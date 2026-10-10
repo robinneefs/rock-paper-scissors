@@ -1,6 +1,6 @@
 # Architecture
 
-_Status: proposal, 2026-10-10. No game code exists yet. This document is the plan the code will follow; change it when a decision changes._
+_Status: in use, 2026-10-10. Steps 1 and 2 of the build order are built (`packages/core`, `apps/game`); the code follows this document. Change it when a decision changes._
 
 How the Rock Paper Scissors Fighter code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, Colyseus later, Capacitor later, arcade cabinet layout, pixel perfect, polish as a core goal).
 
@@ -171,6 +171,7 @@ The fight scene must not care whether the opponent is a CPU on the same device o
 // apps/game/src/session/MatchSession.ts
 export interface MatchSession {
   readonly me: Side;
+  ready(): void;                         // the scene is listening: local starts the match, online tells the server
   submitPick(move: Move): void;
   requestRematch(): void;
   snapshot(): MatchView;                 // current phase, health, rounds, timer end
@@ -239,7 +240,7 @@ The game always starts the same way: Boot, then the logo intro, then the home sc
 
   Adding online play, settings or a how-to-play screen is a new item here plus its scene; no other scene changes.
 - **One place for transitions.** Scenes never start each other by key. A small `SceneFlow` (`scenes/flow.ts`) has `toHome()`, `toFight(setup)`, `toResult(outcome)` and plays the transition (a short pixel wipe, timed by `tuning.transitions`). 
-- **`MatchSetup` describes a match.** `toFight(setup)` builds the session from the setup (`createSession(setup)` in `session/`): `{ mode: 'cpu', cpu: 'random' }` now, `{ mode: 'online', roomCode }` later. The setup travels to the result screen, so **Retry** is `session.requestRematch()`: the local session restarts at once; the online session asks the opponent and waits for both to agree.
+- **`MatchSetup` describes a match.** `toFight(setup)` builds the session from the setup (`createSession(setup)` in `session/`): `{ mode: 'cpu', cpu: 'random' }` now, `{ mode: 'online', roomCode }` later. The setup travels to the result screen, so **Retry** is `session.requestRematch()`: the session answers with a `rematchAccepted` event (locally at once; online once both players agree), and the flow reopens the fight with the same session, which starts again on `ready()`.
 - **Menu input.** The `InputRouter` adds menu actions: `nav:up` / `nav:down` (joystick, arrow keys), `confirm` (any of the three cabinet buttons, Enter, Space) and `back` (Esc, Android back). Menu items on the monitor can also be tapped or clicked. In menus the joystick finally does something; in a fight it stays decoration.
 - **Music.** The menu loop plays on Home and Result; the fight loop in `FightScene`. `SceneFlow` asks `AudioService` to cross-fade on each transition.
 
@@ -303,7 +304,7 @@ There are two homes for numbers, on purpose:
 
 **Audio.** An `AudioService` wraps Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds are referred to by typed keys (`Sfx.HitThrow`), and a key can map to several variations that are picked at random so hits don't repeat. Generated music (Tone.js) later plugs in as another music source.
 
-**Assets.** Art comes out of Aseprite (or PixelLab) as sprite sheets with JSON frame data. A typed manifest (`assets/keys.ts`) lists every key, so a typo is a compile error instead of a missing sprite at runtime. One shared palette (`config/palette.ts`, plus a `tools/` script that checks exported images only use palette colours).
+**Assets.** Until the real art exists, `assets/placeholders/` draws every texture in code at boot (fighters, icons, cabinet, stage) under the real asset keys. Loading a real sprite sheet under the same key in `BootScene` makes its placeholder step aside; no view changes. Art comes out of Aseprite (or PixelLab) as sprite sheets with JSON frame data. A typed manifest (`assets/keys.ts`) lists every key, so a typo is a compile error instead of a missing sprite at runtime. One shared palette (`config/palette.ts`, plus a `tools/` script that checks exported images only use palette colours).
 
 **Settings.** Volumes, mute and (later) key bindings are saved through a `Storage` adapter in `platform/` (localStorage in the browser, Capacitor Preferences on Android).
 
@@ -392,7 +393,7 @@ What a typical future change touches, to show the structure holds up:
 Matches the roadmap in the project context:
 
 1. **Rules core with tests.** Set up the monorepo, lint rules and CI. Write `@rps/core` rules and referee, fully tested. Console only.
-2. **Playable prototype.** `apps/game` with the pixel scaler, `CabinetScene`, `FightScene` with rectangles as fighters, `LocalSession` with `RandomCpu`, the HUD, timer and best of three, and the menu flow from the start: `LogoScene` (placeholder logo), `HomeScene` with Start game, `ResultScene` with Retry and Main menu. `tuning.ts` exists from the start, even with few values.
+2. **Playable prototype.** _(Built together with step 1, 2026-10-10.)_ `apps/game` with the pixel scaler, `CabinetScene`, `FightScene` with placeholder fighters, `LocalSession` with `RandomCpu`, the HUD, timer and best of three, and the menu flow from the start: `LogoScene` (placeholder logo), `HomeScene` with Start game, `ResultScene` with Retry and Main menu. `tuning.ts` exists from the start, even with few values.
 3. **Art and juice.** Real sprite sheets, the reveal timeline, the `fx/` kit, audio, the dev tuning panel.
 4. **Polish and web release.** The game-feel pass, screenshot tests, GitHub Pages deploy.
 5. **Online.** `apps/server`, `OnlineSession`, room codes.
@@ -404,6 +405,6 @@ Defaults picked in this document that are easy to change now and harder later (t
 
 | Choice | Default | Alternative |
 |---|---|---|
-| Repo shape | npm workspaces monorepo (`packages/core`, `apps/game`, later `apps/server`) | One app with a `core/` folder, split later |
-| Dev tuning panel | Tweakpane, dev builds only | lil-gui, or no panel |
-| Lint for import rules | `eslint-plugin-import` `no-restricted-paths` | `dependency-cruiser` |
+| Repo shape | npm workspaces monorepo (`packages/core`, `apps/game`, later `apps/server`) (built this way) | One app with a `core/` folder, split later |
+| Dev tuning panel | Tweakpane, dev builds only (not added yet; step 3) | lil-gui, or no panel |
+| Lint for import rules | `eslint-plugin-import` `no-restricted-paths` plus `no-restricted-imports` for Phaser and the `Referee` (built this way, `eslint.config.js`) | `dependency-cruiser` |

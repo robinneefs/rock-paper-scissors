@@ -6,7 +6,30 @@ Two fighters face off inside an arcade cabinet. Each exchange, both players secr
 
 ![Arcade cabinet mock-up in the browser, picking a move](docs/mockups/cabinet/cabinet-browser-pick.png)
 
-> **Status: design phase.** The game is designed but not built yet. This repository holds the design documents, mock-ups and art direction samples. Game code comes next.
+> **Status: first playable.** Logo intro, home menu, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
+
+| Home | Fight | Result |
+|---|---|---|
+| ![Home menu](docs/screenshots/first-playable-home.png) | ![A throw beats a block](docs/screenshots/first-playable-fight.png) | ![Result screen](docs/screenshots/first-playable-result.png) |
+
+## Play it locally
+
+Needs Node 22.
+
+```sh
+npm install
+npm run dev        # opens the game at http://localhost:5173
+```
+
+Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Attack / Throw / Block. In menus the arrow keys (or dragging the joystick) move the cursor and any cabinet button, Enter or Space selects. Esc goes back.
+
+| Command | What it does |
+|---|---|
+| `npm test` | Rules, referee and session tests (Vitest) |
+| `npm run test:e2e` | Browser smoke test (Playwright) |
+| `npm run lint` | ESLint, including the layer import rules |
+| `npm run typecheck` | TypeScript, strict |
+| `npm run build` | Production build into `apps/game/dist` |
 
 ## How it plays
 
@@ -36,7 +59,7 @@ Because the damage is uneven, this is not classic rock paper scissors. Throw is 
 |---|---|
 | ![Reveal in the browser](docs/mockups/cabinet/cabinet-browser-reveal.png) | ![Reveal on a phone](docs/mockups/cabinet/cabinet-phone-reveal.png) |
 
-## Technology (planned)
+## Technology
 
 | Part | Choice |
 |---|---|
@@ -62,10 +85,13 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 
 | Path | What's in it |
 |---|---|
+| [`packages/core/`](packages/core/) | `@rps/core`: the rules and the referee, plain TypeScript with zero dependencies |
+| [`apps/game/`](apps/game/) | The Phaser game: scenes, views, session, input, pixel scaler, tuning |
+| [`tools/`](tools/) | Small scripts (the placeholder logo) |
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions, open questions and the decision log |
 | [`docs/idea/`](docs/idea/) | The original idea brief |
 | [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
-| [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code will be structured: layers, packages, online play, pixel-perfect rendering, tuning |
+| [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured: layers, packages, online play, pixel-perfect rendering, tuning |
 | [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Current arcade cabinet mock-ups (browser and phone) |
 | [`docs/mockups/landscape-superseded/`](docs/mockups/landscape-superseded/) | Earlier landscape mock-ups, replaced by the cabinet layout |
 | [`docs/art-direction/`](docs/art-direction/) | Art direction samples: sprite sizes, character styles, body shapes |
