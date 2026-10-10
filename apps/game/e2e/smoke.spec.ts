@@ -26,14 +26,6 @@ async function untilScene(page: Page, key: string, maxMs = 5000): Promise<void> 
   await run(page, 300);
 }
 
-/**
- * Advances the fake clock in small steps. One big runFor() lets the browser run the game's frames
- * with large gaps, and Phaser clamps big frame deltas, so game time falls behind the clock.
- */
-async function run(page: Page, ms: number): Promise<void> {
-  for (let left = ms; left > 0; left -= 50) await page.clock.runFor(Math.min(50, left));
-}
-
 test('boots to the logo, the home menu, and plays an exchange against the CPU', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
