@@ -1,0 +1,923 @@
+<title>Rock Paper Scissors Fighter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one dusk-rooftop column; the playable stage is the hero, then the design document as numbered chapters. Single dark look on purpose (it is the game's own world). */
+:root {
+  --night: #141129;
+  --dusk: #1d1838;
+  --panel: #241d44;
+  --line: #3a3063;
+  --ink: #f6efe2;
+  --muted: #b9add6;
+  --attack: #e5483f;
+  --throw: #f0a92e;
+  --block: #2bb3a3;
+  --sun: #ffc27a;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --digits: 'Press Start 2P', 'Courier New', monospace;
+  --body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--ink); }
+body { font-family: var(--body); font-size: 17px; line-height: 1.6; padding-inline: 16px; padding-block: 0 64px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+p { margin: 0; max-width: 66ch; }
+a { color: var(--sun); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Hero */
+header.hero { display: grid; gap: 18px; padding-block: 40px 20px; }
+.eyebrow { font-family: var(--display); letter-spacing: .18em; text-transform: uppercase; color: var(--sun); font-size: 14px; }
+h1 { font-size: clamp(38px, 7vw, 76px); letter-spacing: .01em; }
+h1 span.a { color: var(--attack); } h1 span.t { color: var(--throw); } h1 span.b { color: var(--block); }
+.lede { font-size: 19px; color: var(--muted); max-width: 60ch; }
+.stage-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; overflow: hidden; border: 4px solid #000; box-shadow: 0 0 0 4px var(--line), 0 18px 0 -4px rgba(0,0,0,.45); background: #171433; }
+.stage-wrap > .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.stage-note { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; color: var(--muted); font-size: 15px; }
+.kbd { font-family: var(--display); border: 2px solid var(--line); padding: 0 6px; color: var(--ink); }
+.touch-moves { display: none; gap: 10px; }
+.touch-moves button { flex: 1; font: 600 18px var(--display); padding: 12px 6px; border: 3px solid #000; color: #fff8ec; text-shadow: 2px 2px 0 rgba(0,0,0,.5); cursor: pointer; }
+.touch-moves .attack { background: var(--attack); } .touch-moves .throw { background: var(--throw); } .touch-moves .block { background: var(--block); }
+@media (max-width: 720px) { .touch-moves { display: flex; } }
+
+/* Chapters */
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 20px 8px; border-top: 2px solid var(--line); margin-top: 28px; }
+nav.toc a { font-family: var(--display); font-size: 15px; text-decoration: none; color: var(--muted); border: 2px solid var(--line); padding: 4px 10px; }
+nav.toc a:hover { color: var(--ink); border-color: var(--muted); }
+section.ch { display: grid; gap: 20px; padding-block: 48px 8px; scroll-margin-top: 12px; }
+.ch-head { display: flex; align-items: baseline; gap: 14px; }
+.ch-head .no { font-family: var(--display); color: var(--sun); font-size: 18px; }
+h2 { font-size: clamp(28px, 4.4vw, 40px); }
+h3 { font-size: 20px; color: var(--ink); }
+.grid { display: grid; gap: 16px; }
+.cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+.cols-2 > *, .cols-3 > * { min-width: 0; }
+.tile { background: var(--panel); border: 2px solid var(--line); padding: 18px; display: grid; gap: 8px; align-content: start; }
+.tile h3 { font-size: 19px; }
+.tile p { color: var(--muted); font-size: 16px; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 66ch; }
+ul.plain li::marker { color: var(--sun); }
+.callout { border-left: 6px solid var(--sun); background: var(--dusk); padding: 14px 18px; max-width: 70ch; }
+.callout strong { font-family: var(--display); font-weight: 600; letter-spacing: .03em; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); font-weight: 600; color: var(--muted); letter-spacing: .04em; font-size: 15px; }
+td.n { font-variant-numeric: tabular-nums; }
+.chip { display: inline-block; font-family: var(--display); font-size: 15px; padding: 1px 8px; color: #fff8ec; border: 2px solid #000; text-shadow: 1px 1px 0 rgba(0,0,0,.5); white-space: nowrap; }
+.chip.attack { background: var(--attack); } .chip.throw { background: var(--throw); } .chip.block { background: var(--block); }
+
+/* Rules triangle */
+.tri svg { width: 100%; max-width: 440px; height: auto; display: block; }
+
+/* Mind game */
+.mix { display: grid; gap: 14px; }
+.mix-row { display: grid; grid-template-columns: 80px 1fr 64px; align-items: center; gap: 12px; }
+.mix-row .lbl { font-family: var(--display); }
+.mix-bar { height: 26px; background: var(--dusk); border: 2px solid var(--line); position: relative; }
+.mix-bar > i { position: absolute; inset: 0 auto 0 0; transition: width .3s steps(8); }
+.mix-row .pct { font-family: var(--digits); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.sliders { display: grid; gap: 10px; }
+.slider { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 15px; }
+.slider input { width: 100%; accent-color: var(--sun); }
+.slider output { font-family: var(--digits); font-size: 12px; text-align: right; }
+.reset-btn { justify-self: start; font: 600 15px var(--display); background: transparent; color: var(--muted); border: 2px solid var(--line); padding: 4px 10px; cursor: pointer; }
+.insight { font-size: 16px; color: var(--muted); }
+.loop { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; counter-reset: lp; }
+.loop li { list-style: none; background: var(--panel); border: 2px solid var(--line); padding: 12px 14px; font-size: 16px; }
+
+/* Flow */
+ol.flow { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; counter-reset: st; max-width: 760px; }
+ol.flow li { counter-increment: st; display: grid; grid-template-columns: 52px 1fr; gap: 14px; padding: 14px 0; border-bottom: 2px dashed var(--line); }
+ol.flow li::before { content: counter(st); font-family: var(--display); font-size: 26px; color: var(--night); background: var(--sun); width: 44px; height: 44px; display: grid; place-items: center; border: 3px solid #000; }
+ol.flow li b { font-family: var(--display); font-weight: 600; font-size: 18px; display: block; }
+ol.flow li span { color: var(--muted); }
+
+/* Mock-up gallery */
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
+.shot { display: grid; gap: 8px; margin: 0; min-width: 0; }
+.shot .stage-wrap { box-shadow: 0 0 0 3px var(--line); border-width: 3px; }
+.shot figcaption { font-size: 15px; color: var(--muted); }
+.shot figcaption b { color: var(--ink); font-family: var(--display); font-weight: 600; }
+.poses { overflow-x: auto; border: 2px solid var(--line); background: #171433; }
+.poses-inner { position: relative; width: 1000px; height: 250px; }
+.poses canvas { display: block; image-rendering: pixelated; width: 1000px; height: 210px; }
+.pose-labels span { position: absolute; top: 218px; transform: translateX(-50%); font-family: var(--display); font-size: 15px; color: var(--muted); white-space: nowrap; }
+
+/* Architecture */
+.arch { display: grid; gap: 14px; }
+.arch-top { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; }
+@media (max-width: 720px) { .arch-top { grid-template-columns: 1fr; } }
+.arch .box { border: 2px solid var(--line); padding: 14px; display: grid; gap: 10px; align-content: start; }
+.arch .box.later { border-style: dashed; }
+.arch .box > b { font-family: var(--display); font-weight: 600; }
+.arch .inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.arch .inner div { background: var(--panel); padding: 10px 12px; font-size: 15px; color: var(--muted); }
+.arch .inner div b { display: block; color: var(--ink); font-family: var(--display); font-weight: 600; }
+.arch .rules { border: 3px solid var(--sun); background: rgba(255,194,122,.08); padding: 14px 16px; }
+.arch .rules b { font-family: var(--display); font-weight: 600; color: var(--sun); }
+.arch .uses { font-family: var(--display); color: var(--muted); font-size: 14px; text-align: center; letter-spacing: .1em; }
+
+/* Roadmap */
+ol.road { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; counter-reset: rd; }
+ol.road li { counter-increment: rd; background: var(--panel); border: 2px solid var(--line); padding: 12px; display: grid; gap: 4px; align-content: start; font-size: 15px; color: var(--muted); }
+ol.road li::before { content: 'Step ' counter(rd); font-family: var(--display); color: var(--sun); font-size: 14px; }
+ol.road li b { color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 17px; }
+ol.road li.later { border-style: dashed; }
+ul.qs { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 70ch; }
+ul.qs li { padding-left: 30px; position: relative; }
+ul.qs li::before { content: '?'; position: absolute; left: 0; top: 1px; width: 20px; height: 20px; display: grid; place-items: center; font-family: var(--display); background: var(--line); color: var(--ink); font-size: 14px; }
+footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line); color: var(--muted); font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.stage { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #171433; font-family: 'Pixelify Sans', 'Courier New', monospace; color: #fff8ec; user-select: none; }
+.stage canvas { position: absolute; inset: 0; width: 1280px; height: 720px; image-rendering: pixelated; }
+.hud-top { position: absolute; left: 40px; right: 40px; top: 28px; display: grid; grid-template-columns: 1fr 120px 1fr; align-items: start; gap: 24px; }
+.side { display: grid; gap: 8px; }
+.side.right { justify-items: end; }
+.name { font-size: 26px; letter-spacing: 2px; text-shadow: 3px 3px 0 #1a1326; display: flex; gap: 14px; align-items: baseline; }
+.name small { font-size: 18px; color: #d9cbe8; letter-spacing: 1px; }
+.bar { position: relative; width: 100%; height: 34px; background: #1a1326; border: 4px solid #1a1326; box-shadow: 0 0 0 4px #fff8ec; }
+.bar .lost { position: absolute; top: 0; bottom: 0; background: #f5e3a0; transition: width .5s ease .25s; }
+.bar .hp { position: absolute; top: 0; bottom: 0; background: linear-gradient(#7fe08a 0 45%, #3fb35a 45% 100%); transition: width .25s steps(6); }
+.side.left .bar .hp, .side.left .bar .lost { right: 0; }
+.side.right .bar .hp, .side.right .bar .lost { left: 0; }
+.bar .hp.low { background: linear-gradient(#ff8b6b 0 45%, #e5483f 45% 100%); }
+.bar .num { position: absolute; top: 2px; font-size: 22px; text-shadow: 2px 2px 0 #1a1326; }
+.side.left .bar .num { left: 10px; }
+.side.right .bar .num { right: 10px; }
+.pips { display: flex; gap: 10px; }
+.pip { width: 22px; height: 22px; background: #1a1326; border: 4px solid #fff8ec; transform: rotate(45deg); margin: 4px; }
+.pip.won { background: #f0a92e; }
+.timer { justify-self: center; width: 112px; height: 112px; display: grid; place-items: center; background: #1a1326; border: 6px solid #fff8ec; font-size: 64px; line-height: 1; text-shadow: 4px 4px 0 #3d2659; position: relative; }
+.timer.hurry { color: #ff8b6b; }
+.timer .lbl { position: absolute; bottom: -34px; font-size: 18px; letter-spacing: 3px; color: #f0e3ff; text-shadow: 2px 2px 0 #1a1326; white-space: nowrap; }
+.round-tag { display:none; position: absolute; left: 50%; top: 178px; transform: translateX(-50%); font-size: 20px; letter-spacing: 4px; color: #fff8ec; text-shadow: 2px 2px 0 #1a1326; }
+.moves { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; gap: 22px; }
+.move { width: 200px; height: 84px; display: grid; grid-template-columns: 50px 1fr; align-items: center; gap: 10px; padding: 0 16px; font: inherit; font-size: 28px; letter-spacing: 1px; color: #fff8ec; text-shadow: 3px 3px 0 rgba(26,19,38,.7); border: 5px solid #1a1326; cursor: pointer; position: relative; box-shadow: inset 0 -10px 0 rgba(0,0,0,.25), 0 6px 0 #1a1326; }
+.move .key { position: absolute; top: -14px; right: -10px; width: 34px; height: 34px; display: grid; place-items: center; font-size: 18px; background: #1a1326; color: #fff8ec; text-shadow: none; }
+.move canvas { position: static; width: 50px; height: 50px; image-rendering: pixelated; }
+.move.attack { background: #e5483f; }
+.move.throw { background: #f0a92e; }
+.move.block { background: #2bb3a3; }
+.move.dim { filter: saturate(.35) brightness(.7); }
+.move.sel { transform: translateY(-10px); box-shadow: inset 0 -10px 0 rgba(0,0,0,.25), 0 16px 0 #1a1326, 0 0 0 5px #fff8ec; }
+.move:focus-visible { outline: 5px solid #fff8ec; outline-offset: 4px; }
+.status { position: absolute; left: 50%; bottom: 119px; background: rgba(26,19,38,.82); padding: 2px 14px; border: 3px solid #1a1326; transform: translateX(-50%); font-size: 19px; letter-spacing: 2px; text-shadow: 2px 2px 0 #1a1326; white-space: nowrap; }
+.dmg { position: absolute; font-size: 56px; color: #fff3b0; text-shadow: 4px 4px 0 #8f1f22, -2px -2px 0 #1a1326; transform: translate(-50%, -50%); white-space: nowrap; }
+.dmg.tie { color: #e6defa; text-shadow: 4px 4px 0 #3d2659; font-size: 40px; }
+.banner { position: absolute; left: 0; right: 0; top: 168px; text-align: center; font-size: 120px; letter-spacing: 8px; color: #fff3b0; text-shadow: 8px 8px 0 #e5483f, 14px 14px 0 #1a1326; }
+.banner small { display: block; font-size: 36px; letter-spacing: 4px; color: #fff8ec; text-shadow: 3px 3px 0 #1a1326; margin-top: 10px; }
+.cta { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); display: flex; gap: 20px; }
+.cta button { font: inherit; font-size: 30px; padding: 14px 30px; background: #fff8ec; color: #1a1326; border: 5px solid #1a1326; box-shadow: 0 6px 0 #1a1326; cursor: pointer; }
+.cta button.alt { background: #3d2659; color: #fff8ec; }
+.vignette { position: absolute; inset: 0; background: rgba(23,20,51,.3); }
+.timer.vs .t { font-size: 44px; color: #f0a92e; }
+[hidden]{display:none!important}
+.status:empty{display:none}
+
+.stage .timer .t, .stage .bar .num, .stage .dmg { font-family: var(--digits); }
+.stage .timer .t { font-size: 44px; } .stage .timer.vs .t { font-size: 30px; } .stage .bar .num { font-size: 16px; top: 7px; } .stage .dmg { font-size: 40px; } .stage .dmg.tie { font-size: 30px; }
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">Game design document · web game</div>
+  <h1>Rock Paper Scissors <span class="a">F</span><span class="t">i</span><span class="b">g</span>hter</h1>
+  <p class="lede">Two fighters, three moves, five seconds to choose. Attack beats Throw, Throw beats Block, Block beats Attack, and each win hits for a different amount. Try the sketch below: it plays the exchange flow from this document against the random computer.</p>
+  <div class="stage-wrap" id="hero-wrap"><div id="hero-stage"></div></div>
+  <div class="touch-moves" id="touch-moves">
+    <button class="attack" data-move="attack">Attack</button><button class="throw" data-move="throw">Throw</button><button class="block" data-move="block">Block</button>
+  </div>
+  <div class="stage-note"><span>Pick with the buttons or keys <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span>. Placeholder art drawn in code, not final sprites.</span><span>Best of three · 100 health · 5 second timer</span></div>
+</header>
+
+<nav class="toc" aria-label="Chapters">
+  <a href="#overview">Overview</a><a href="#rules">Rules</a><a href="#mind">Mind game</a><a href="#flow">Exchange flow</a><a href="#look">Look and feel</a><a href="#audio">Audio</a><a href="#tech">Technology</a><a href="#roadmap">Roadmap</a>
+</nav>
+
+<section class="ch" id="overview">
+  <div class="ch-head"><span class="no">01</span><h2>Overview</h2></div>
+  <p>A browser fighting game built on rock paper scissors. Version 1 is single player against a random computer. Online play and an Android app come later, and they shape every technical choice now.</p>
+  <div class="grid cols-3">
+    <div class="tile"><h3>Simple to read</h3><p>Three moves, one clear winner each exchange, no hidden mechanics.</p></div>
+    <div class="tile"><h3>Satisfying reveal</h3><p>Both picks lock in, the move icons drop in, and the fighters act it out.</p></div>
+    <div class="tile"><h3>Built for online</h3><p>The rules never trust the client, so adding a server later changes how moves arrive, not the rules.</p></div>
+  </div>
+  <p><b>Platforms:</b> desktop and mobile web browsers first, then Android by wrapping the same build.</p>
+</section>
+
+<section class="ch" id="rules">
+  <div class="ch-head"><span class="no">02</span><h2>Core rules</h2></div>
+  <div class="grid cols-2">
+    <div class="tri">
+      <svg viewBox="0 0 440 360" role="img" aria-label="Attack beats Throw for 15, Throw beats Block for 20, Block beats Attack for 10">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f6efe2"/></marker></defs>
+        <g stroke="#f6efe2" stroke-width="3" fill="none">
+          <path d="M248 92 L350 246" marker-end="url(#ar)"/>
+          <path d="M296 284 L146 284" marker-end="url(#ar)"/>
+          <path d="M92 246 L192 92" marker-end="url(#ar)"/>
+        </g>
+        <g font-family="Pixelify Sans, monospace" text-anchor="middle">
+          <rect x="160" y="22" width="120" height="64" fill="#e5483f" stroke="#000" stroke-width="4"/>
+          <text x="220" y="62" font-size="24" fill="#fff8ec">Attack</text>
+          <rect x="300" y="252" width="120" height="64" fill="#f0a92e" stroke="#000" stroke-width="4"/>
+          <text x="360" y="292" font-size="24" fill="#fff8ec">Throw</text>
+          <rect x="20" y="252" width="120" height="64" fill="#2bb3a3" stroke="#000" stroke-width="4"/>
+          <text x="80" y="292" font-size="24" fill="#fff8ec">Block</text>
+          <text x="338" y="160" font-size="20" fill="#f6efe2">beats</text><text x="338" y="184" font-size="26" fill="#ffc27a">15</text>
+          <text x="220" y="330" font-size="20" fill="#f6efe2">beats · <tspan fill="#ffc27a" font-size="26">20</tspan></text>
+          <text x="102" y="160" font-size="20" fill="#f6efe2">beats</text><text x="102" y="184" font-size="26" fill="#ffc27a">10</text>
+        </g>
+      </svg>
+    </div>
+    <div class="grid">
+      <div class="table-scroll"><table>
+        <thead><tr><th>Winning move</th><th>Beats</th><th>Damage</th></tr></thead>
+        <tbody>
+          <tr><td><span class="chip throw">Throw</span></td><td>Block</td><td class="n">20</td></tr>
+          <tr><td><span class="chip attack">Attack</span></td><td>Throw</td><td class="n">15</td></tr>
+          <tr><td><span class="chip block">Block</span> counter</td><td>Attack</td><td class="n">10</td></tr>
+        </tbody>
+      </table></div>
+      <ul class="plain">
+        <li>A tie deals no damage. Only the loser of an exchange takes damage, so there is no double knockout.</li>
+        <li>Each fighter starts a round with 100 health, a value to tune in playtests.</li>
+        <li>A round ends at 0 health. A match is best of three rounds, and health resets each round.</li>
+        <li>The computer picks one of the three moves at random, with equal odds.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="ch" id="mind">
+  <div class="ch-head"><span class="no">03</span><h2>The mind game</h2></div>
+  <p>Because the three wins hit for different amounts, this is not a coin flip. Throw is the tempting big hit, and that temptation is what players read and punish.</p>
+  <ol class="loop">
+    <li>Throw pays the most, so players lean toward it.</li>
+    <li>Expecting a Throw, the opponent picks Attack.</li>
+    <li>Expecting that Attack, you switch to Block.</li>
+    <li>Blocking too often gets punished by Throw. Repeat.</li>
+  </ol>
+  <div class="grid cols-2">
+    <div class="tile mix" aria-live="polite">
+      <h3>The balanced mix</h3>
+      <p>When both players play perfectly, these are the shares of picks where neither has an edge. Change the damage values to see how the mix moves.</p>
+      <div class="mix-row"><span class="lbl">Attack</span><div class="mix-bar"><i id="bar-attack" style="background:var(--attack)"></i></div><span class="pct" id="pct-attack">44%</span></div>
+      <div class="mix-row"><span class="lbl">Block</span><div class="mix-bar"><i id="bar-block" style="background:var(--block)"></i></div><span class="pct" id="pct-block">33%</span></div>
+      <div class="mix-row"><span class="lbl">Throw</span><div class="mix-bar"><i id="bar-throw" style="background:var(--throw)"></i></div><span class="pct" id="pct-throw">22%</span></div>
+      <div class="sliders">
+        <label class="slider" for="d-attack">Attack damage<input id="d-attack" type="range" min="5" max="40" step="1" value="15"><output id="o-attack">15</output></label>
+        <label class="slider" for="d-throw">Throw damage<input id="d-throw" type="range" min="5" max="40" step="1" value="20"><output id="o-throw">20</output></label>
+        <label class="slider" for="d-block">Block damage<input id="d-block" type="range" min="5" max="40" step="1" value="10"><output id="o-block">10</output></label>
+      </div>
+      <button class="reset-btn" id="mix-reset" type="button">Reset to 15 / 20 / 10</button>
+    </div>
+    <div class="grid">
+      <p class="insight"><b style="color:var(--ink)">The rule of thumb:</b> each move's share is proportional to the damage of the move it beats. Attack beats the 20 damage Throw, so Attack is picked most. Throw beats the 10 damage Block, so Throw, the biggest hit, is picked least.</p>
+      <p class="insight"><b style="color:var(--ink)">Health changes the stakes.</b> With 15 health left, an Attack or Throw win ends the round but a 10 damage Block counter does not. Late-round picks feel different from early ones.</p>
+      <p class="insight"><b style="color:var(--ink)">Against the random computer,</b> Attack and Throw each gain about 1.7 net damage per exchange on average, while Block loses about 3.3. A computer that plays the balanced mix, or punishes patterns, would make a stronger opponent later.</p>
+    </div>
+  </div>
+</section>
+
+<section class="ch" id="flow">
+  <div class="ch-head"><span class="no">04</span><h2>Exchange flow</h2></div>
+  <p>Every exchange runs the same way: a 5 second countdown, a simultaneous reveal, then the animation and damage.</p>
+  <ol class="flow">
+    <li><div><b>Pick</b><span>A 5 second countdown starts (3 seconds is the alternative to playtest). Tap or click Attack, Throw or Block, or press 1, 2, 3. You can change your pick until the timer ends.</span></div></li>
+    <li><div><b>Lock in</b><span>At 0, anyone without a pick gets a random move. Picks stay hidden until both are locked.</span></div></li>
+    <li><div><b>Reveal</b><span>Each fighter's move icon drops in above their head with a bounce, at the same moment for both.</span></div></li>
+    <li><div><b>Act it out</b><span>Both fighters play their move. The winner lands with a hit flash, a hit sound and a small screen shake. On a tie the moves clash and nobody takes damage.</span></div></li>
+    <li><div><b>Resolve</b><span>The loser's health bar drains by the damage amount.</span></div></li>
+    <li><div><b>Next</b><span>Next countdown, or a knockout: the round goes to the other fighter, a "Round 2" or "Final round" banner starts the next one, or the match ends with a winner screen and a rematch button.</span></div></li>
+  </ol>
+  <p class="insight">In online play the timer and the random fallback pick run on the server, so both players see the same reveal at the same time.</p>
+</section>
+
+<section class="ch" id="look">
+  <div class="ch-head"><span class="no">05</span><h2>Look and feel</h2></div>
+  <p>Two pixel-art fighters stand close together near the center, about one body-width apart, so attacks and throws visibly connect. Health bars and round markers sit above them, the three move buttons below. The screen is landscape 16:9 and scales to fit.</p>
+  <div class="shots" id="shots"></div>
+  <h3>Animations each fighter needs</h3>
+  <div class="poses"><div class="poses-inner"><canvas id="poses" width="400" height="84"></canvas><div class="pose-labels" id="pose-labels"></div></div></div>
+  <div class="callout"><strong>Art decision.</strong> The free packs we checked (Jestaa's free character, LuizMelo's Fantasy Martial Characters, Pixel Moon Studio's Fighter v2) don't look good enough and none include block or throw. Before building starts, we either find better packs (paid ones included) or generate our own fighters with AI image tools and clean them up into sprite sheets. The fighters on this page are placeholders drawn in code.</div>
+  <p>Move icons can come from <a href="https://kenney.nl/assets" target="_blank" rel="noopener">Kenney</a>, whose packs are CC0.</p>
+</section>
+
+<section class="ch" id="audio">
+  <div class="ch-head"><span class="no">06</span><h2>Audio</h2></div>
+  <p>Version 1 ships with free hit sounds and one looping fight track. Custom music made with Claude comes later.</p>
+  <div class="grid cols-2">
+    <div class="tile"><h3>Sound effects</h3>
+      <ul class="plain">
+        <li>Countdown ticks for the last 3 seconds and a lock-in sound at the reveal.</li>
+        <li>A different hit per winning move (attack, throw slam, block counter) and a clash on a tie.</li>
+        <li>KO, "Round 1, fight" and a win jingle.</li>
+        <li>Source: <a href="https://opengameart.org/content/37-hitspunches" target="_blank" rel="noopener">37 hits/punches</a> by Independent.nu, CC0.</li>
+      </ul></div>
+    <div class="tile"><h3>Music</h3>
+      <ul class="plain">
+        <li>A menu loop and a fight loop, with mute and separate music and effects volume.</li>
+        <li>To start: a CC0 chiptune loop from OpenGameArt.</li>
+        <li>Later: Claude composes chiptune music as code (for example note sequences played with Tone.js) or writes MIDI files a free tool turns into audio.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="ch" id="tech">
+  <div class="ch-head"><span class="no">07</span><h2>Technology</h2></div>
+  <p>Phaser 3 and TypeScript, bundled with Vite, with the rules in a separate module that a future online server reuses unchanged.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Part</th><th>Choice</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Game engine</td><td><a href="https://phaser.io" target="_blank" rel="noopener">Phaser 3</a></td><td>2D sprites, animations, tweens and audio for the browser</td></tr>
+      <tr><td>Language</td><td>TypeScript</td><td>One language for game, rules and server; types catch mistakes</td></tr>
+      <tr><td>Build tool</td><td>Vite</td><td>Fast dev server, simple production build</td></tr>
+      <tr><td>Tests</td><td>Vitest</td><td>Tests the rules module without a browser</td></tr>
+      <tr><td>Online play (later)</td><td>Node + <a href="https://colyseus.io" target="_blank" rel="noopener">Colyseus</a></td><td>Rooms, matchmaking and state sync made for games like this</td></tr>
+      <tr><td>Android (later)</td><td><a href="https://capacitorjs.com" target="_blank" rel="noopener">Capacitor</a></td><td>Wraps the same web build as an Android app</td></tr>
+    </tbody>
+  </table></div>
+  <div class="arch" role="img" aria-label="The browser game and a future server both use the shared rules module">
+    <div class="arch-top">
+      <div class="box"><b>Browser game: Phaser 3 + TypeScript</b>
+        <div class="inner">
+          <div><b>Fight scene</b>Fighters, health bars, move icons, timer, sounds. Only displays results.</div>
+          <div><b>Move source</b>Your pick and the random computer pick now; the online opponent later.</div>
+        </div>
+        <span class="insight" style="font-size:14px">Capacitor wraps this build for Android.</span>
+      </div>
+      <div class="box later"><b>Game server (later)</b>
+        <div class="inner"><div><b>Colyseus room</b>Runs the timer and random fallback pick, sends results to both players.</div></div>
+      </div>
+    </div>
+    <div class="uses">BOTH USE</div>
+    <div class="rules"><b>Shared rules module, plain TypeScript.</b> Decides each exchange from both moves and tracks health, rounds and the match. No Phaser, no timers, no network code.</div>
+  </div>
+  <ul class="plain">
+    <li>The game never decides a result inside a scene. Scenes only display what the rules module returns.</li>
+    <li>Going online swaps the move source for the server; the fight scene and rules stay as they are.</li>
+    <li>In online play only the server knows both picks before the reveal, so nobody can peek or cheat.</li>
+  </ul>
+</section>
+
+<section class="ch" id="roadmap">
+  <div class="ch-head"><span class="no">08</span><h2>Roadmap</h2></div>
+  <p>Each step ends with something playable.</p>
+  <ol class="road">
+    <li><b>Rules core</b>Shared rules module with tests, played in the console.</li>
+    <li><b>Prototype</b>Phaser scene with rectangles, buttons, bars, timer, best of three.</li>
+    <li><b>Art and juice</b>Sprites, falling icons, hit flash, shake, sound and music.</li>
+    <li><b>Release</b>Title screen, rematch, settings, mobile check, published on the web.</li>
+    <li class="later"><b>Online play</b>Colyseus server, room codes, server runs timer and rules.</li>
+    <li class="later"><b>Android</b>Capacitor wrapper and a Play Store test build.</li>
+  </ol>
+  <h3>Open questions</h3>
+  <ul class="qs">
+    <li>Before building: find better fighter art, or generate our own with AI, including block and throw frames.</li>
+    <li>Is 100 starting health the right round length?</li>
+    <li>5 or 3 second timer? Starting with 5.</li>
+    <li>Does the game get a name beyond Rock Paper Scissors Fighter?</li>
+  </ul>
+</section>
+
+<footer>
+  <span>Updated 10 October 2026</span>
+  <a href="https://claude.ai/code/artifact/3f1b261a-b2c2-4342-b7f6-22d848beccb6" target="_blank" rel="noopener">Editable design document</a>
+  <a href="https://github.com/robinneefs/rock-paper-scissors" target="_blank" rel="noopener">Repository</a>
+</footer>
+</div>
+
+<script>
+// Pixel-art stage renderer for Rock Paper Scissors Fighter mock-ups.
+// Draws on a 320x180 canvas, scaled up 4x with crisp pixels.
+(function () {
+  const W = 320, H = 180, GROUND = 140;
+
+  const INK = '#1a1326';
+  const SKIN = '#eab68c', SKIN_D = '#c58a63', HAIR = '#2a1b14';
+  const PAL = {
+    p1: { gi: '#e9e2d2', giD: '#b7ad99', belt: '#1c1c1c', band: '#d83a3f' },
+    p2: { gi: '#2f4675', giD: '#1f2f52', belt: '#e2a93b', band: '#e2a93b' },
+  };
+  const MOVE = {
+    attack: { color: '#e5483f', dark: '#8f1f22', label: 'Attack' },
+    throw: { color: '#f0a92e', dark: '#8a5410', label: 'Throw' },
+    block: { color: '#2bb3a3', dark: '#11645b', label: 'Block' },
+  };
+
+  // Angles in degrees: 0 = toward opponent, 90 = down, -90 = up.
+  const POSES = {
+    idle:    { torso: -82, legF: [60, 96], legB: [116, 100], armF: [58, -62], armB: [78, -78] },
+    attack:  { torso: -70, legF: [36, 88], legB: [136, 140], armF: [-6, -4], armB: [112, -118], lean: 4 },
+    throw:   { torso: -52, legF: [48, 92], legB: [128, 118], armF: [14, 26], armB: [28, 8], lean: 5 },
+    block:   { torso: -96, legF: [74, 96], legB: [112, 94], armF: [34, -100], armB: [46, -96] },
+    counter: { torso: -76, legF: [50, 92], legB: [126, 120], armF: [-2, -12], armB: [62, -92], lean: 3 },
+    hurt:    { torso: -116, legF: [80, 104], legB: [104, 82], armF: [-150, -120], armB: [-170, 160], lean: -4 },
+    air:     { torso: -150, legF: [-40, -20], legB: [-20, 0], armF: [-110, -150], armB: [-90, -130], air: 36, lean: -6 },
+    ko:      { torso: 178, legF: [2, 0], legB: [-6, 4], armF: [166, 178], armB: [190, 182], air: 6 },
+    win:     { torso: -88, legF: [66, 94], legB: [114, 92], armF: [-78, -94], armB: [70, -76] },
+  };
+
+  const L = { thigh: 15, shin: 15, torso: 18, upper: 11, fore: 11 };
+  const rad = (d) => (d * Math.PI) / 180;
+  const pt = (x, y, ang, len) => [x + Math.cos(rad(ang)) * len, y + Math.sin(rad(ang)) * len];
+
+  function seg(ctx, s, ox, x0, y0, x1, y1, w, color) {
+    ctx.fillStyle = color;
+    const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 2) + 1;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const x = ox + s * (x0 + (x1 - x0) * t), y = y0 + (y1 - y0) * t;
+      ctx.fillRect(Math.round(x - w / 2), Math.round(y - w / 2), w, w);
+    }
+  }
+  function box(ctx, s, ox, cx, cy, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(ox + s * cx - w / 2), Math.round(cy - h / 2), w, h);
+  }
+
+  // Draw one fighter. who: 'p1' | 'p2'. facing: 1 right, -1 left.
+  function drawFighter(ctx, who, x, pose, opts = {}) {
+    const p = Object.assign({}, POSES[pose] || POSES.idle);
+    const pal = PAL[who];
+    const s = opts.facing || 1;
+    const bob = opts.bob || 0;
+    // Leg geometry relative to hip at (0,0)
+    const kneeF = pt(0, 0, p.legF[0], L.thigh), footF = pt(kneeF[0], kneeF[1], p.legF[1], L.shin);
+    const kneeB = pt(0, 0, p.legB[0], L.thigh), footB = pt(kneeB[0], kneeB[1], p.legB[1], L.shin);
+    let hipY = p.air != null ? GROUND - p.air : GROUND - Math.max(footF[1], footB[1]);
+    hipY += bob + (opts.dy || 0);
+    const ox = x + (p.lean || 0) * s;
+    const T = (pts) => pts.map(([a, b]) => [a, b + hipY]);
+    const [kF, fF, kB, fB] = T([kneeF, footF, kneeB, footB]);
+    const neck = pt(0, hipY, p.torso, L.torso);
+    const shF = pt(0, hipY, p.torso, L.torso - 3), shB = pt(0, hipY, p.torso, L.torso - 4);
+    const elF = pt(shF[0], shF[1], p.armF[0], L.upper), haF = pt(elF[0], elF[1], p.armF[1], L.fore);
+    const elB = pt(shB[0], shB[1], p.armB[0], L.upper), haB = pt(elB[0], elB[1], p.armB[1], L.fore);
+    const head = pt(0, hipY, p.torso, L.torso + 7);
+
+    const limb = (a, b, c, w, col, foot) => {
+      seg(ctx, s, ox, a[0], a[1], b[0], b[1], w, col);
+      seg(ctx, s, ox, b[0], b[1], c[0], c[1], w, col);
+      if (foot) box(ctx, s, ox, c[0] + 2, c[1], w + 2, 4, foot);
+    };
+    // Shadow
+    ctx.fillStyle = 'rgba(10,6,20,0.35)';
+    ctx.fillRect(Math.round(ox - 16), GROUND + 1, 32, 4);
+
+    // Back limbs (outline + fill)
+    limb([0, hipY], kB, fB, 8, INK); limb([0, hipY], kB, fB, 6, pal.giD, SKIN_D);
+    limb(shB, elB, haB, 7, INK); limb(shB, elB, haB, 5, pal.giD);
+    box(ctx, s, ox, haB[0], haB[1], 8, 8, INK); box(ctx, s, ox, haB[0], haB[1], 6, 6, SKIN_D);
+
+    // Front silhouette outline
+    seg(ctx, s, ox, 0, hipY, neck[0], neck[1], 13, INK);
+    limb([0, hipY], kF, fF, 8, INK);
+    box(ctx, s, ox, head[0], head[1], 12, 13, INK);
+    limb(shF, elF, haF, 7, INK);
+    box(ctx, s, ox, haF[0], haF[1], 8, 8, INK);
+    // Fills
+    seg(ctx, s, ox, 0, hipY, neck[0], neck[1], 11, pal.gi);
+    // gi lapel
+    seg(ctx, s, ox, neck[0], neck[1], (neck[0] * 0.5), hipY - 7, 2, pal.giD);
+    limb([0, hipY], kF, fF, 6, pal.gi, SKIN);
+    // belt
+    const bx = pt(0, hipY, p.torso, 2);
+    box(ctx, s, ox, bx[0], bx[1], 12, 3, pal.belt);
+    box(ctx, s, ox, bx[0] - 4, bx[1] + 3, 2, 5, pal.belt);
+    // head
+    box(ctx, s, ox, head[0], head[1], 10, 11, SKIN);
+    box(ctx, s, ox, head[0] - 1, head[1] - 4, 10, 4, HAIR);
+    box(ctx, s, ox, head[0], head[1] - 1, 10, 2, pal.band);
+    box(ctx, s, ox, head[0] - 7, head[1] - 1, 4, 2, pal.band);
+    box(ctx, s, ox, head[0] - 10, head[1] + 1, 3, 2, pal.band);
+    if (pose === 'ko') {
+      box(ctx, s, ox, head[0] + 2, head[1] + 2, 4, 1, INK);
+    } else {
+      box(ctx, s, ox, head[0] + 3, head[1] + 1, 2, 3, INK); box(ctx, s, ox, head[0] + 5, head[1] + 4, 1, 1, SKIN_D);
+    }
+    // front arm
+    limb(shF, elF, haF, 5, pal.gi);
+    box(ctx, s, ox, haF[0], haF[1], 6, 6, SKIN);
+    return { hand: [ox + s * haF[0], haF[1]], head: [ox + s * head[0], head[1]] };
+  }
+
+  // 11x11 glyphs
+  const GLYPH = {
+    attack: [
+      '..XXXXXXX..', '.XX.X.X.XX.', '.XXXXXXXXX.', 'XXXXXXXXXX.', 'XXXXXXXXXX.',
+      'XXXXXXXXX..', '.XXXXXXXX..', '..XXXXXX...', '..XXXXXX...', '..XXXXXX...', '...........'],
+    throw: [
+      '...XXXXX...', '..X.....X..', '.X.......X.', 'X.........X', 'X.........X',
+      'X......XXXXX', 'X.......XXX.', '.X.......X..', '..X........', '...XXXX....', '...........'],
+    block: [
+      'XXXXXXXXXXX', 'X.........X', 'X...XXX...X', 'X..XXXXX..X', 'X...XXX...X',
+      'X....X....X', '.X.......X.', '.X.......X.', '..X.....X..', '...X...X...', '....XXX....'],
+  };
+  function drawIcon(ctx, move, cx, cy) {
+    const m = MOVE[move];
+    const r = 10;
+    for (let y = -r - 1; y <= r + 1; y++) for (let x = -r - 1; x <= r + 1; x++) {
+      const d = Math.hypot(x, y);
+      if (d <= r + 1.2) { ctx.fillStyle = d > r ? INK : (y > 3 ? m.dark : m.color); ctx.fillRect(cx + x, cy + y, 1, 1); }
+    }
+    const g = GLYPH[move];
+    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) {
+      if (g[y][x] === 'X') { ctx.fillStyle = '#fff8ec'; ctx.fillRect(cx - 5 + x, cy - 5 + y, 1, 1); }
+    }
+  }
+  function drawQuestion(ctx, cx, cy) {
+    const r = 10;
+    for (let y = -r - 1; y <= r + 1; y++) for (let x = -r - 1; x <= r + 1; x++) {
+      const d = Math.hypot(x, y);
+      if (d <= r + 1.2) { ctx.fillStyle = d > r ? INK : '#4a3f63'; ctx.fillRect(cx + x, cy + y, 1, 1); }
+    }
+    const q = ['.XXXX.', 'XX..XX', '....XX', '...XX.', '..XX..', '..XX..', '......', '..XX..'];
+    q.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'X') { ctx.fillStyle = '#d9d0ef'; ctx.fillRect(cx - 3 + x, cy - 4 + y, 1, 1); } }));
+  }
+
+  function drawBackdrop(ctx) {
+    const bands = ['#171433', '#1f1a44', '#2b2052', '#3d2659', '#552c5d', '#743460', '#9a3f5d', '#c2555a', '#e07a58', '#f0a066'];
+    const top = 0, bot = 100, step = (bot - top) / bands.length;
+    bands.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(0, Math.floor(top + i * step), W, Math.ceil(step) + 1); });
+    // dither between bands
+    for (let i = 1; i < bands.length; i++) {
+      const y = Math.floor(top + i * step);
+      ctx.fillStyle = bands[i - 1];
+      for (let x = (i % 2); x < W; x += 2) ctx.fillRect(x, y, 1, 1);
+    }
+    // stars
+    ctx.fillStyle = '#cfc6f0';
+    [[22, 9], [61, 18], [96, 6], [140, 14], [201, 8], [244, 19], [281, 7], [305, 23], [176, 26], [40, 30]].forEach(([x, y]) => ctx.fillRect(x, y, 1, 1));
+    // sun
+    const sx = 160, sy = 96, sr = 30;
+    for (let y = -sr; y <= 0; y++) for (let x = -sr; x <= sr; x++) {
+      if (x * x + y * y <= sr * sr) {
+        const yy = sy + y;
+        if (yy > 78 && (yy % 5 === 0 || (yy > 88 && yy % 3 === 0))) continue;
+        ctx.fillStyle = y < -18 ? '#ffd9a0' : '#ffc27a'; ctx.fillRect(sx + x, yy, 1, 1);
+      }
+    }
+    // mountains
+    const ridge = (base, amp, f, ph, col) => {
+      ctx.fillStyle = col;
+      for (let x = 0; x < W; x++) {
+        const h = Math.round(base - amp * (0.55 * Math.sin(x * f + ph) + 0.3 * Math.sin(x * f * 2.3 + ph * 2) + 0.15 * Math.sin(x * f * 5.1)));
+        ctx.fillRect(x, h, 1, 110 - h);
+      }
+    };
+    ridge(86, 16, 0.021, 1.2, '#5a2d55');
+    ridge(96, 10, 0.034, 3.1, '#3c2245');
+    // rooftop floor
+    ctx.fillStyle = '#2a1830'; ctx.fillRect(0, 100, W, 4);
+    ctx.fillStyle = '#6b3f2e'; ctx.fillRect(0, 104, W, H - 104);
+    for (let y = 104; y < H; y += 6) { ctx.fillStyle = '#5a3426'; ctx.fillRect(0, y, W, 1); }
+    for (let y = 104, r = 0; y < H; y += 6, r++) {
+      ctx.fillStyle = '#4b2a20';
+      for (let x = (r * 37) % 53; x < W; x += 53) ctx.fillRect(x, y, 1, 6);
+    }
+    ctx.fillStyle = '#8a5640'; ctx.fillRect(0, 104, W, 1);
+    // fighting ring mat
+    ctx.fillStyle = '#7d4a36'; ctx.fillRect(76, 124, 168, 20);
+    ctx.fillStyle = '#9b5e43'; ctx.fillRect(76, 124, 168, 1);
+    ctx.fillStyle = '#5a3426'; ctx.fillRect(76, 143, 168, 1);
+    // lanterns
+    const lantern = (x) => {
+      ctx.fillStyle = '#2a1830'; ctx.fillRect(x, 58, 2, 64);
+      ctx.fillRect(x - 6, 58, 14, 2);
+      ctx.fillStyle = '#d8432f'; ctx.fillRect(x - 4, 62, 10, 12);
+      ctx.fillStyle = '#ff9a4a'; ctx.fillRect(x - 2, 64, 6, 8);
+      ctx.fillStyle = '#2a1830'; ctx.fillRect(x - 4, 62, 10, 1); ctx.fillRect(x - 4, 73, 10, 1);
+    };
+    lantern(30); lantern(288);
+  }
+
+  function drawSpark(ctx, x, y, big) {
+    const c = ['#fff6d6', '#ffd36b', '#ff8a3d'];
+    const arms = big ? 9 : 6;
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4, len = i % 2 ? arms * 0.55 : arms;
+      for (let t = 0; t <= len; t++) {
+        ctx.fillStyle = c[Math.min(2, Math.floor(t / (len / 3)))];
+        ctx.fillRect(Math.round(x + Math.cos(a) * t), Math.round(y + Math.sin(a) * t), 1, 1);
+      }
+    }
+    ctx.fillStyle = '#fff'; ctx.fillRect(x - 2, y - 2, 5, 5);
+  }
+
+  // state: { p1:{x,pose,dy,icon,iconY}, p2:{...}, spark:{x,y,big}, flash }
+  function render(ctx, st) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    if (st.shake) ctx.translate(st.shake[0], st.shake[1]);
+    drawBackdrop(ctx);
+    const order = st.p1.front ? ['p2', 'p1'] : ['p1', 'p2'];
+    const out = {};
+    order.forEach((k) => {
+      const f = st[k];
+      out[k] = drawFighter(ctx, k, f.x, f.pose, { facing: k === 'p1' ? 1 : -1, bob: f.bob || 0, dy: f.dy || 0 });
+    });
+    ['p1', 'p2'].forEach((k) => {
+      const f = st[k];
+      const ix = Math.round(f.iconX ?? (k === 'p1' ? 124 : 196)), iy = Math.round(f.iconY ?? 40);
+      if (f.icon === '?') drawQuestion(ctx, ix, iy);
+      else if (f.icon) drawIcon(ctx, f.icon, ix, iy);
+    });
+    if (st.spark) drawSpark(ctx, st.spark.x, st.spark.y, st.spark.big);
+    ctx.restore();
+    if (st.flash) { ctx.fillStyle = `rgba(255,248,230,${st.flash})`; ctx.fillRect(0, 0, W, H); }
+    return out;
+  }
+
+  window.RPSArt = { W, H, GROUND, POSES, MOVE, PAL, render, drawFighter, drawIcon, drawBackdrop };
+})();
+
+// HUD overlay for the 1280x720 stage. Coordinates for popups are in 320x180 canvas pixels.
+(function () {
+  function iconCanvas(move) {
+    const c = document.createElement('canvas');
+    c.width = 25; c.height = 25;
+    window.RPSArt.drawIcon(c.getContext('2d'), move, 12, 12);
+    return c;
+  }
+  function buildStage(host) {
+    host.classList.add('stage');
+    host.innerHTML = `
+      <canvas width="320" height="180"></canvas>
+      <div class="hud-top">
+        <div class="side left"><div class="name">YOU <small>Red Band</small></div><div class="bar"><div class="lost"></div><div class="hp"></div><span class="num"></span></div><div class="pips"><span class="pip"></span><span class="pip"></span></div></div>
+        <div class="timer"><span class="t">5</span><span class="lbl">PICK!</span></div>
+        <div class="side right"><div class="name"><small>Gold Band</small> CPU</div><div class="bar"><div class="lost"></div><div class="hp"></div><span class="num"></span></div><div class="pips"><span class="pip"></span><span class="pip"></span></div></div>
+      </div>
+      <div class="round-tag"></div>
+      <div class="status"></div>
+      <div class="pops"></div>
+      <div class="overlay"></div>
+      <div class="moves">
+        <button class="move attack" data-move="attack"><span class="ic"></span>Attack<span class="key">1</span></button>
+        <button class="move throw" data-move="throw"><span class="ic"></span>Throw<span class="key">2</span></button>
+        <button class="move block" data-move="block"><span class="ic"></span>Block<span class="key">3</span></button>
+      </div>`;
+    host.querySelectorAll('.move').forEach((b) => b.querySelector('.ic').replaceWith(iconCanvas(b.dataset.move)));
+    const q = (s) => host.querySelector(s);
+    const canvas = q('canvas');
+    const sides = host.querySelectorAll('.side');
+    function setBar(side, hp, lost) {
+      const bar = side.querySelector('.bar');
+      bar.querySelector('.hp').style.width = hp + '%';
+      bar.querySelector('.hp').classList.toggle('low', hp <= 25);
+      bar.querySelector('.lost').style.width = (lost ?? hp) + '%';
+      bar.querySelector('.num').textContent = hp;
+    }
+    function setHud(h) {
+      if (h.hp1 != null) setBar(sides[0], h.hp1, h.lost1);
+      if (h.hp2 != null) setBar(sides[1], h.hp2, h.lost2);
+      if (h.won1 != null) sides[0].querySelectorAll('.pip').forEach((p, i) => p.classList.toggle('won', i < h.won1));
+      if (h.won2 != null) sides[1].querySelectorAll('.pip').forEach((p, i) => p.classList.toggle('won', i < h.won2));
+      if (h.timer !== undefined) {
+        q('.timer .t').textContent = h.timer ?? 'VS';
+        q('.timer').classList.toggle('vs', h.timer === null);
+        q('.timer').classList.toggle('hurry', h.timer !== null && h.timer <= 2);
+      }
+      if (h.timerLabel !== undefined) q('.timer .lbl').textContent = h.timerLabel;
+      if (h.round !== undefined) q('.round-tag').textContent = h.round;
+      if (h.status !== undefined) q('.status').textContent = h.status;
+      if (h.selected !== undefined || h.locked !== undefined) {
+        host.querySelectorAll('.move').forEach((b) => {
+          b.classList.toggle('sel', b.dataset.move === h.selected);
+          b.classList.toggle('dim', !!h.locked && b.dataset.move !== h.selected);
+        });
+      }
+      if (h.showMoves !== undefined) q('.moves').hidden = !h.showMoves;
+      if (h.pops !== undefined) {
+        q('.pops').innerHTML = h.pops.map((p) => `<div class="dmg ${p.cls || ''}" style="left:${p.x * 4}px;top:${p.y * 4}px">${p.text}</div>`).join('');
+      }
+      if (h.banner !== undefined) {
+        q('.overlay').innerHTML = h.banner
+          ? `${h.banner.dim ? '<div class="vignette"></div>' : ''}<div class="banner">${h.banner.title}${h.banner.sub ? `<small>${h.banner.sub}</small>` : ''}</div>${h.banner.cta ? `<div class="cta">${h.banner.cta}</div>` : ''}`
+          : '';
+      }
+    }
+    return { host, canvas, ctx: canvas.getContext('2d'), setHud };
+  }
+  window.RPSHud = { buildStage };
+})();
+
+</script>
+<script>
+(function () {
+  const A = window.RPSArt, HUD = window.RPSHud;
+  const DMG = { attack: 15, throw: 20, block: 10 };
+  const BEATS = { attack: 'throw', throw: 'block', block: 'attack' };
+  const MOVES = ['attack', 'throw', 'block'];
+  const LABEL = { attack: 'Attack', throw: 'Throw', block: 'Block' };
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function fit(wrap, stage) {
+    const apply = () => { stage.style.transform = `scale(${wrap.clientWidth / 1280})`; };
+    apply();
+    if (window.ResizeObserver) new ResizeObserver(apply).observe(wrap); else addEventListener('resize', apply);
+  }
+
+  // ---------- Hero: playable sketch ----------
+  const S = HUD.buildStage(document.getElementById('hero-stage'));
+  fit(document.getElementById('hero-wrap'), S.host);
+  const HOME = { p1: 130, p2: 190 };
+  const scene = { p1: { x: HOME.p1, pose: 'idle' }, p2: { x: HOME.p2, pose: 'idle' } };
+  const game = { hp: [100, 100], won: [0, 0], round: 1, pick: null, picking: false, running: false };
+
+  function frame(t) {
+    const bob = reduce ? 0 : Math.floor(t / 420) % 2;
+    scene.p1.bob = scene.p1.pose === 'idle' ? bob : 0;
+    scene.p2.bob = scene.p2.pose === 'idle' ? 1 - bob : 0;
+    A.render(S.ctx, scene);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? Math.min(ms, 250) : ms));
+  function tween(ms, fn) {
+    return new Promise((res) => {
+      if (reduce) { fn(1); return res(); }
+      const t0 = performance.now();
+      const step = (t) => { const k = Math.min(1, (t - t0) / ms); fn(k); k < 1 ? requestAnimationFrame(step) : res(); };
+      requestAnimationFrame(step);
+    });
+  }
+  const bounce = (k) => { const n = 7.5625, d = 2.75; if (k < 1 / d) return n * k * k; if (k < 2 / d) return n * (k -= 1.5 / d) * k + .75; if (k < 2.5 / d) return n * (k -= 2.25 / d) * k + .9375; return n * (k -= 2.625 / d) * k + .984375; };
+  const roundName = () => game.round === 3 ? 'FINAL ROUND' : 'ROUND ' + game.round;
+
+  function hudBase(extra) {
+    S.setHud(Object.assign({ hp1: game.hp[0], hp2: game.hp[1], won1: game.won[0], won2: game.won[1], timerLabel: roundName() }, extra));
+  }
+  function choose(m) {
+    if (!game.picking) return;
+    game.pick = m;
+    S.setHud({ selected: m, status: `You picked ${LABEL[m]}. You can still change it.` });
+  }
+  S.host.querySelectorAll('.move').forEach((b) => b.addEventListener('click', () => choose(b.dataset.move)));
+  document.querySelectorAll('#touch-moves button').forEach((b) => b.addEventListener('click', () => choose(b.dataset.move)));
+  addEventListener('keydown', (e) => {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const m = { '1': 'attack', '2': 'throw', '3': 'block' }[e.key];
+    if (m && game.picking) { e.preventDefault(); choose(m); }
+  });
+
+  function ready(title, sub, label) {
+    S.setHud({ banner: { title, sub, dim: true, cta: `<button type="button" class="go">${label}</button>` }, showMoves: false, status: '', pops: [] });
+    S.host.querySelector('.go').addEventListener('click', start, { once: true });
+  }
+
+  async function exchange() {
+    scene.p1 = { x: HOME.p1, pose: 'idle' };
+    scene.p2 = { x: HOME.p2, pose: 'idle', icon: '?' };
+    scene.spark = null; scene.flash = 0;
+    game.pick = null; game.picking = true;
+    const cpu = MOVES[Math.floor(Math.random() * 3)];
+    hudBase({ selected: null, locked: false, showMoves: true, status: 'Pick your move', pops: [], banner: null });
+    for (let t = 5; t > 0; t--) { S.setHud({ timer: t }); await sleep(1000); }
+    game.picking = false;
+    let mine = game.pick, auto = false;
+    if (!mine) { mine = MOVES[Math.floor(Math.random() * 3)]; auto = true; }
+    S.setHud({ timer: null, selected: mine, locked: true, status: auto ? `Time's up! Random pick: ${LABEL[mine]}` : 'Locked in' });
+
+    // Reveal: icons drop in
+    scene.p1.icon = mine; scene.p2.icon = cpu;
+    await tween(520, (k) => { const y = -14 + 54 * bounce(k); scene.p1.iconY = y; scene.p2.iconY = y; });
+    await sleep(250);
+
+    const res = mine === cpu ? 0 : BEATS[mine] === cpu ? 1 : -1;
+    if (res === 0) {
+      scene.p1.pose = poseFor(mine, true); scene.p2.pose = poseFor(cpu, true);
+      await tween(160, (k) => { scene.p1.x = HOME.p1 + 8 * k; scene.p2.x = HOME.p2 - 8 * k; });
+      scene.spark = { x: 160, y: 102, big: false };
+      S.setHud({ status: 'Tie! No damage', pops: [{ x: 160, y: 80, text: 'CLASH!', cls: 'tie' }] });
+      await shake(4);
+      scene.spark = null;
+      await sleep(700);
+      return;
+    }
+    const W = res === 1 ? 'p1' : 'p2', L = res === 1 ? 'p2' : 'p1';
+    const wm = res === 1 ? mine : cpu, lm = res === 1 ? cpu : mine;
+    const dir = W === 'p1' ? 1 : -1;
+    scene[W].pose = poseFor(wm, true); scene[L].pose = poseFor(lm, false);
+    await tween(150, (k) => { scene[W].x = HOME[W] + dir * 12 * k; scene[L].x = HOME[L] - dir * 4 * k; });
+    // impact
+    scene[L].pose = wm === 'throw' ? 'air' : 'hurt';
+    scene.spark = { x: 160 + dir * 10, y: wm === 'throw' ? 106 : 98, big: wm === 'throw' };
+    scene.flash = .55;
+    const li = L === 'p1' ? 0 : 1;
+    const before = game.hp[li];
+    game.hp[li] = Math.max(0, before - DMG[wm]);
+    const hpKey = li === 0 ? 'hp1' : 'hp2', lostKey = li === 0 ? 'lost1' : 'lost2';
+    S.setHud({ [hpKey]: game.hp[li], [lostKey]: before, status: `${LABEL[wm]} beats ${LABEL[lm]}`, pops: [{ x: L === 'p2' ? 212 : 108, y: 78, text: '-' + DMG[wm] }] });
+    const startX = scene[L].x;
+    const fly = wm === 'throw' ? tween(380, (k) => { scene[L].x = startX + dir * 22 * k; scene[L].dy = -Math.sin(k * Math.PI) * 10; }) : tween(200, (k) => { scene[L].x = startX + dir * 8 * k; });
+    await Promise.all([shake(wm === 'throw' ? 6 : 4), tween(220, (k) => { scene.flash = .55 * (1 - k); }), fly]);
+    scene[L].dy = 0; scene.spark = null;
+    await sleep(80);
+    S.setHud({ [hpKey]: game.hp[li], [lostKey]: game.hp[li] });
+    await sleep(750);
+    if (game.hp[li] === 0) return W;
+  }
+  function poseFor(m, win) { return m === 'block' ? (win ? 'counter' : 'block') : m; }
+  async function shake(n) {
+    if (reduce) return;
+    for (let i = 0; i < n; i++) { scene.shake = [(i % 2 ? -1 : 1) * 2, (i % 3) - 1]; await new Promise((r) => setTimeout(r, 40)); }
+    scene.shake = null;
+  }
+
+  async function start() {
+    if (game.running) return;
+    game.running = true;
+    if (game.won[0] === 2 || game.won[1] === 2 || game.round > 3) { game.won = [0, 0]; game.round = 1; }
+    game.hp = [100, 100];
+    hudBase({ timer: null, banner: { title: roundName(), sub: 'Fight!' }, showMoves: true, pops: [], status: '', selected: null, locked: false, lost1: 100, lost2: 100 });
+    await sleep(1100);
+    for (;;) {
+      const winner = await exchange();
+      if (!winner) continue;
+      const wi = winner === 'p1' ? 0 : 1;
+      game.won[wi]++;
+      scene[winner] = { x: winner === 'p1' ? 122 : 198, pose: 'win' };
+      const loser = winner === 'p1' ? 'p2' : 'p1';
+      scene[loser] = { x: loser === 'p1' ? 112 : 206, pose: 'ko' };
+      hudBase({ status: '', pops: [], showMoves: false, banner: { title: 'K.O.', sub: winner === 'p1' ? 'You take the round' : 'CPU takes the round' } });
+      await sleep(1600);
+      if (game.won[wi] === 2) {
+        game.running = false;
+        ready(winner === 'p1' ? 'YOU WIN' : 'CPU WINS', `${Math.max(...game.won)} rounds to ${Math.min(...game.won)}`, 'Rematch');
+        return;
+      }
+      game.round++;
+      game.hp = [100, 100];
+      scene.p1 = { x: HOME.p1, pose: 'idle' }; scene.p2 = { x: HOME.p2, pose: 'idle' };
+      hudBase({ lost1: 100, lost2: 100, timer: null, banner: { title: roundName(), sub: 'Fight!' } });
+      await sleep(1300);
+    }
+  }
+  hudBase({ timer: 5, selected: null });
+  ready('READY?', 'Best of three against the computer', 'Start fight');
+
+  // ---------- Mock-up gallery (static stills) ----------
+  const STILLS = [
+    { cap: '<b>Pick your move.</b> Five seconds to choose; the computer\'s pick stays hidden.', sc: { p1: { x: 130, pose: 'idle' }, p2: { x: 190, pose: 'idle', icon: '?' } },
+      hud: { hp1: 70, hp2: 55, won1: 1, won2: 0, timer: 3, timerLabel: 'ROUND 2', selected: 'throw', status: 'You picked Throw. You can still change it.' } },
+    { cap: '<b>Reveal.</b> Icons drop in together; Throw beats Block for 20.', sc: { p1: { x: 146, pose: 'throw', icon: 'throw', front: true }, p2: { x: 180, pose: 'air', icon: 'block' }, spark: { x: 170, y: 106, big: true } },
+      hud: { hp1: 70, hp2: 35, lost2: 55, won1: 1, won2: 0, timer: null, timerLabel: 'ROUND 2', selected: 'throw', locked: true, status: 'Throw beats Block', pops: [{ x: 212, y: 78, text: '-20' }] } },
+    { cap: '<b>Tie.</b> Same move on both sides: the moves clash and nobody takes damage.', sc: { p1: { x: 140, pose: 'attack', icon: 'attack' }, p2: { x: 180, pose: 'attack', icon: 'attack' }, spark: { x: 160, y: 102 } },
+      hud: { hp1: 45, hp2: 35, won1: 1, won2: 1, timer: null, timerLabel: 'FINAL ROUND', selected: 'attack', locked: true, status: 'Tie! No damage', pops: [{ x: 160, y: 80, text: 'CLASH!', cls: 'tie' }] } },
+    { cap: '<b>Match won.</b> Best of three ends with a winner screen and a rematch button.', sc: { p1: { x: 120, pose: 'win' }, p2: { x: 200, pose: 'ko' } },
+      hud: { hp1: 45, hp2: 0, won1: 2, won2: 1, timer: null, timerLabel: 'FINAL ROUND', showMoves: false, banner: { title: 'YOU WIN', sub: '2 rounds to 1', dim: true, cta: '<button type="button" tabindex="-1">Rematch</button><button type="button" class="alt" tabindex="-1">Main menu</button>' } } },
+  ];
+  const shots = document.getElementById('shots');
+  STILLS.forEach((s) => {
+    const fig = document.createElement('figure'); fig.className = 'shot';
+    fig.innerHTML = '<div class="stage-wrap"><div></div></div><figcaption></figcaption>';
+    fig.querySelector('figcaption').innerHTML = s.cap;
+    shots.appendChild(fig);
+    const st = HUD.buildStage(fig.querySelector('.stage-wrap > div'));
+    st.host.setAttribute('aria-hidden', 'true');
+    st.host.querySelectorAll('button').forEach((b) => { b.tabIndex = -1; });
+    fit(fig.querySelector('.stage-wrap'), st.host);
+    A.render(st.ctx, s.sc);
+    st.setHud(s.hud);
+  });
+
+  // ---------- Pose sheet ----------
+  const pc = document.getElementById('poses').getContext('2d');
+  pc.imageSmoothingEnabled = false;
+  pc.fillStyle = '#171433'; pc.fillRect(0, 0, 400, 84);
+  pc.fillStyle = '#2b2052'; pc.fillRect(0, 72, 400, 12);
+  const POSE_LIST = [['idle', 'Idle', 26], ['attack', 'Attack', 76], ['throw', 'Throw', 126], ['block', 'Block', 174], ['counter', 'Counter', 220], ['hurt', 'Hurt', 268], ['ko', 'Knocked out', 324], ['win', 'Win', 378]];
+  const pl = document.getElementById('pose-labels');
+  POSE_LIST.forEach(([p, name, x], i) => {
+    pc.save(); pc.translate(0, -70);
+    A.drawFighter(pc, i % 2 ? 'p2' : 'p1', x, p, { facing: 1 });
+    pc.restore();
+    const sp = document.createElement('span'); sp.textContent = name; sp.style.left = (x * 2.5) + 'px'; pl.appendChild(sp);
+  });
+
+  // ---------- Mix calculator ----------
+  const ids = ['attack', 'throw', 'block'];
+  function mix() {
+    const d = {}; ids.forEach((m) => { d[m] = +document.getElementById('d-' + m).value; document.getElementById('o-' + m).textContent = d[m]; });
+    // Each move's share is proportional to the damage of the move it beats.
+    const w = { attack: d.throw, throw: d.block, block: d.attack };
+    const tot = w.attack + w.throw + w.block;
+    ids.forEach((m) => {
+      const p = w[m] / tot;
+      document.getElementById('bar-' + m).style.width = (p * 100).toFixed(1) + '%';
+      document.getElementById('pct-' + m).textContent = Math.round(p * 100) + '%';
+    });
+  }
+  ids.forEach((m) => document.getElementById('d-' + m).addEventListener('input', mix));
+  document.getElementById('mix-reset').addEventListener('click', () => { document.getElementById('d-attack').value = 15; document.getElementById('d-throw').value = 20; document.getElementById('d-block').value = 10; mix(); });
+  mix();
+})();
+</script>

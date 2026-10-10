@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="hud.css"><style>body{margin:0;background:#000}</style></head>
+<body><div id="s"></div>
+<script src="stage.js"></script><script src="hud.js"></script>
+<script>
+const S = RPSHud.buildStage(document.getElementById('s'));
+const scenes = {
+  pick: () => { RPSArt.render(S.ctx, {p1:{x:130,pose:'idle'},p2:{x:190,pose:'idle',icon:'?'}});
+    S.setHud({hp1:70,hp2:55,won1:1,won2:0,timer:3,timerLabel:'ROUND 2',selected:'throw',status:'You picked Throw. You can still change it.',pops:[]}); },
+  reveal: () => { RPSArt.render(S.ctx, {p1:{x:146,pose:'throw',icon:'throw',front:true},p2:{x:180,pose:'air',icon:'block'},spark:{x:170,y:106,big:true}});
+    S.setHud({hp1:70,hp2:35,lost2:55,won1:1,won2:0,timer:null,timerLabel:'ROUND 2',selected:'throw',locked:true,status:'Throw beats Block',pops:[{x:212,y:78,text:'-20'}]}); },
+  clash: () => { RPSArt.render(S.ctx, {p1:{x:140,pose:'attack',icon:'attack'},p2:{x:180,pose:'attack',icon:'attack'},spark:{x:160,y:102,big:false}});
+    S.setHud({hp1:45,hp2:35,won1:1,won2:1,timer:null,timerLabel:'FINAL ROUND',selected:'attack',locked:true,status:'Tie! No damage',pops:[{x:160,y:80,text:'CLASH!',cls:'tie'}]}); },
+  win: () => { RPSArt.render(S.ctx, {p1:{x:120,pose:'win'},p2:{x:200,pose:'ko'}});
+    S.setHud({hp1:45,hp2:0,won1:2,won2:1,timer:null,timerLabel:'FINAL ROUND',status:'',showMoves:false,pops:[],banner:{title:'YOU WIN',sub:'2 rounds to 1',dim:true,cta:'<button>Rematch</button><button class="alt">Main menu</button>'}}); },
+};
+(scenes[location.hash.slice(1)] || scenes.pick)();
+</script></body></html>

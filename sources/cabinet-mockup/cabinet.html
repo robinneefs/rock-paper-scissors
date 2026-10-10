@@ -1,0 +1,211 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--ink:#1a0f2e;--pink:#ff2fbf;--cyan:#3ff0ff;--txt:#f6f0ff}
+body{margin:0;background:#07040f;font-family:'Pixelify Sans',monospace;color:var(--txt)}
+.view{position:relative;overflow:hidden}
+canvas.px{position:absolute;left:0;image-rendering:pixelated}
+.ov{position:absolute;inset:0}
+/* everything inside .g is sized in game pixels via --s */
+.g *{box-sizing:border-box}
+.abs{position:absolute}
+.marq{display:grid;place-items:center;font-weight:700;color:#fff;letter-spacing:calc(var(--s)*1px);
+ text-shadow:0 0 calc(var(--s)*3px) var(--pink),0 0 calc(var(--s)*6px) var(--pink),calc(var(--s)*1px) calc(var(--s)*1px) 0 #5a0b4a}
+.marq small{display:block;font-size:.42em;color:var(--cyan);text-shadow:0 0 calc(var(--s)*3px) var(--cyan);letter-spacing:calc(var(--s)*1.5px);margin-top:calc(var(--s)*-1px)}
+.hud{display:grid;grid-template-columns:1fr calc(var(--s)*30px) 1fr;gap:calc(var(--s)*5px);align-items:start}
+.side{display:grid;gap:calc(var(--s)*2px)}
+.side.r{justify-items:end}
+.nm{font-size:calc(var(--s)*7px);letter-spacing:calc(var(--s)*.5px);text-shadow:0 0 calc(var(--s)*2px) var(--pink),calc(var(--s)*.6px) calc(var(--s)*.6px) 0 var(--ink)}
+.bar{position:relative;width:100%;height:calc(var(--s)*8px);background:#120826;border:calc(var(--s)*1px) solid var(--ink);box-shadow:0 0 0 calc(var(--s)*1px) var(--cyan),0 0 calc(var(--s)*4px) rgba(63,240,255,.5)}
+.side.r .bar{box-shadow:0 0 0 calc(var(--s)*1px) var(--pink),0 0 calc(var(--s)*4px) rgba(255,47,191,.5)}
+.bar i{position:absolute;top:0;bottom:0}
+.side.l .bar i{right:0}.side.r .bar i{left:0}
+.bar .lost{background:#fff1a8}
+.bar .hp{background:linear-gradient(#b4ffe9 0 25%,#3ff0c8 25% 62%,#16b39a 62%)}
+.pips{display:flex;gap:calc(var(--s)*3px)}
+.pip{width:calc(var(--s)*4px);height:calc(var(--s)*4px);background:#120826;border:calc(var(--s)*1px) solid #c9b8ff;transform:rotate(45deg);margin:calc(var(--s)*1px)}
+.pip.won{background:#ffb321;border-color:#fff1a8;box-shadow:0 0 calc(var(--s)*3px) #ffb321}
+.timer{justify-self:center;width:calc(var(--s)*28px);height:calc(var(--s)*26px);display:grid;place-items:center;background:#120826;border:calc(var(--s)*1px) solid var(--txt);
+ box-shadow:0 0 0 calc(var(--s)*1px) var(--pink),0 0 calc(var(--s)*6px) var(--pink);font-size:calc(var(--s)*16px);line-height:1;text-shadow:0 0 calc(var(--s)*2px) var(--cyan),calc(var(--s)*.8px) calc(var(--s)*.8px) 0 #3d1f66;position:relative}
+.timer.vs{color:#ffb321;font-size:calc(var(--s)*11px);text-shadow:0 0 calc(var(--s)*3px) #ffb321}
+.timer.hurry{color:#ff8fc7}
+.timer .lbl{position:absolute;bottom:calc(var(--s)*-9px);font-size:calc(var(--s)*5px);letter-spacing:calc(var(--s)*1px);white-space:nowrap;color:var(--cyan);text-shadow:0 0 calc(var(--s)*2px) var(--cyan)}
+.status{left:50%;transform:translateX(-50%);white-space:nowrap;font-size:calc(var(--s)*6.5px);letter-spacing:calc(var(--s)*.5px);padding:calc(var(--s)*1px) calc(var(--s)*4px);
+ background:rgba(18,8,38,.85);border:calc(var(--s)*.75px) solid var(--cyan);box-shadow:0 0 calc(var(--s)*3px) rgba(63,240,255,.5)}
+.status b{color:var(--cyan)}
+.dmg{transform:translate(-50%,-50%);font-weight:700;font-size:calc(var(--s)*18px);color:#fff1a8;text-shadow:0 0 calc(var(--s)*3px) #ff3b8f,calc(var(--s)*1.2px) calc(var(--s)*1.2px) 0 #b3165f}
+.blabel{transform:translateX(-50%);font-size:calc(var(--s)*6.5px);letter-spacing:calc(var(--s)*.6px);text-align:center;white-space:nowrap;color:var(--c);text-shadow:0 0 calc(var(--s)*2.5px) var(--c),calc(var(--s)*.6px) calc(var(--s)*.6px) 0 var(--ink)}
+.key{display:inline-grid;place-items:center;min-width:calc(var(--s)*7px);height:calc(var(--s)*7px);padding:0 calc(var(--s)*1px);margin-left:calc(var(--s)*1.5px);font-size:calc(var(--s)*5px);color:var(--txt);background:#120826;border:calc(var(--s)*.6px) solid #8a78c8;text-shadow:none;vertical-align:middle}
+.hint{transform:translateX(-50%);font-size:calc(var(--s)*4.5px);color:#9d8ad6;white-space:nowrap;letter-spacing:calc(var(--s)*.4px)}
+.coin{font-size:calc(var(--s)*4.5px);color:#ffb321;letter-spacing:calc(var(--s)*.5px);text-shadow:0 0 calc(var(--s)*2px) #ffb321;transform:translateX(-50%);white-space:nowrap}
+.mine{font-size:calc(var(--s)*4.5px);color:#c9b8ff;letter-spacing:calc(var(--s)*.5px);transform:translateX(-50%);white-space:nowrap;text-shadow:calc(var(--s)*.5px) calc(var(--s)*.5px) 0 var(--ink)}
+/* browser chrome */
+.chrome{position:absolute;left:0;right:0;top:0;height:64px;background:#1c1830;display:flex;align-items:center;gap:22px;padding:0 26px;font-family:system-ui,sans-serif;font-size:22px;color:#b9b2d6;box-sizing:border-box;border-bottom:1px solid #2c2647}
+.dots{display:flex;gap:10px}.dots i{width:16px;height:16px;border-radius:50%;background:#4a4466;display:block}
+.url{flex:1;max-width:760px;height:40px;border-radius:20px;background:#0f0c1d;display:flex;align-items:center;padding:0 20px}
+/* phone */
+.phone{display:inline-block;padding:30px;background:#100a1f;border-radius:110px;box-shadow:inset 0 0 0 6px #2a1d45;margin:30px}
+.phone .view{border-radius:80px}
+.notch{position:absolute;left:50%;top:30px;width:210px;height:60px;transform:translateX(-50%);background:#000;border-radius:40px;z-index:5}
+.homebar{position:absolute;left:50%;bottom:20px;width:320px;height:12px;transform:translateX(-50%);background:rgba(255,255,255,.55);border-radius:6px;z-index:5}
+.sbar{position:absolute;top:44px;left:90px;right:90px;display:flex;justify-content:space-between;font-family:system-ui,sans-serif;font-size:34px;font-weight:600;color:#fff;z-index:5}
+</style></head><body>
+<div id="root"></div>
+<script src="art.js"></script>
+<script>
+// ---------- tiny pixel helpers on a 2d context ----------
+const rgb=c=>Array.isArray(c)?`rgb(${c[0]},${c[1]},${c[2]})`:c;
+function R(ctx,x,y,w,h,c){ctx.fillStyle=rgb(c);ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
+function ell(ctx,cx,cy,rx,ry,c){ctx.fillStyle=rgb(c);for(let y=-ry;y<=ry;y++){const w=Math.round(rx*Math.sqrt(Math.max(0,1-(y/(ry+0.5))**2)));ctx.fillRect(Math.round(cx-w),Math.round(cy+y),w*2+1,1);}}
+function sdfDraw(ctx,cx,cy,k,f,base,shade,ink=true){
+ for(let py=Math.floor(cy-10*k);py<cy+10*k;py++)for(let px=Math.floor(cx-10*k);px<cx+10*k;px++){
+  const X=(px+0.5-cx)/k,Y=(py+0.5-cy)/k,d=f(X,Y)*k;
+  if(d<0)R(ctx,px,py,1,1,shade&&f(X+0.9/k,Y+1.2/k)>=0?shade:base);else if(ink&&d<1)R(ctx,px,py,1,1,INK);}}
+const shadeOf=(c,f)=>c.map(v=>Math.round(v*f));
+
+// ---------- the cabinet (front view), drawn in game pixels ----------
+// returns layout info (monitor rect etc.) for overlays
+const CAB={W:270,marq:40,bez:15,bezV:12,monW:216,monH:288,panel:150,door:44};
+function cabinet(ctx,x0,y0,st,opts){
+ const c=CAB,W=c.W;
+ const monX=x0+c.bez+12-12+ (W-c.monW)/2 - c.bez + c.bez - (W-c.monW)/2 + (W-c.monW)/2; // = x0+(W-monW)/2
+ const mx=x0+(W-c.monW)/2, my=y0+c.marq+c.bezV;
+ const pY=my+c.monH+c.bezV, dY=pY+c.panel;
+ const H=c.marq+c.bezV*2+c.monH+c.panel+(opts.door?c.door:0);
+ const body=[44,22,88],bodyD=[28,12,60],edge=[255,47,191];
+ // body + side neon strips
+ R(ctx,x0,y0,W,H,body);
+ R(ctx,x0,y0,6,H,bodyD);R(ctx,x0+W-6,y0,6,H,bodyD);
+ R(ctx,x0+2,y0,1,H,edge);R(ctx,x0+W-3,y0,1,H,edge);
+ // marquee (backlit)
+ const mq=[[120,20,120],[170,30,140],[220,50,160]];
+ for(let i=0;i<c.marq-6;i++){R(ctx,x0+8,y0+3+i,W-16,1,mq[Math.min(2,Math.floor(i/(c.marq-6)*3))]);}
+ R(ctx,x0+8,y0+3,W-16,1,[255,170,230]);R(ctx,x0+8,y0+c.marq-4,W-16,1,[60,10,70]);
+ // bezel
+ R(ctx,mx-c.bez+3,y0+c.marq,c.monW+2*(c.bez-3),c.monH+2*c.bezV,[11,7,22]);
+ R(ctx,mx-3,my-3,c.monW+6,c.monH+6,[24,16,40]);
+ // control panel: top surface with neon stripes + front lip
+ R(ctx,x0,pY,W,c.panel,[58,32,112]);
+ R(ctx,x0,pY,W,2,[90,56,160]);
+ for(let i=0;i<3;i++)R(ctx,x0+8,pY+c.panel-30+i*5,W-16,2,[[255,47,191],[255,179,33],[63,240,255]][i]);
+ R(ctx,x0,pY+c.panel-12,W,12,bodyD);R(ctx,x0,pY+c.panel-12,W,1,[90,56,160]);
+ // joystick
+ const jx=x0+44,jy=pY+58,tilt=opts.tilt||[0,0];
+ ell(ctx,jx,jy+4,20,12,[20,10,40]);ell(ctx,jx,jy+2,17,10,[36,22,66]);ell(ctx,jx,jy+2,6,3,[12,6,24]);
+ const bx=jx+tilt[0]*9,by=jy-26+tilt[1]*6;
+ for(let t=0;t<=1;t+=0.02){R(ctx,jx+(bx-jx)*t-1.5,jy+(by+6-jy)*t,4,1,t<0.2?[60,60,80]:[150,150,175]);}
+ ell(ctx,bx,by,11,10,[150,20,60]);ell(ctx,bx-1,by-1,10,9,[230,40,90]);ell(ctx,bx-3,by-4,4,3,[255,150,180]);R(ctx,bx-5,by-6,2,1,[255,255,255]);
+ // buttons
+ const ms=['attack','throw','block'],bxs=[x0+112,x0+170,x0+228],byy=pY+50;
+ const info=[];
+ ms.forEach((m,i)=>{const col=MOVES[m].c,press=st.sel===m,dim=st.locked&&!press;
+  const cx=bxs[i],top=press?byy+4:byy,side=press?2:7;
+  ell(ctx,cx,byy+9,25,16,[18,8,34]);                // socket
+  if(press){ctx.globalAlpha=0.35;ell(ctx,cx,byy+6,32,22,col);ctx.globalAlpha=1;ell(ctx,cx,byy+9,25,16,[18,8,34]);}
+  for(let s=side;s>=0;s--)ell(ctx,cx,top+s,22,15,shadeOf(col,dim?0.25:0.55));
+  ell(ctx,cx,top,22,15,shadeOf(col,dim?0.35:press?1:0.88));
+  ell(ctx,cx-5,top-5,10,5,shadeOf(col.map(v=>Math.min(255,v+60)),dim?0.4:1));
+  sdfDraw(ctx,cx,top+1,1.15,iconSdf(m),dim?[60,40,90]:[255,255,255],dim?[40,30,70]:[200,190,230]);
+  info.push({m,cx,ly:byy+30});});
+ // coin door
+ if(opts.door){R(ctx,x0+6,dY,W-12,c.door,[22,12,44]);
+  for(const cx of [x0+W/2-30,x0+W/2+30]){R(ctx,cx-11,dY+10,22,24,[40,26,70]);R(ctx,cx-2,dY+15,4,10,[255,179,33]);R(ctx,cx-6,dY+28,12,2,[255,120,40]);}}
+ return {mx,my,pY,dY,H,jx,jy,info};
+}
+
+// ---------- monitor content (216x288 game screen) ----------
+function monitor(st){
+ const B=window.BIG,W=B?144:216,H=B?192:288,hz=B?100:150,gy=B?155:232,k=B?1:64/48;
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
+ backdrop(ctx,W,H,hz);
+ const x1=Math.round(W/2-18*k+(st.p1.dx||0)),x2=Math.round(W/2+18*k+(st.p2.dx||0));
+ ctx.fillStyle='rgba(5,0,20,0.6)';for(const x of [x1,x2])ctx.fillRect(Math.round(x-11*k),gy-1,Math.round(22*k),3);
+ const img=ctx.getImageData(0,0,W,H);
+ const order=st.front==='p1'?[['p2',x2,-1],['p1',x1,1]]:[['p1',x1,1],['p2',x2,-1]];
+ for(const [who,x,f] of order)drawFighter(img,W,H,who,x,gy,k,f,st[who].pose);
+ const by=gy-Math.round(48*k)-(B?9:12),br=B?8:11;
+ if(st.p1.badge)badge(img,W,H,x1+2,by,st.p1.badge,br);
+ if(st.p2.badge)badge(img,W,H,x2-2,by,st.p2.badge,br);
+ if(st.spark)spark(img,W,Math.round(W/2+st.spark[0]*(B?0.75:1)),gy+Math.round(st.spark[1]*(B?0.75:1)),B?9:12);
+ // CRT scanlines + rounded corners
+ if(!B)for(let y=0;y<H;y+=2)for(let x=0;x<W;x++){const i=(y*W+x)*4;for(let c=0;c<3;c++)img.data[i+c]*=0.86;}
+ for(let y=0;y<4;y++)for(let x=0;x<4-y;x++)for(const [ax,ay] of [[x,y],[W-1-x,y],[x,H-1-y],[W-1-x,H-1-y]]){const i=(ay*W+ax)*4;img.data[i]=24;img.data[i+1]=16;img.data[i+2]=40;}
+ ctx.putImageData(img,0,0);
+ return {cv,x1,x2,gy,by};
+}
+
+function overlays(s,lay,mon,st,opts){
+ const h=st.hud,mx=lay.mx,my=lay.my,P=(x,y)=>`left:${x*s}px;top:${y*s}px`;
+ const side=(cls,nm,hp,lost,won)=>`<div class="side ${cls}"><div class="nm">${nm}</div><div class="bar"><i class="lost" style="width:${lost??hp}%"></i><i class="hp" style="width:${hp}%"></i></div><div class="pips"><span class="pip ${won>0?'won':''}"></span><span class="pip ${won>1?'won':''}"></span></div></div>`;
+ let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${15*s}px">RPS FIGHTER<small>ATTACK · THROW · BLOCK</small></div>
+ <div class="abs hud" style="${P(mx+6,my+7)};width:${204*s}px">${side('l','YOU',h.hp1,h.lost1,h.won1)}
+  <div class="timer ${h.timer==null?'vs':h.timer<=2?'hurry':''}"><span>${h.timer??'VS'}</span><span class="lbl">${h.label}</span></div>${side('r','CPU',h.hp2,h.lost2,h.won2)}</div>`;
+ if(h.mine)o+=`<div class="abs mine" style="${P(mx+mon.x1+2,my+mon.by-20)}">ONLY YOU SEE THIS</div>`;
+ if(h.status)o+=`<div class="abs status" style="left:${(mx+108)*s}px;top:${(my+252)*s}px">${h.status}</div>`;
+ for(const p of h.pops||[])o+=`<div class="abs dmg" style="${P(mx+p.x,my+p.y)}">${p.text}</div>`;
+ for(const b of lay.info){o+=`<div class="abs blabel" style="--c:${MOVES[b.m].css};${P(b.cx,b.ly)}">${MOVES[b.m].label}${opts.keys?`<span class="key">${{attack:1,throw:2,block:3}[b.m]}</span>`:''}</div>`;}
+ if(opts.keys)o+=`<div class="abs hint" style="${P(lay.jx,lay.jy+22)}">arrow keys or drag</div>`;
+ if(opts.door)o+=`<div class="abs coin" style="${P(lay.x0+CAB.W/2,lay.dY+36)}">${opts.coinText||''}</div>`;
+ return `<div class="ov g" style="--s:${s}">${o}</div>`;
+}
+
+function room(ctx,W,H,floorY){
+ for(let y=0;y<H;y++){const t=y/floorY;R(ctx,0,y,W,1,y<floorY?[Math.round(14+10*t),Math.round(8+4*t),Math.round(34+16*t)]:[10,6,22]);}
+ // floor checker in perspective-ish rows
+ for(let y=floorY;y<H;y+=6)for(let x=((y-floorY)/6%2)*16;x<W;x+=32)R(ctx,x,y,16,6,[18,10,36]);
+ R(ctx,0,floorY,W,2,[255,47,191]);
+ // other cabinets as silhouettes with glowing screens
+ const cabs=[[60,0.8],[180,0.9],[W-180,0.9],[W-60,0.8]];
+ for(const [cx,sc] of cabs){const w=110*sc,h=330*sc,x=cx-w/2,y=floorY-h;R(ctx,x,y,w,h,[22,12,44]);R(ctx,x,y,w,26*sc,[60,18,80]);
+  R(ctx,x+12*sc,y+40*sc,w-24*sc,90*sc,[20,60,90]);ctx.globalAlpha=0.25;R(ctx,x+6*sc,y+34*sc,w-12*sc,102*sc,[63,240,255]);ctx.globalAlpha=1;
+  R(ctx,x,y+150*sc,w,40*sc,[34,20,64]);}
+ // neon wall sign
+ ctx.globalAlpha=0.9;R(ctx,W/2-200,30,2,0,[0,0,0]);ctx.globalAlpha=1;
+}
+
+function placeMon(v,ctx,mon,lay,s,top){
+ if(!window.BIG){ctx.drawImage(mon.cv,lay.mx,lay.my);return;}
+ const c=mon.cv;c.style.cssText=`position:absolute;image-rendering:pixelated;left:${lay.mx*s}px;top:${top+lay.my*s}px;width:${216*s}px;height:${288*s}px`;v.appendChild(c);
+}
+function build(kind,st){
+ const root=document.getElementById('root');
+ if(kind==='browser'){
+  const VW=1920,VH=1200,s=2,top=64,TOP=64,LW=VW/s,LH=(VH-top)/s;
+  const v=document.createElement('div');v.className='view';v.style.width=VW+'px';v.style.height=VH+'px';
+  v.innerHTML=`<div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url">localhost:5173 · RPS Fighter</div></div>`;
+  const cv=document.createElement('canvas');cv.className='px';cv.width=LW;cv.height=LH;cv.style.top=top+'px';cv.style.width=VW+'px';cv.style.height=(VH-top)+'px';v.appendChild(cv);
+  const ctx=cv.getContext('2d');
+  const cabH=CAB.marq+CAB.bezV*2+CAB.monH+CAB.panel+CAB.door,x0=(LW-CAB.W)/2,y0=LH-cabH-14;
+  room(ctx,LW,LH,LH-30);
+  // cabinet glow
+  ctx.globalAlpha=0.18;R(ctx,x0-14,y0-10,CAB.W+28,cabH+10,[255,47,191]);ctx.globalAlpha=1;
+  const lay=cabinet(ctx,x0,y0,st.hud,{door:true,tilt:st.tilt});lay.x0=x0;lay.y0=y0;
+  R(ctx,x0-10,y0+cabH,CAB.W+20,6,[5,2,12]);
+  const mon=monitor(st);placeMon(v,ctx,mon,lay,s,TOP);
+  const ov=document.createElement('div');ov.style.cssText=`position:absolute;left:0;right:0;top:${top}px;bottom:0`;
+  ov.innerHTML=overlays(s,lay,mon,st,{keys:true,door:true,coinText:'INSERT COIN'});v.appendChild(ov);
+  root.appendChild(v);
+ } else {
+  const s=4,TOP=0,LW=270,LH=585,VW=LW*s,VH=LH*s;
+  const ph=document.createElement('div');ph.className='phone';
+  const v=document.createElement('div');v.className='view';v.style.width=VW+'px';v.style.height=VH+'px';ph.appendChild(v);
+  const cv=document.createElement('canvas');cv.className='px';cv.width=LW;cv.height=LH;cv.style.top='0';cv.style.width=VW+'px';cv.style.height=VH+'px';v.appendChild(cv);
+  const ctx=cv.getContext('2d');R(ctx,0,0,LW,LH,[10,6,22]);
+  const x0=0,y0=34;
+  const lay=cabinet(ctx,x0,y0,st.hud,{door:true,tilt:st.tilt});lay.x0=x0;lay.y0=y0;
+  const mon=monitor(st);placeMon(v,ctx,mon,lay,s,TOP);
+  const ov=document.createElement('div');ov.style.cssText='position:absolute;inset:0';
+  ov.innerHTML=overlays(s,lay,mon,st,{keys:false,door:true,coinText:'CREDIT 1'});v.appendChild(ov);
+  v.insertAdjacentHTML('beforeend','<div class="sbar"><span>9:41</span><span>▮▮▮ 100%</span></div><div class="notch"></div><div class="homebar"></div>');
+  root.appendChild(ph);
+ }
+}
+const SC={
+ pick:{p1:{pose:'idle',badge:'throw'},p2:{pose:'idle',badge:'?'},tilt:[0,0],
+   hud:{hp1:70,hp2:55,won1:1,won2:0,timer:3,label:'ROUND 2',sel:'throw',status:'You picked <b>Throw</b>. You can still change it.'}},
+ reveal:{p1:{pose:'block',badge:'block',dx:3},p2:{pose:'attack',badge:'attack',dx:2},front:'p1',spark:[2,-34],tilt:[1,-1],
+   hud:{hp1:70,hp2:45,lost2:55,won1:1,won2:0,timer:null,label:'ROUND 2',sel:'block',locked:true,status:'<b>Block</b> counters Attack',pops:[{x:172,y:126,text:'-10'}]}},
+};
+const [kind,scene,big]=(location.hash.slice(1)||'browser-pick').split('-');window.BIG=big==='big';
+build(kind,SC[scene]);
+</script></body></html>

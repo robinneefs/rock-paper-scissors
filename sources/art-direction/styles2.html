@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+body{margin:0;background:#0d0a18;color:#f2ecff;font-family:'Pixelify Sans',monospace;width:1920px}
+h1{margin:0;padding:34px 48px 6px;font-size:44px;letter-spacing:2px}
+.sub{padding:0 48px 24px;font-size:24px;color:#a99bd6}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;padding:0 48px 48px}
+.card{background:#171230;border:3px solid #2e2554;padding:18px 20px}
+.card h2{margin:0 0 4px;font-size:30px}
+.card p{margin:0 0 12px;font-size:20px;color:#b9acdf;line-height:1.3;min-height:52px}
+canvas{display:block;image-rendering:pixelated;margin:0 auto}
+</style></head><body>
+<h1>Soft pastel, branching out</h1>
+<div class="sub">Same fighter, same idle pose, nine drawing styles, all pixel art at 48 px tall and shown at 7x.</div>
+<div class="grid" id="g"></div>
+<script src="art.js"></script>
+<script src="styles.js"></script>
+<script>
+const base={px:48,hair:'round',eyes:'big',outline:'selout',seloutF:0.55,shade:'cel'};
+const B_PAL={gi:[252,248,242],giS:[200,190,222],belt:[96,80,128],beltS:[66,52,96],band:[255,118,140],bandS:[214,80,112],skin:[255,216,190],skinS:[238,168,152],hair:[104,78,124],hairS:[72,50,92]};
+const W=72,H=62,GY=56;
+function fill(img,fn){for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=fn(x,y);if(!c)continue;const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;}}
+const STYLES=[
+ {name:'1 · Soft pastel (base)',desc:'The starting point: coloured outlines, pastel colours, shiny eyes, blush.',
+  ...base,hi:0.35,iris:[120,70,60],blush:[255,140,150],mouth:[170,90,90],pal:B_PAL,
+  bg:(x,y)=>y<GY?[255,236,222]:y===GY?[170,206,176]:[214,236,214]},
+ {name:'2 · Anime cel',desc:'Crisp cel shading with cool blue-violet shadows, glossy hair highlight, sparkly eyes.',
+  ...base,hs:1.08,hi:0.3,hairHi:0.5,iris:[60,110,200],blush:[255,150,170],mouth:[190,90,100],
+  pal:{gi:[250,250,255],giS:[170,176,236],belt:[60,56,110],beltS:[36,32,80],band:[255,70,110],bandS:[180,40,120],skin:[255,222,200],skinS:[236,160,170],hair:[64,64,130],hairS:[38,36,90]},
+  bg:(x,y)=>y<GY?((x+y)%14<1?[214,226,255]:[232,240,255]):y===GY?[150,170,230]:[200,214,250]},
+ {name:'3 · Manga ink',desc:'Black and white with screentone shading, like a manga page. The red headband is the only colour.',
+  ...base,outline:'black',ink:[0,0,0],shade:'tone',hairHi:0.85,iris:[0,0,0],
+  pal:{gi:[255,255,255],giS:[0,0,0],belt:[0,0,0],beltS:[0,0,0],band:[230,30,50],bandS:[150,0,30],skin:[255,255,255],skinS:[0,0,0],hair:[0,0,0],hairS:[0,0,0]},
+  bg:(x,y)=>{if(y===GY)return [0,0,0];if(y>GY)return (x+y)%2?[255,255,255]:[180,180,180];const dx=x-36,dy=y-30;const a=Math.atan2(dy,dx);return (Math.round(a*20)%3===0&&dx*dx+dy*dy>500)?[200,200,200]:[255,255,255];}},
+ {name:'4 · Ukiyo-e woodblock',desc:'Japanese print look: flat muted inks, brown outlines, paper grain, calm line eyes.',
+  ...base,outline:'black',ink:[64,38,32],shade:'flat',eyes:'line',eyeCol:[40,24,24],tex:0.1,mouth:[150,60,50],
+  pal:{gi:[238,228,204],giS:[198,182,152],belt:[40,54,98],beltS:[40,54,98],band:[214,72,42],bandS:[214,72,42],skin:[242,216,180],skinS:[216,182,142],hair:[36,32,44],hairS:[36,32,44]},
+  bg:(x,y)=>{const n=hsh(x,y,9);const paper=n<0.08?[220,206,174]:[232,220,192];if(y<GY)return paper;if(y===GY)return [40,54,98];return ((x+Math.round(Math.sin(y)*2))%6<2)?[70,90,140]:[40,54,98];}},
+ {name:'5 · Watercolour storybook',desc:'No outlines, soft dithered shading and paper texture. Gentle, like a picture book.',
+  ...base,outline:null,shade:'dither',eyes:'dot',eyeCol:[80,60,70],tex:0.16,blush:[245,150,150],
+  pal:{gi:[246,242,234],giS:[192,202,222],belt:[118,100,130],beltS:[86,72,100],band:[228,112,112],bandS:[190,80,96],skin:[250,216,192],skinS:[226,170,152],hair:[128,94,84],hairS:[96,68,64]},
+  bg:(x,y)=>{const n=hsh(x,y,5);if(y<GY)return n<0.1?[238,230,212]:[246,240,226];return n<0.3?[200,222,190]:[214,232,204];}},
+ {name:'6 · Crayon doodle',desc:'Wobbly broken outlines and crayon grain on notebook paper. Hand-made and playful.',
+  ...base,outline:'black',ink:[72,52,64],ow:1.5,gaps:0.2,shade:'flat',eyes:'dot',eyeCol:[60,40,50],tex:0.26,blush:[250,120,120],
+  pal:{gi:[255,255,255],giS:[214,214,232],belt:[60,60,90],beltS:[60,60,90],band:[240,60,60],bandS:[240,60,60],skin:[255,204,164],skinS:[240,170,130],hair:[96,68,52],hairS:[96,68,52]},
+  bg:(x,y)=>x===8?[240,140,150]:(y%7===0?[170,200,240]:[250,250,242])},
+ {name:'7 · Vinyl sticker toy',desc:'Glossy toy look with a big head, thick outline and a white sticker border.',
+  ...base,outline:'black',ink:[36,24,52],ow:1.3,hs:1.3,bw:1.12,hi:0.55,hairHi:0.45,border:[255,255,255],borderW:2,iris:[70,40,110],blush:[255,120,160],fist:3.7,
+  pal:{gi:[255,255,255],giS:[196,206,240],belt:[40,36,70],beltS:[24,20,44],band:[255,40,96],bandS:[190,20,80],skin:[255,206,172],skinS:[236,150,130],hair:[44,34,70],hairS:[26,18,44]},
+  bg:(x,y)=>((x%8===0&&y%8===0)||(x%8===4&&y%8===4))?[255,206,230]:[255,172,212]},
+ {name:'8 · Pastel neon',desc:'Soft pastel mixed with the neon arcade: pink and violet shadows, cyan headband, rim light.',
+  ...base,outline:'black',ink:[44,22,72],hi:0.3,hairHi:0.4,rim:[120,250,255],iris:[220,60,200],blush:[255,120,200],
+  pal:{gi:[250,244,255],giS:[196,150,255],belt:[70,40,120],beltS:[46,22,90],band:[40,230,240],bandS:[20,150,200],skin:[255,214,214],skinS:[246,140,190],hair:[86,56,150],hairS:[54,30,110]},
+  bg:(x,y)=>{if(y<GY){const t=y/GY;return t<0.5?[40,20,80]:t<0.8?[90,30,120]:[170,50,150];}if(y===GY)return [255,90,220];return ((x-36)*(y-GY)%13===0||(y-GY)%3===0)?[200,60,200]:[30,10,60];}},
+ {name:'9 · Flat graphic',desc:'No outlines and no shading: just bold flat shapes, like a modern poster or app icon.',
+  ...base,outline:null,shade:'flat',eyes:'dot',eyeCol:[36,50,66],hs:1.15,
+  pal:{gi:[246,240,228],giS:[206,198,186],belt:[36,58,80],beltS:[36,58,80],band:[232,84,62],bandS:[232,84,62],skin:[246,200,160],skinS:[220,170,134],hair:[36,58,80],hairS:[36,58,80]},
+  bg:(x,y)=>y<GY?((x-36)*(x-36)+(y-30)*(y-30)<520?[94,186,174]:[70,160,150]):[52,128,120]},
+];
+const g=document.getElementById('g');
+for(const S of STYLES){
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
+ const img=ctx.createImageData(W,H);fill(img,S.bg);
+ for(let xx=-10;xx<=10;xx++)for(let yy=0;yy<2;yy++){const i=((GY+1+yy)*W+34+xx)*4;for(let c=0;c<3;c++)img.data[i+c]=Math.round(img.data[i+c]*0.8);}
+ drawStyled(img,W,H,S,32,GY+1,1,'idle');
+ ctx.putImageData(img,0,0);
+ cv.style.width=W*7+'px';cv.style.height=H*7+'px';
+ const card=document.createElement('div');card.className='card';card.innerHTML=`<h2>${S.name}</h2><p>${S.desc}</p>`;card.appendChild(cv);g.appendChild(card);
+}
+</script></body></html>

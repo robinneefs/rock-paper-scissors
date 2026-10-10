@@ -1,0 +1,45 @@
+.stage { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #171433; font-family: 'Pixelify Sans', 'Courier New', monospace; color: #fff8ec; user-select: none; }
+.stage canvas { position: absolute; inset: 0; width: 1280px; height: 720px; image-rendering: pixelated; }
+.hud-top { position: absolute; left: 40px; right: 40px; top: 28px; display: grid; grid-template-columns: 1fr 120px 1fr; align-items: start; gap: 24px; }
+.side { display: grid; gap: 8px; }
+.side.right { justify-items: end; }
+.name { font-size: 26px; letter-spacing: 2px; text-shadow: 3px 3px 0 #1a1326; display: flex; gap: 14px; align-items: baseline; }
+.name small { font-size: 18px; color: #d9cbe8; letter-spacing: 1px; }
+.bar { position: relative; width: 100%; height: 34px; background: #1a1326; border: 4px solid #1a1326; box-shadow: 0 0 0 4px #fff8ec; }
+.bar .lost { position: absolute; top: 0; bottom: 0; background: #f5e3a0; transition: width .5s ease .25s; }
+.bar .hp { position: absolute; top: 0; bottom: 0; background: linear-gradient(#7fe08a 0 45%, #3fb35a 45% 100%); transition: width .25s steps(6); }
+.side.left .bar .hp, .side.left .bar .lost { right: 0; }
+.side.right .bar .hp, .side.right .bar .lost { left: 0; }
+.bar .hp.low { background: linear-gradient(#ff8b6b 0 45%, #e5483f 45% 100%); }
+.bar .num { position: absolute; top: 2px; font-size: 22px; text-shadow: 2px 2px 0 #1a1326; }
+.side.left .bar .num { left: 10px; }
+.side.right .bar .num { right: 10px; }
+.pips { display: flex; gap: 10px; }
+.pip { width: 22px; height: 22px; background: #1a1326; border: 4px solid #fff8ec; transform: rotate(45deg); margin: 4px; }
+.pip.won { background: #f0a92e; }
+.timer { justify-self: center; width: 112px; height: 112px; display: grid; place-items: center; background: #1a1326; border: 6px solid #fff8ec; font-size: 64px; line-height: 1; text-shadow: 4px 4px 0 #3d2659; position: relative; }
+.timer.hurry { color: #ff8b6b; }
+.timer .lbl { position: absolute; bottom: -34px; font-size: 18px; letter-spacing: 3px; color: #f0e3ff; text-shadow: 2px 2px 0 #1a1326; white-space: nowrap; }
+.round-tag { display:none; position: absolute; left: 50%; top: 178px; transform: translateX(-50%); font-size: 20px; letter-spacing: 4px; color: #fff8ec; text-shadow: 2px 2px 0 #1a1326; }
+.moves { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; gap: 22px; }
+.move { width: 200px; height: 84px; display: grid; grid-template-columns: 50px 1fr; align-items: center; gap: 10px; padding: 0 16px; font: inherit; font-size: 28px; letter-spacing: 1px; color: #fff8ec; text-shadow: 3px 3px 0 rgba(26,19,38,.7); border: 5px solid #1a1326; cursor: pointer; position: relative; box-shadow: inset 0 -10px 0 rgba(0,0,0,.25), 0 6px 0 #1a1326; }
+.move .key { position: absolute; top: -14px; right: -10px; width: 34px; height: 34px; display: grid; place-items: center; font-size: 18px; background: #1a1326; color: #fff8ec; text-shadow: none; }
+.move canvas { position: static; width: 50px; height: 50px; image-rendering: pixelated; }
+.move.attack { background: #e5483f; }
+.move.throw { background: #f0a92e; }
+.move.block { background: #2bb3a3; }
+.move.dim { filter: saturate(.35) brightness(.7); }
+.move.sel { transform: translateY(-10px); box-shadow: inset 0 -10px 0 rgba(0,0,0,.25), 0 16px 0 #1a1326, 0 0 0 5px #fff8ec; }
+.move:focus-visible { outline: 5px solid #fff8ec; outline-offset: 4px; }
+.status { position: absolute; left: 50%; bottom: 119px; background: rgba(26,19,38,.82); padding: 2px 14px; border: 3px solid #1a1326; transform: translateX(-50%); font-size: 19px; letter-spacing: 2px; text-shadow: 2px 2px 0 #1a1326; white-space: nowrap; }
+.dmg { position: absolute; font-size: 56px; color: #fff3b0; text-shadow: 4px 4px 0 #8f1f22, -2px -2px 0 #1a1326; transform: translate(-50%, -50%); white-space: nowrap; }
+.dmg.tie { color: #e6defa; text-shadow: 4px 4px 0 #3d2659; font-size: 40px; }
+.banner { position: absolute; left: 0; right: 0; top: 168px; text-align: center; font-size: 120px; letter-spacing: 8px; color: #fff3b0; text-shadow: 8px 8px 0 #e5483f, 14px 14px 0 #1a1326; }
+.banner small { display: block; font-size: 36px; letter-spacing: 4px; color: #fff8ec; text-shadow: 3px 3px 0 #1a1326; margin-top: 10px; }
+.cta { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); display: flex; gap: 20px; }
+.cta button { font: inherit; font-size: 30px; padding: 14px 30px; background: #fff8ec; color: #1a1326; border: 5px solid #1a1326; box-shadow: 0 6px 0 #1a1326; cursor: pointer; }
+.cta button.alt { background: #3d2659; color: #fff8ec; }
+.vignette { position: absolute; inset: 0; background: rgba(23,20,51,.3); }
+.timer.vs .t { font-size: 44px; color: #f0a92e; }
+[hidden]{display:none!important}
+.status:empty{display:none}

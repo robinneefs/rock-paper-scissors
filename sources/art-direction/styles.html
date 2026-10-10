@@ -1,0 +1,68 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+body{margin:0;background:#0d0a18;color:#f2ecff;font-family:'Pixelify Sans',monospace;width:1920px}
+h1{margin:0;padding:34px 48px 6px;font-size:44px;letter-spacing:2px}
+.sub{padding:0 48px 24px;font-size:24px;color:#a99bd6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:34px;padding:0 48px 48px}
+.card{background:#171230;border:3px solid #2e2554;padding:20px 22px}
+.card h2{margin:0 0 4px;font-size:34px}
+.card p{margin:0 0 14px;font-size:22px;color:#b9acdf;line-height:1.35}
+canvas{display:block;image-rendering:pixelated;margin:0 auto}
+.meta{margin-top:10px;font-size:19px;color:#8d80b8}
+</style></head><body>
+<h1>One fighter, six pixel styles</h1>
+<div class="sub">Idle · Attack · Block. Each picture is drawn at its real pixel size and enlarged by a whole number, so every pixel is a clean square.</div>
+<div class="grid" id="g"></div>
+<script src="art.js"></script>
+<script src="styles.js"></script>
+<script>
+const GB=[[15,56,15],[48,98,48],[139,172,15],[155,188,15]];
+const STYLES=[
+ {name:'A · Neon arcade chibi',desc:'Where we are now: black outlines, two-tone shading, a cyan rim light from the neon.',
+  px:48,outline:'black',shade:'cel',rim:[63,240,255],eyes:'anime',hair:'spiky',pal:P.p1,
+  bg:[22,10,48],floor:[60,20,90],line:[255,47,191]},
+ {name:'B · Soft pastel',desc:'Coloured outlines instead of black, soft pastel colours, big shiny eyes and blush. Cozy and friendly.',
+  px:48,outline:'selout',seloutF:0.55,shade:'cel',hi:0.35,eyes:'big',iris:[120,70,60],blush:[255,140,150],mouth:[170,90,90],hair:'round',noLapel:false,
+  pal:{gi:[252,248,242],giS:[200,190,222],belt:[96,80,128],beltS:[66,52,96],band:[255,118,140],bandS:[214,80,112],skin:[255,216,190],skinS:[238,168,152],hair:[104,78,124],hairS:[72,50,92]},
+  bg:[255,236,222],floor:[214,236,214],line:[170,206,176]},
+ {name:'C · 8-bit tiny',desc:'NES-like: only 32 pixels tall, few colours, no shading, dot eyes. Biggest pixels, very retro.',
+  px:32,outline:'black',shade:'flat',eyes:'dot',hair:'spiky',hs:1.15,bw:1.08,noEar:true,noLapel:true,
+  pal:{gi:[252,252,252],giS:[188,188,188],belt:[136,20,0],beltS:[136,20,0],band:[228,0,88],bandS:[228,0,88],skin:[252,188,148],skinS:[228,92,16],hair:[0,0,0],hairS:[0,0,0]},
+  bg:[104,136,252],floor:[0,168,0],line:[0,88,0]},
+ {name:'D · Big-head mascot',desc:'Huge head, tiny wide body, coloured outlines, determined squint. Toy-like and very cute.',
+  px:44,outline:'selout',seloutF:0.4,shade:'cel',eyes:'line',hair:'round',hs:1.5,bw:1.22,blush:[255,130,120],fist:3.8,
+  pal:{gi:[255,255,255],giS:[178,204,255],belt:[44,40,66],beltS:[28,24,44],band:[255,64,64],bandS:[200,30,50],skin:[255,204,156],skinS:[232,150,112],hair:[52,40,66],hairS:[30,22,42]},
+  bg:[150,214,255],floor:[96,196,120],line:[60,150,90]},
+ {name:'E · 16-bit hero',desc:'SNES-era fighter: taller, sharper hair, three tones with dithering and highlights. Cute but more serious.',
+  px:64,outline:'black',ink:[24,14,30],shade:'dither',hi:0.4,eyes:'anime',hair:'sharp',hs:0.92,mouth:[150,70,70],
+  pal:{gi:[238,234,226],giS:[146,136,170],belt:[44,32,54],beltS:[24,16,32],band:[218,32,54],bandS:[128,12,40],skin:[248,198,152],skinS:[196,118,88],hair:[84,48,34],hairS:[44,22,20]},
+  bg:[70,40,70],floor:[120,70,50],line:[200,120,70]},
+ {name:'F · Game Boy',desc:'Four shades of green only. Shows how far a strict palette can go; could be an unlockable mode.',
+  px:40,outline:'black',ink:GB[0],shade:'cel',eyes:'dot',eyeCol:GB[0],hair:'spiky',hs:1.1,
+  pal:{gi:GB[3],giS:GB[2],belt:GB[0],beltS:GB[0],band:GB[3],bandS:GB[2],skin:GB[2],skinS:GB[1],hair:GB[1],hairS:GB[0]},
+  bg:GB[3],floor:GB[2],line:GB[1]},
+];
+const g=document.getElementById('g');
+for(const S of STYLES){
+ const W=Math.round(S.px*3.15),H=Math.round(S.px*1.32);
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
+ ctx.fillStyle=`rgb(${S.bg})`;ctx.fillRect(0,0,W,H);
+ const gy=H-Math.max(3,Math.round(S.px*0.12));
+ ctx.fillStyle=`rgb(${S.floor})`;ctx.fillRect(0,gy,W,H-gy);ctx.fillStyle=`rgb(${S.line})`;ctx.fillRect(0,gy,W,1);
+ const img=ctx.getImageData(0,0,W,H);
+ ['idle','attack','block'].forEach((pose,i)=>{
+  const x=Math.round(S.px*(0.5+i*1.02));
+  // pixel shadow
+  for(let yy=0;yy<2;yy++)for(let xx=-Math.round(S.px*0.22);xx<=Math.round(S.px*0.22)-yy*2;xx++){const j=((gy+1+yy)*W+x+xx+yy)*4;for(let c=0;c<3;c++)img.data[j+c]=Math.round(img.data[j+c]*0.7);}
+  drawStyled(img,W,H,S,x,gy+1,1,pose);
+ });
+ ctx.putImageData(img,0,0);
+ const sc=Math.max(1,Math.floor(760/W));
+ cv.style.width=W*sc+'px';cv.style.height=H*sc+'px';
+ const card=document.createElement('div');card.className='card';
+ card.innerHTML=`<h2>${S.name}</h2><p>${S.desc}</p>`;card.appendChild(cv);
+ card.insertAdjacentHTML('beforeend',`<div class="meta">${S.px} px tall · shown at ${sc}x</div>`);
+ g.appendChild(card);
+}
+</script></body></html>
