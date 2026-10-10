@@ -2,10 +2,11 @@ import { Emitter } from '@rps/core';
 
 /**
  * How the cabinet is scaled to the window.
- * - `pixelPerfect`: largest whole-number scale, every pixel the same size (the default).
+ * - `pixelPerfect`: largest whole-number scale, every pixel the same size.
  * - `fillHeight`: the cabinet fills the window (vertically on a desktop), so the scale can be a
  *   fraction. Still nearest-neighbour, but some rows and columns of pixels come out one device
- *   pixel wider than others. A deliberate exception to pixel-perfect rule 2, chosen by the player.
+ *   pixel wider than others. The default (user's call, 2026-10-10): a deliberate exception to
+ *   pixel-perfect rule 2; players who want every pixel even pick Pixel perfect in Options.
  */
 export type ScalingMode = 'pixelPerfect' | 'fillHeight';
 
@@ -15,7 +16,7 @@ export interface Settings {
   scaling: ScalingMode;
 }
 
-export const DEFAULT_SETTINGS: Settings = { scaling: 'pixelPerfect' };
+export const DEFAULT_SETTINGS: Settings = { scaling: 'fillHeight' };
 
 /** The part of the Web Storage API we use (localStorage now, Capacitor Preferences later). */
 export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem'>;

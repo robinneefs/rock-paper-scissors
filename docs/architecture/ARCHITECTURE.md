@@ -271,7 +271,7 @@ The pixel-perfect rules from the project context are enforced in one place, the 
 
 - Sampling stays nearest-neighbour (`pixelArt`, `image-rendering: pixelated`), so nothing blurs, and everything inside the game still sits on one native grid (rules 1, 3 to 6 are unchanged).
 - But at a fractional scale some rows and columns of native pixels come out one device pixel wider than their neighbours (at 1.7×, pixels are 1 or 2 device pixels wide). Thin lines and text can look slightly uneven, and a moving sprite can shimmer by a device pixel.
-- Pixel perfect stays the default. The choice is kept in `SettingsStore` (`platform/settings.ts`), saved to localStorage and read before the game starts, so the first frame is already at the chosen scale. The pixel-perfect screenshot check (section 13) runs in the default mode only.
+- Fill height is the default for a first visit (the user's call, 2026-10-10); players who want every pixel even pick Pixel perfect. The choice is kept in `SettingsStore` (`platform/settings.ts`), saved to localStorage and read before the game starts, so the first frame is already at the chosen scale. The pixel-perfect screenshot check (section 13) sets Pixel perfect first.
 
 **Cabinet size (decided 2026-10-10): 270 × 472 native** (marquee 32, bezels 12, monitor 216 × 288, control panel 128). The earlier 270 × 502 frame only fit a typical 1080p browser window (about 950 px tall inside the browser) at 1×; at 472 it shows at 2× there, and at 4× on most phones. The cabinet mock-ups are redrawn at this size.
 

@@ -50,9 +50,9 @@ const memoryStore = (
 };
 
 describe('SettingsStore', () => {
-  it('defaults to pixel perfect', () => {
-    expect(new SettingsStore(memoryStore()).value.scaling).toBe('pixelPerfect');
-    expect(new SettingsStore(null).value.scaling).toBe('pixelPerfect');
+  it('defaults to fill height', () => {
+    expect(new SettingsStore(memoryStore()).value.scaling).toBe('fillHeight');
+    expect(new SettingsStore(null).value.scaling).toBe('fillHeight');
   });
 
   it('remembers the scaling choice between visits', () => {
@@ -60,18 +60,18 @@ describe('SettingsStore', () => {
     const first = new SettingsStore(store);
     const seen: string[] = [];
     first.onChange((s) => seen.push(s.scaling));
-    first.set('scaling', 'fillHeight');
-    expect(seen).toEqual(['fillHeight']);
-    expect(new SettingsStore(store).value.scaling).toBe('fillHeight');
+    first.set('scaling', 'pixelPerfect');
+    expect(seen).toEqual(['pixelPerfect']);
+    expect(new SettingsStore(store).value.scaling).toBe('pixelPerfect');
   });
 
   it('ignores broken or unknown saved values', () => {
     expect(new SettingsStore(memoryStore({ 'rps-fighter.settings': '{nope' })).value.scaling).toBe(
-      'pixelPerfect',
+      'fillHeight',
     );
     expect(
       new SettingsStore(memoryStore({ 'rps-fighter.settings': '{"scaling":"stretch"}' })).value.scaling,
-    ).toBe('pixelPerfect');
+    ).toBe('fillHeight');
   });
 
   it('still applies a setting when storage refuses to save', () => {
@@ -81,8 +81,8 @@ describe('SettingsStore', () => {
         throw new Error('quota');
       },
     });
-    s.set('scaling', 'fillHeight');
-    expect(s.value.scaling).toBe('fillHeight');
+    s.set('scaling', 'pixelPerfect');
+    expect(s.value.scaling).toBe('pixelPerfect');
   });
 
   it('cycles through the scaling modes', () => {
