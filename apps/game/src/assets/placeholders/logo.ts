@@ -4,7 +4,7 @@ export const LOGO_SIZE = { width: 176, height: 112 } as const;
 
 /**
  * The placeholder studio logo ("YOUR STUDIO" + a pixel emblem). It ships as
- * public/assets/logo.png (written by tools/make-placeholder-logo.ts); swapping that file for the
+ * public/assets/logo.png (written by tools/make-placeholder-logo.mjs); swapping that file for the
  * company logo is the whole change.
  */
 export function paintLogo(): PixelBuffer {

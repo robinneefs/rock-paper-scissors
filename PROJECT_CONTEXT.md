@@ -33,10 +33,10 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 
 ## Where things stand
 
-- Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), branch `claude/first-playable-8tihq6`, PR to `main` pending the user's merge.
+- Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), merged into `main` as PR #3 on 2026-10-10. The user also runs it locally from `D:\Vibe Coding Projects\rock-paper-scissors` (`npm run dev`).
 - What works: placeholder logo intro (skippable), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone (whole-number scaling).
 - Art is **placeholder**, drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so final sprites swap in without touching views. No sound or music yet.
-- Next: final fighter art (Art direction thread), juice (sparks, dust, hit-pause tuning), audio, dev tuning panel (Tweakpane) — roadmap step 3.
+- Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Open feel questions: 5s vs 3s timer, 100 health (rounds take about 6 to 8 exchanges).
 - `archive/old-draft/` in this folder is an **earlier draft the user discarded**. Do not build on it. It is not in the repository.
 
 ## Code (2026-10-10)
@@ -48,7 +48,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 | `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
 | `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` |
 | `apps/game/src/config/tuning.ts` | Every feel value |
-| `apps/game/public/assets/logo.png` | Placeholder logo (swap this file for the company logo; regenerate the placeholder with `npx vite-node tools/make-placeholder-logo.ts`) |
+| `apps/game/public/assets/logo.png` | Placeholder logo (swap this file for the company logo; regenerate the placeholder with `node tools/make-placeholder-logo.mjs`) |
 
 Commands: `npm install`, `npm run dev`, `npm test` (42 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
 
@@ -242,3 +242,5 @@ Architecture rules:
 - 2026-10-10: Layout: vertical arcade cabinet (monitor on top, control panel with 3 physical buttons + decorative joystick below), in browser and on phone. Replaces landscape 16:9.
 - 2026-10-10: Menu flow added: placeholder logo intro (fade in/out, replaceable), home screen with Start game vs CPU and a greyed Online slot for later, result screen with Retry / Main menu. Menus as data so multiplayer menus slot in later. Architecture doc, design documents and mock-ups updated.
 - 2026-10-10: First playable built (logo, home, best-of-three vs random CPU, result with Retry / Main menu) with placeholder art drawn in code; rules/referee/session tests, layer lint rules, Playwright smoke test and CI. PR from `claude/first-playable-8tihq6`.
+- 2026-10-10: User merged-approved; PR #3 (first playable) merged into main. Next steps agreed: tuning panel, juice, sound, then final art.
+- 2026-10-10: Cleared the npm install warnings: Vitest 3 → 5 (3 advisories in dev-only test tooling: `@vitest/mocker`, `tinypool`) and approved esbuild's install script in `allowScripts` (newer npm asks for it). The placeholder-logo tool now runs with plain `node`.
