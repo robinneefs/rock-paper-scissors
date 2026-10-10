@@ -27,16 +27,30 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 
 - Game design document (Claude Doc, editable): https://claude.ai/code/artifact/3f1b261a-b2c2-4342-b7f6-22d848beccb6
 - Interactive design document (HTML artifact, playable sketch): https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ
-- Repository: https://github.com/robinneefs/rock-paper-scissors (design docs, mock-ups and art samples; no game code yet)
+- Repository: https://github.com/robinneefs/rock-paper-scissors (game code in `packages/core` + `apps/game`, plus design docs, mock-ups and art samples)
 - Original idea brief: `docs/idea/rock-paper-scissors-idea.md`
 - Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
 
 ## Where things stand
 
-- Phase: **design**. Features and tech are agreed; the design document is written.
-- No game code yet. The user wants to discuss and design before building.
-- Blocker before building: fighter art (see Open questions).
+- Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), branch `claude/first-playable-8tihq6`, PR to `main` pending the user's merge.
+- What works: placeholder logo intro (skippable), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone (whole-number scaling).
+- Art is **placeholder**, drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so final sprites swap in without touching views. No sound or music yet.
+- Next: final fighter art (Art direction thread), juice (sparks, dust, hit-pause tuning), audio, dev tuning panel (Tweakpane) — roadmap step 3.
 - `archive/old-draft/` in this folder is an **earlier draft the user discarded**. Do not build on it. It is not in the repository.
+
+## Code (2026-10-10)
+
+| Where | What |
+|---|---|
+| `packages/core` | `@rps/core`: rules (`resolveExchange`, `applyExchange`, rounds) and the `Referee` phase machine with injected clock + seeded RNG. Rules config and phase timings in `src/config.ts` (pick 5000, reveal 1800, round intro 1600, round over 2200 ms). |
+| `apps/game/src/session` | `MatchSession`, `LocalSession`, `RandomCpu` (think delay 0.4 to 1.6s), `createSession(setup)` |
+| `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
+| `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` |
+| `apps/game/src/config/tuning.ts` | Every feel value |
+| `apps/game/public/assets/logo.png` | Placeholder logo (swap this file for the company logo; regenerate the placeholder with `npx vite-node tools/make-placeholder-logo.ts`) |
+
+Commands: `npm install`, `npm run dev`, `npm test` (42 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
 
 ## The game in one paragraph
 
@@ -174,12 +188,12 @@ Architecture rules:
 - Scenes wire, a `FightDirector` choreographs, views are dumb. `CabinetScene` always runs; monitor scenes (Logo, Home, Fight, Result) draw through a 216x288 camera viewport. Menus are data + one `MenuView`; `SceneFlow` owns screen changes.
 - Two homes for numbers: rules and phase timings in `packages/core/src/config.ts` (shared with server); all feel values in `apps/game/src/config/tuning.ts`. Dev-only Tweakpane panel to tune live.
 - Pixel scaler in `platform/`: largest whole scale in device pixels, canvas fills the window, leftover is arcade room.
-- Defaults to confirm: monorepo shape, Tweakpane, `no-restricted-paths` for import rules. (Cabinet frame 270x472 is decided.)
+- Built as proposed (2026-10-10): npm workspaces monorepo, `eslint-plugin-import` `no-restricted-paths` + `no-restricted-imports` (no Phaser in core/session, no `Referee` outside the session). Tweakpane not added yet (step 3). `MatchSession` gained `ready()` (scene is listening; local starts the match) and a `rematchAccepted` event for Retry.
 
 ## Roadmap
 
-1. Rules core with tests (console only).
-2. Playable prototype: rectangles as fighters, buttons, bars, timer, best of three, plus the menu flow (logo intro, home with Start game, result with Retry / Main menu).
+1. Rules core with tests (console only). **Done 2026-10-10.**
+2. Playable prototype: placeholder fighters, buttons, bars, timer, best of three, plus the menu flow (logo intro, home with Start game, result with Retry / Main menu). **Done 2026-10-10.**
 3. Art and juice: sprites, falling icons, hit flash, shake, SFX, music.
 4. Polish and release on the web (e.g. GitHub Pages), including a dedicated game-feel pass (see "Polish and game feel").
 5. Online play (Colyseus, room codes).
@@ -187,7 +201,7 @@ Architecture rules:
 
 ## Open questions
 
-- Fighter art: better pack or AI-generated? (must be settled before building)
+- Fighter art: better pack or AI-generated? (no longer blocks building: placeholders are in; real art swaps in under the same asset keys)
 - Overall aesthetic: the user is "not crazy about it yet" (cute chibi + neon '80s); parked, revisit later.
 - Art tools (researched 2026-10-10): best fit is **PixelLab** (pixel-art AI with character directions + animations, hosted MCP at https://api.pixellab.ai/mcp, Bearer API key, plans from ~$12/mo). Alternatives: Retro Diffusion (great look, Aseprite extension, $20-65 one-time, has API), Ludo, Scenario; Aseprite for hand cleanup. Claude's cloud sessions currently cannot reach api.pixellab.ai (built-in environment blocks it): needs a cloud environment that allows the domain plus the key as a secret, or run Claude Code locally with the MCP. User wants a more attractive pixel style with slightly bigger pixels.
 - Cabinet look: monitor aspect (3:4 portrait chosen as default), cabinet colours and side art.
@@ -197,7 +211,7 @@ Architecture rules:
 
 ## How the user likes to work
 
-- Discuss and decide first, then design docs, then build. Don't start writing game code until asked.
+- Discuss and decide first, then design docs, then build. (Building was approved 2026-10-10: "yes start that" for the first playable.)
 - Keep questions short and few at a time; offer a recommendation.
 - Online multiplayer readiness is "very important" to the user.
 - Wants a solid, expandable base with readable, structured code (asked for the architecture document before any building).
@@ -227,3 +241,4 @@ Architecture rules:
 - 2026-10-10: Cabinet frame trimmed to 270x472 native (from 502) so it shows at 2x in a 1080p browser window; mock-ups redrawn.
 - 2026-10-10: Layout: vertical arcade cabinet (monitor on top, control panel with 3 physical buttons + decorative joystick below), in browser and on phone. Replaces landscape 16:9.
 - 2026-10-10: Menu flow added: placeholder logo intro (fade in/out, replaceable), home screen with Start game vs CPU and a greyed Online slot for later, result screen with Retry / Main menu. Menus as data so multiplayer menus slot in later. Architecture doc, design documents and mock-ups updated.
+- 2026-10-10: First playable built (logo, home, best-of-three vs random CPU, result with Retry / Main menu) with placeholder art drawn in code; rules/referee/session tests, layer lint rules, Playwright smoke test and CI. PR from `claude/first-playable-8tihq6`.

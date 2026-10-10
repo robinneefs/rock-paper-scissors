@@ -1,0 +1,16 @@
+{
+  "name": "@rps/game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@rps/core": "0.1.0",
+    "phaser": "3.90.0"
+  }
+}
