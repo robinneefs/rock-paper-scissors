@@ -68,34 +68,34 @@ test('the logo can be skipped with any button', async ({ page }) => {
   expect(await scenes(page)).toContain('Home');
 });
 
-test('options switches scaling to fill height and remembers it after a reload', async ({ page }) => {
+test('scaling fills the height by default; options switches it and remembers', async ({ page }) => {
   await page.clock.install();
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1'); // skip the logo
   await untilScene(page, 'Home');
-  expect(await scale(page)).toBe(2); // 600 x 1000 window: whole-number 2x
+  expect(await scale(page)).toBeCloseTo(1000 / 472, 3); // 600 x 1000 window: fills the height
 
   await page.keyboard.press('ArrowDown'); // ONLINE is greyed out, so the cursor lands on OPTIONS
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');
 
-  await page.keyboard.press('Enter'); // SCALING: PIXEL PERFECT -> FILL HEIGHT
+  await page.keyboard.press('Enter'); // SCALING: FILL HEIGHT -> PIXEL PERFECT
   await run(page, 100);
-  expect(await scale(page)).toBeCloseTo(1000 / 472, 3);
+  expect(await scale(page)).toBe(2); // whole-number 2x
 
   await page.reload();
   await untilScene(page, 'Logo');
-  expect(await scale(page)).toBeCloseTo(1000 / 472, 3);
+  expect(await scale(page)).toBe(2);
 
   await page.keyboard.press('Digit1');
   await untilScene(page, 'Home');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');
-  await page.keyboard.press('ArrowRight'); // flips back to PIXEL PERFECT
+  await page.keyboard.press('ArrowRight'); // flips back to FILL HEIGHT
   await run(page, 100);
-  expect(await scale(page)).toBe(2);
+  expect(await scale(page)).toBeCloseTo(1000 / 472, 3);
   await page.keyboard.press('Escape');
   await untilScene(page, 'Home');
 });

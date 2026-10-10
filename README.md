@@ -1,8 +1,8 @@
 # Rock Paper Scissors Fighter
 
-A pixel-art fighting game built on rock paper scissors, played in the browser.
-
 **[▶ Play it in your browser](https://robinneefs.github.io/RPS-Fighter/)** on desktop or on a phone held upright, no install needed.
+
+A pixel-art fighting game built on rock paper scissors, played in the browser.
 
 Two fighters face off inside an arcade cabinet. Each exchange, both players secretly pick **Attack**, **Throw** or **Block** before a 5 second countdown runs out. The picks are revealed together, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds.
 
