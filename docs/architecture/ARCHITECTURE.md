@@ -239,7 +239,7 @@ The pixel-perfect rules from the project context are enforced in one place, the 
 5. **Whole pixels only.** Positions go through `snap()`; tweens and shake round to whole pixels; no `setScale` or `setRotation` on sprites (turns, squash and zoom are drawn as frames).
 6. **Pixel text.** A bitmap pixel font at native size. No browser fonts on the canvas.
 
-**Cabinet size note:** at 270 × 502 (today's mock-up), a typical 1080p browser window (about 950 px tall inside the browser) only fits the cabinet at 1×, which is tiny. Trimming the frame to **270 × 472** (marquee 32, control panel 128, monitor unchanged at 216 × 288) lets it show at 2× there, and at 4× on most phones. This is a recommendation to confirm, see [section 16](#16-choices-to-confirm).
+**Cabinet size (decided 2026-10-10): 270 × 472 native** (marquee 32, bezels 12, monitor 216 × 288, control panel 128). The earlier 270 × 502 frame only fit a typical 1080p browser window (about 950 px tall inside the browser) at 1×; at 472 it shows at 2× there, and at 4× on most phones. The cabinet mock-ups are redrawn at this size.
 
 ## 8. Tuning: every feel value in one place
 
@@ -370,11 +370,10 @@ Matches the roadmap in the project context:
 
 ## 16. Choices to confirm
 
-Defaults picked in this document that are easy to change now and harder later:
+Defaults picked in this document that are easy to change now and harder later (the cabinet size is already decided: 270 × 472):
 
 | Choice | Default | Alternative |
 |---|---|---|
 | Repo shape | npm workspaces monorepo (`packages/core`, `apps/game`, later `apps/server`) | One app with a `core/` folder, split later |
-| Cabinet frame | 270 × 472 native (shows at 2× on a 1080p browser window) | Keep 270 × 502 (1× on 1080p windows) |
 | Dev tuning panel | Tweakpane, dev builds only | lil-gui, or no panel |
 | Lint for import rules | `eslint-plugin-import` `no-restricted-paths` | `dependency-cruiser` |

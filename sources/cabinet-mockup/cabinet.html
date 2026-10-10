@@ -65,7 +65,7 @@ const shadeOf=(c,f)=>c.map(v=>Math.round(v*f));
 
 // ---------- the cabinet (front view), drawn in game pixels ----------
 // returns layout info (monitor rect etc.) for overlays
-const CAB={W:270,marq:40,bez:15,bezV:12,monW:216,monH:288,panel:150,door:44};
+const CAB={W:270,marq:32,bez:15,bezV:12,monW:216,monH:288,panel:128,door:44}; // 270x472 frame (decided 2026-10-10)
 function cabinet(ctx,x0,y0,st,opts){
  const c=CAB,W=c.W;
  const monX=x0+c.bez+12-12+ (W-c.monW)/2 - c.bez + c.bez - (W-c.monW)/2 + (W-c.monW)/2; // = x0+(W-monW)/2
@@ -137,7 +137,7 @@ function monitor(st){
 function overlays(s,lay,mon,st,opts){
  const h=st.hud,mx=lay.mx,my=lay.my,P=(x,y)=>`left:${x*s}px;top:${y*s}px`;
  const side=(cls,nm,hp,lost,won)=>`<div class="side ${cls}"><div class="nm">${nm}</div><div class="bar"><i class="lost" style="width:${lost??hp}%"></i><i class="hp" style="width:${hp}%"></i></div><div class="pips"><span class="pip ${won>0?'won':''}"></span><span class="pip ${won>1?'won':''}"></span></div></div>`;
- let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${15*s}px">RPS FIGHTER<small>ATTACK · THROW · BLOCK</small></div>
+ let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${13*s}px">RPS FIGHTER<small>ATTACK · THROW · BLOCK</small></div>
  <div class="abs hud" style="${P(mx+6,my+7)};width:${204*s}px">${side('l','YOU',h.hp1,h.lost1,h.won1)}
   <div class="timer ${h.timer==null?'vs':h.timer<=2?'hurry':''}"><span>${h.timer??'VS'}</span><span class="lbl">${h.label}</span></div>${side('r','CPU',h.hp2,h.lost2,h.won2)}</div>`;
  if(h.mine)o+=`<div class="abs mine" style="${P(mx+mon.x1+2,my+mon.by-20)}">ONLY YOU SEE THIS</div>`;

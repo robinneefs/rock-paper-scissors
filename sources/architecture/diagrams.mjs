@@ -254,7 +254,7 @@ function card(x, y, w, h, kind, title, lines = [], o = {}) {
   [0, 1, 2].forEach((i) => { b += `<circle cx="${cx + 125 + i * 48}" cy="${py + 66}" r="17" fill="${['#ff4f6d', '#ffcf3f', '#3fd0ff'][i]}" stroke="#120826" stroke-width="2"/>`; });
   b += `<circle cx="${cx + 52}" cy="${py + 66}" r="9" fill="#ff4f6d" stroke="#120826" stroke-width="2"/><path d="M ${cx + 52} ${py + 75} v 20" stroke="#120826" stroke-width="5"/>`;
   b += text(cx + CW / 2, py + 112, 'CabinetScene: always on', { anchor: 'middle', size: 11.5, fill: '#cbbcff' });
-  b += text(cx, cy + 472 + 24, ['Cabinet target height 472 so that it', 'shows at 2× in a 1080p browser window.', '(mock-up today: 502, trim marquee/panel)'], { size: 12, fill: C.sub });
+  b += text(cx, cy + 472 + 24, ['Cabinet target height 472 so that it', 'shows at 2× in a 1080p browser window.', '(decided; the first mock-ups were 502)'], { size: 12, fill: C.sub });
 
   // (b) desktop
   const dx = 360, dy = 110, dw = 360, dh = 180; // 1920x960 scaled by 0.1875
