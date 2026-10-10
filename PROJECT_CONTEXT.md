@@ -14,10 +14,11 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `README.md` | Repository front page |
 | `docs/idea/` | Original idea brief |
 | `docs/design/` | Interactive design document (saved HTML) |
+| `docs/architecture/` | Architecture document (`ARCHITECTURE.md`) and its diagrams (`diagrams/*.svg`) |
 | `docs/mockups/cabinet/` | Current arcade cabinet mock-ups |
 | `docs/mockups/landscape-superseded/` | Old landscape mock-ups |
 | `docs/art-direction/` | Art direction samples (sizes, styles, body shapes) |
-| `sources/` | Code that draws the mock-ups and samples (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`) |
+| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) |
 | `archive/old-draft/` | Discarded first draft (not in the repo) |
 
 New art samples go in `docs/art-direction/` (their source in `sources/art-direction/`); new mock-ups in `docs/mockups/`.
@@ -28,6 +29,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 - Interactive design document (HTML artifact, playable sketch): https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ
 - Repository: https://github.com/robinneefs/rock-paper-scissors (design docs, mock-ups and art samples; no game code yet)
 - Original idea brief: `docs/idea/rock-paper-scissors-idea.md`
+- Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
 
 ## Where things stand
 
@@ -96,6 +98,7 @@ The whole game is drawn as an upright arcade machine. This gives a vertical layo
 - **Browser:** the cabinet stands centered and is scaled to fit the window height; the space around it is a dark arcade-room backdrop.
 - **Phone:** portrait; the cabinet fills the screen, with the control panel in thumb reach.
 - Monitor content is a 3:4 portrait screen (default picked by Claude; open to change). Game resolution 216x288 with 64 px fighters.
+- **Cabinet frame 270x472 native (decided 2026-10-10):** marquee 32, bezels 12, monitor 216x288, control panel 128. Shows at 2x in a 1080p browser window and 4x on most phones. Mock-ups redrawn at this size.
 - Mock-ups: `docs/mockups/cabinet/cabinet-browser-pick.png`, `cabinet-browser-reveal.png`, `cabinet-phone-pick.png`, `cabinet-phone-reveal.png`. Source in `sources/cabinet-mockup/` (`cabinet.html#browser-pick` etc.; render with `node shotcab.mjs browser-pick phone-reveal ...`). The older landscape mock-ups (`docs/mockups/landscape-superseded/`) are superseded.
 
 ## Pixel perfect (requirement, 2026-10-10)
@@ -145,6 +148,16 @@ Architecture rules:
 - Moves arrive through a **move source**: now local input + random CPU; later the server.
 - Online: only the server knows both picks before the reveal (anti-cheat).
 
+**Architecture (proposed 2026-10-10, see `docs/architecture/ARCHITECTURE.md`):**
+- npm workspaces monorepo: `packages/core` (rules + referee, zero dependencies), `apps/game` (Phaser client), later `apps/server` (Colyseus).
+- Four layers, dependencies only point down: Platform, Presentation (scenes, director, views, fx, audio, input), Session, Core. Import rules enforced by ESLint.
+- Core = pure rules functions + a `Referee` phase machine (RoundIntro, Picking, Reveal, RoundOver, MatchOver) with injected clock and seeded RNG; the same referee runs in the Colyseus room later.
+- Scenes talk only to a `MatchSession` interface: `LocalSession` (referee + `RandomCpu` move source) now, `OnlineSession` later.
+- Scenes wire, a `FightDirector` choreographs, views are dumb. `CabinetScene` always runs; monitor scenes draw through a 216x288 camera viewport.
+- Two homes for numbers: rules and phase timings in `packages/core/src/config.ts` (shared with server); all feel values in `apps/game/src/config/tuning.ts`. Dev-only Tweakpane panel to tune live.
+- Pixel scaler in `platform/`: largest whole scale in device pixels, canvas fills the window, leftover is arcade room.
+- Defaults to confirm: monorepo shape, Tweakpane, `no-restricted-paths` for import rules. (Cabinet frame 270x472 is decided.)
+
 ## Roadmap
 
 1. Rules core with tests (console only).
@@ -160,6 +173,7 @@ Architecture rules:
 - Overall aesthetic: the user is "not crazy about it yet" (cute chibi + neon '80s); parked, revisit later.
 - Art tools (researched 2026-10-10): best fit is **PixelLab** (pixel-art AI with character directions + animations, hosted MCP at https://api.pixellab.ai/mcp, Bearer API key, plans from ~$12/mo). Alternatives: Retro Diffusion (great look, Aseprite extension, $20-65 one-time, has API), Ludo, Scenario; Aseprite for hand cleanup. Claude's cloud sessions currently cannot reach api.pixellab.ai (built-in environment blocks it): needs a cloud environment that allows the domain plus the key as a secret, or run Claude Code locally with the MCP. User wants a more attractive pixel style with slightly bigger pixels.
 - Cabinet look: monitor aspect (3:4 portrait chosen as default), cabinet colours and side art.
+- Architecture defaults to confirm (see section 16 of the architecture doc): monorepo, Tweakpane, lint tool for import rules.
 - 100 starting health right? 5s or 3s timer?
 - Game name beyond "Rock Paper Scissors Fighter"?
 
@@ -168,6 +182,7 @@ Architecture rules:
 - Discuss and decide first, then design docs, then build. Don't start writing game code until asked.
 - Keep questions short and few at a time; offer a recommendation.
 - Online multiplayer readiness is "very important" to the user.
+- Wants a solid, expandable base with readable, structured code (asked for the architecture document before any building).
 
 ## Artifacts
 
@@ -190,4 +205,6 @@ Architecture rules:
 - 2026-10-10: Pixel perfect is a requirement (see section).
 - 2026-10-10: User approved the cabinet layout and proportions (art style to be refined).
 - 2026-10-10: Organized the project files (docs/, sources/, archive/) and pushed them with a README to the repository.
+- 2026-10-10: Architecture document written (`docs/architecture/ARCHITECTURE.md`): layers, monorepo, core rules + referee, MatchSession, director/views, pixel scaler, tuning, online, Android, code rules, testing. Proposal pending the user's review.
+- 2026-10-10: Cabinet frame trimmed to 270x472 native (from 502) so it shows at 2x in a 1080p browser window; mock-ups redrawn.
 - 2026-10-10: Layout: vertical arcade cabinet (monitor on top, control panel with 3 physical buttons + decorative joystick below), in browser and on phone. Replaces landscape 16:9.
