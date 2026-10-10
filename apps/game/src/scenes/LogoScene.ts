@@ -10,7 +10,7 @@ import { useMonitorCamera } from './monitor';
 /**
  * Studio logo intro: fades in, holds, fades out, then the home screen. Any button or tap skips it.
  * The fade steps through a few darkened levels (pixel perfect), never a smooth alpha blend.
- * The image is assets/logo.png: replacing that file is the whole logo swap.
+ * The image is assets/logo.png (the Chain Shift logo, built by tools/make-logo.py).
  */
 export class LogoScene extends Phaser.Scene {
   constructor() {

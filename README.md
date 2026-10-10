@@ -12,7 +12,7 @@ Two fighters face off inside an arcade cabinet. Each exchange, both players secr
 
 | Logo intro | Home | Fight | Result |
 |---|---|---|---|
-| ![Placeholder logo intro](docs/screenshots/phone-logo.png) | ![Home menu](docs/screenshots/phone-home.png) | ![A throw beats a block](docs/screenshots/phone-reveal.png) | ![Result screen](docs/screenshots/phone-result.png) |
+| ![Logo intro](docs/screenshots/phone-logo.png) | ![Home menu](docs/screenshots/phone-home.png) | ![A throw beats a block](docs/screenshots/phone-reveal.png) | ![Result screen](docs/screenshots/phone-result.png) |
 
 Screenshots of the current build on a phone. Recapture them with `node sources/screenshots/capture.mjs`.
 
@@ -91,12 +91,13 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 |---|---|
 | [`packages/core/`](packages/core/) | `@rps/core`: the rules and the referee, plain TypeScript with zero dependencies |
 | [`apps/game/`](apps/game/) | The Phaser game: scenes, views, session, input, pixel scaler, tuning |
-| [`tools/`](tools/) | Small scripts (the placeholder logo) |
+| [`tools/`](tools/) | Small scripts (building the in-game logo from `docs/brand/`) |
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions, open questions and the decision log |
 | [`docs/idea/`](docs/idea/) | The original idea brief |
 | [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
 | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured: layers, packages, online play, pixel-perfect rendering, tuning |
 | [`docs/screenshots/`](docs/screenshots/) | Screenshots of the current build (browser and phone) |
+| [`docs/brand/`](docs/brand/) | Studio logo masters (Chain Shift, white and purple) |
 | [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Arcade cabinet mock-ups drawn before the build (browser and phone) |
 | [`docs/mockups/landscape-superseded/`](docs/mockups/landscape-superseded/) | Earlier landscape mock-ups, replaced by the cabinet layout |
 | [`docs/art-direction/`](docs/art-direction/) | Art direction samples: sprite sizes, character styles, body shapes |
