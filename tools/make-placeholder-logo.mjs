@@ -1,21 +1,21 @@
 // Writes the placeholder studio logo to apps/game/public/assets/logo.png.
-// Run with: npx vite-node tools/make-placeholder-logo.ts
+// Run with: node tools/make-placeholder-logo.mjs
 // Replacing that PNG with the company logo is the whole logo swap; this script is only for the placeholder.
 import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
-import { paintLogo } from '../apps/game/src/assets/placeholders/logo';
+import { createServer } from 'vite';
 
 const crcTable = Array.from({ length: 256 }, (_, n) => {
   let c = n;
   for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
   return c >>> 0;
 });
-const crc32 = (buf: Uint8Array) => {
+const crc32 = (buf) => {
   let c = 0xffffffff;
-  for (const byte of buf) c = crcTable[(c ^ byte) & 0xff]! ^ (c >>> 8);
+  for (const byte of buf) c = crcTable[(c ^ byte) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
 };
-const chunk = (type: string, data: Uint8Array) => {
+const chunk = (type, data) => {
   const out = Buffer.alloc(12 + data.length);
   out.writeUInt32BE(data.length, 0);
   out.write(type, 4, 'ascii');
@@ -24,6 +24,15 @@ const chunk = (type: string, data: Uint8Array) => {
   return out;
 };
 
+// Load the TypeScript painter through Vite, so the placeholder art code is shared with the game.
+const vite = await createServer({
+  root: new URL('..', import.meta.url).pathname,
+  server: { middlewareMode: true },
+  appType: 'custom',
+  logLevel: 'error',
+});
+const { paintLogo } = await vite.ssrLoadModule('/apps/game/src/assets/placeholders/logo.ts');
+await vite.close();
 const img = paintLogo();
 const raw = Buffer.alloc((img.width * 4 + 1) * img.height);
 for (let y = 0; y < img.height; y++) {
