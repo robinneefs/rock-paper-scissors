@@ -36,8 +36,7 @@ test('boots to the logo, the home menu, and plays an exchange against the CPU', 
   await run(page, 300);
   expect(await scenes(page)).toContain('Logo');
 
-  await run(page, 3200); // the logo leaves on its own (about 2.7s)
-  expect(await scenes(page)).toContain('Home');
+  await untilScene(page, 'Home'); // the logo leaves on its own (about 2.7s)
 
   await page.keyboard.press('Enter'); // START GAME (VS CPU)
   await run(page, 600);
