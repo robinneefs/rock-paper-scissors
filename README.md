@@ -25,6 +25,8 @@ npm install
 npm run dev        # opens the game at http://localhost:5173
 ```
 
+In `npm run dev` a **tuning panel** in the top-right corner lets you change every feel value, the rules and the phase timings while you play, then copy the changes back into the code. The backquote key (`) hides it. How to use it and how it's built: [docs/tuning-panel.md](docs/tuning-panel.md).
+
 Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Attack / Throw / Block. In menus the arrow keys (or dragging the joystick) move the cursor and any cabinet button, Enter or Space selects. Esc goes back.
 
 | Command | What it does |
@@ -96,6 +98,7 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 | [`docs/idea/`](docs/idea/) | The original idea brief |
 | [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
 | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured: layers, packages, online play, pixel-perfect rendering, tuning |
+| [`docs/tuning-panel.md`](docs/tuning-panel.md) | The dev tuning panel: how to use it for the game-feel pass and how it's set up |
 | [`docs/screenshots/`](docs/screenshots/) | Screenshots of the current build (browser and phone) |
 | [`docs/brand/`](docs/brand/) | Studio logo masters (Chain Shift, white and purple) |
 | [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Arcade cabinet mock-ups drawn before the build (browser and phone) |

@@ -33,6 +33,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 - Repository: https://github.com/robinneefs/rock-paper-scissors (game code in `packages/core` + `apps/game`, plus design docs, mock-ups and art samples)
 - Original idea brief: `docs/idea/rock-paper-scissors-idea.md`
 - Future plans and roadmap (Claude Doc, editable, made 2026-10-10): https://claude.ai/code/artifact/f1f3ff49-5ab1-4624-8d81-85bf111b8494 (every open decision, balancing thought and planned feature, each with a note on how to proceed, plus the suggested order of work). Tick items off there when they ship.
+- Dev tuning panel guide (how to use it, how it's set up): `docs/tuning-panel.md`
 - Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
 
 ## Where things stand
@@ -52,7 +53,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 | `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
 | `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` (two scaling modes), `SettingsStore` (`platform/settings.ts`, localStorage) |
 | `apps/game/src/config/tuning.ts` | Every feel value |
-| `apps/game/src/dev/` | Dev tuning panel (v0.5.0): Tweakpane over `tuning.ts` (live) plus the core rules and phase timings (next match), with Restart match, Copy changes, Reset all; edits kept in localStorage; backquote hides it. Only in `npm run dev`. |
+| `apps/game/src/dev/` | Dev tuning panel (v0.5.0): Tweakpane over `tuning.ts` (live) plus the core rules and phase timings (next match), with Restart match, Copy changes, Reset all; edits kept in localStorage; backquote hides it. Only in `npm run dev`. User guide and setup: `docs/tuning-panel.md`. |
 | `apps/game/public/assets/logo.png` | Studio logo (Chain Shift as purple pixel art, 192x84 native): the master reduced to 94 blocks wide, each block 2x2 native pixels like the title's scaled font, violet #A35BFF fill with a light top edge, darker bottom edge, drop shadow in `palette.shadow` and a 1 px `palette.ink` outline. Built from the white master `docs/brand/logo-chain-shift-white.png` by `python3 tools/make-logo.py` (needs Pillow), which also writes the full-size `docs/brand/logo-chain-shift-purple.png` |
 
 Changelog: `CHANGELOG.md` at the repo root.
@@ -270,3 +271,4 @@ Architecture rules:
 - 2026-10-10: PR #7 merged (main @ cdabb84, Release workflow tagged v0.4.0) and v0.4.0 published to GitHub Pages (robinneefs.github.io @ 2aa77f2) at the user's request. The repo copy of this file lags this line until the next PR syncs it.
 - 2026-10-10: Wrote the future plans and roadmap Claude Doc (link under Links) collecting all plans so far by area, with a how-to-proceed note per item and a suggested order: game feel and sound, final art, polish and 1.0 on the web, online, Android. Re-added the move-animation open question, which had dropped out of this file.
 - 2026-10-10: Dev tuning panel built (v0.5.0, step 3 item 1) at the user's go-ahead: Tweakpane in dev builds only, editing feel values live and rules/timings for the next match, so the open 3s vs 5s timer and 100 health questions can be tried by feel. Each match now gets its own copy of the rules, and the fight HUD reads them from the session.
+- 2026-10-11: At the user's request, wrote `docs/tuning-panel.md`: how to use the tuning panel (sections, buttons, a tuning order: the hit, HUD, pacing, menus; push values too far then back off; Copy changes and paste into the chat) and how it's set up (files, dev-only loading, lint rule, why rules apply next match, adding values). Linked from the README, architecture doc, changelog and here. Part of v0.5.0 (PR #8).
