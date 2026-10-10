@@ -9,8 +9,9 @@ import { PixelText } from '../views/PixelText';
 import { getContext } from './context';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
+import { VERSION } from '../version';
 
-/** Main menu: title, both fighters idling, START GAME (VS CPU) and a greyed-out ONLINE slot. */
+/** Main menu: title, both fighters idling, START GAME (VS CPU), a greyed-out ONLINE slot and OPTIONS. */
 export class HomeScene extends Phaser.Scene {
   constructor() {
     super(SceneKey.home);
@@ -43,11 +44,16 @@ export class HomeScene extends Phaser.Scene {
       shadow: palette.ink,
     });
 
-    const menu = new MenuView(this, homeMenu(flow), 140, input);
+    const menu = new MenuView(this, homeMenu(flow), 112, input);
     this.add.rectangle(0, menu.bottom + 5, MONITOR.width, 13, palette.panel).setOrigin(0);
     new PixelText(this, cx, menu.bottom + 8, 'STICK MOVES - BUTTON SELECTS', {
       color: palette.lilac,
       align: 'center',
+      shadow: palette.ink,
+    });
+    new PixelText(this, MONITOR.width - 3, MONITOR.height - 10, `V${VERSION}`, {
+      color: palette.dim,
+      align: 'right',
       shadow: palette.ink,
     });
   }
