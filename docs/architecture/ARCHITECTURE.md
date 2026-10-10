@@ -316,6 +316,8 @@ There are two homes for numbers, on purpose:
 
 **Settings.** A `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON through a small key-value adapter (localStorage in the browser, Capacitor Preferences on Android later). Broken or missing storage (private mode, blocked site data) falls back to the defaults and never stops the game. Today it holds the scaling mode; volumes, mute and key bindings join it later. It is part of the `GameContext`.
 
+**Version.** The build's version is set once, in `apps/game/package.json`; `vite.config.ts` injects it and `src/version.ts` exports it as `VERSION`, which the home screen shows small in the corner. Every published build bumps it and adds a `CHANGELOG.md` entry, and is tagged `vX.Y.Z`.
+
 **Wiring.** No global singletons. `main.ts` builds the services once and passes them to scenes through one small `GameContext` object. Tests can hand in fakes.
 
 ## 10. Online play

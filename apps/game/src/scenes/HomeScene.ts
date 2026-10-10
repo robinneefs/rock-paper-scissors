@@ -9,6 +9,7 @@ import { PixelText } from '../views/PixelText';
 import { getContext } from './context';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
+import { VERSION } from '../version';
 
 /** Main menu: title, both fighters idling, START GAME (VS CPU), a greyed-out ONLINE slot and OPTIONS. */
 export class HomeScene extends Phaser.Scene {
@@ -48,6 +49,11 @@ export class HomeScene extends Phaser.Scene {
     new PixelText(this, cx, menu.bottom + 8, 'STICK MOVES - BUTTON SELECTS', {
       color: palette.lilac,
       align: 'center',
+      shadow: palette.ink,
+    });
+    new PixelText(this, MONITOR.width - 3, MONITOR.height - 10, `V${VERSION}`, {
+      color: palette.dim,
+      align: 'right',
       shadow: palette.ink,
     });
   }

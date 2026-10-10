@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import pkg from '../package.json' with { type: 'json' };
 
 declare global {
   interface Window {
-    __rps: { scenes: () => string[]; phase: () => string | null; scale: () => number };
+    __rps: { scenes: () => string[]; phase: () => string | null; scale: () => number; version: string };
   }
 }
 
@@ -45,6 +46,11 @@ test('boots to the logo, the home menu, and plays an exchange against the CPU', 
   await run(page, 2000);
   expect(['picking', 'roundOver']).toContain(await phase(page));
   expect(errors).toEqual([]);
+});
+
+test('the build shows the version from package.json', async ({ page }) => {
+  await page.goto('http://localhost:5174/');
+  expect(await page.evaluate(() => window.__rps.version)).toBe(pkg.version);
 });
 
 test('the logo can be skipped with any button', async ({ page }) => {

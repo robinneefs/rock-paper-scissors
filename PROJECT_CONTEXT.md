@@ -15,10 +15,11 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `docs/idea/` | Original idea brief |
 | `docs/design/` | Interactive design document (saved HTML) |
 | `docs/architecture/` | Architecture document (`ARCHITECTURE.md`) and its diagrams (`diagrams/*.svg`) |
-| `docs/mockups/cabinet/` | Current arcade cabinet mock-ups |
+| `docs/screenshots/` | Screenshots of the current build, browser and phone (recapture with `node sources/screenshots/capture.mjs`) |
+| `docs/mockups/cabinet/` | Arcade cabinet mock-ups drawn before the build |
 | `docs/mockups/landscape-superseded/` | Old landscape mock-ups |
 | `docs/art-direction/` | Art direction samples (sizes, styles, body shapes) |
-| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) and builds the interactive design document (`design-doc/`) |
+| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) builds the interactive design document (`design-doc/`) and captures game screenshots (`screenshots/`) |
 | `archive/old-draft/` | Discarded first draft (not in the repo) |
 
 New art samples go in `docs/art-direction/` (their source in `sources/art-direction/`); new mock-ups in `docs/mockups/`.
@@ -51,9 +52,13 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 | `apps/game/src/config/tuning.ts` | Every feel value |
 | `apps/game/public/assets/logo.png` | Placeholder logo (swap this file for the company logo; regenerate the placeholder with `node tools/make-placeholder-logo.mjs`) |
 
+Changelog: `CHANGELOG.md` at the repo root.
+
 Commands: `npm install`, `npm run dev`, `npm test` (51 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
 
-Publishing (2026-10-10): `npm run build`, then replace the contents of `RPS-Fighter/` in `robinneefs/robinneefs.github.io` with `apps/game/dist/*` and push to its `main`; GitHub Pages redeploys on its own. Vite `base: './'` keeps paths relative, so no base-path change is needed. Nothing updates the online copy automatically: republish after changes the user wants online.
+**Versions and changelog (rule, user's request 2026-10-10):** every build that goes online gets a version bump and a `CHANGELOG.md` entry, no exceptions. Semver under 1.0: new features bump the middle number (0.2.0 → 0.3.0), fix-only builds the last (0.2.1). The version is set in one place, `apps/game/package.json`; Vite injects it (`src/version.ts`) and the home screen shows it small in the bottom-right corner. Each published version is tagged `vX.Y.Z` in git. Current: **v0.2.0** (Options + scaling). v0.1.0 = the first playable (main @ a1a96aa).
+
+Publishing (2026-10-10): bump the version and add the changelog entry in the PR, merge, tag `vX.Y.Z` on main, `npm run build`, then replace the contents of `RPS-Fighter/` in `robinneefs/robinneefs.github.io` with `apps/game/dist/*` and push to its `main`; GitHub Pages redeploys on its own. Vite `base: './'` keeps paths relative, so no base-path change is needed. Nothing updates the online copy automatically: republish after changes the user wants online.
 
 ## The game in one paragraph
 
@@ -225,7 +230,7 @@ Architecture rules:
 ## Artifacts
 
 - Mock-up images (1280x720 PNG, superseded by the cabinet layout): `docs/mockups/landscape-superseded/1-pick-your-move.png`, `2-reveal-throw-beats-block.png`, `3-tie-clash.png`, `4-match-won.png`. Fighters are placeholders drawn in code.
-- Interactive design document: https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ (rebuilt 2026-10-10 around the cabinet: a playable 270x472 cabinet running logo intro → home → fight → result, plus all chapters, menu and cabinet mock-ups, art samples and diagrams). Saved copy: `docs/design/interactive-gdd.html`. Source: `sources/design-doc/gdd.html` (page template) + `sketch.js` (the playable cabinet), using `sources/cabinet-mockup/art.js`, `pixfont.js`, `screens.js`. Build with `node sources/design-doc/build.mjs [artifact-out.html]`; the artifact copy is published with the images under `mockups/`, `art-direction/`, `architecture/diagrams/`. The old landscape page sources stay in `sources/landscape-mockup/` (superseded).
+- Interactive design document: https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ (rebuilt 2026-10-10 around the cabinet: a playable 270x472 cabinet running logo intro → home → fight → result, plus all chapters, menu and cabinet mock-ups, art samples and diagrams). Saved copy: `docs/design/interactive-gdd.html`. Source: `sources/design-doc/gdd.html` (page template) + `sketch.js` (the playable cabinet), using `sources/cabinet-mockup/art.js`, `pixfont.js`, `screens.js`. Build with `node sources/design-doc/build.mjs [artifact-out.html]`; the artifact copy is published with the images under `screenshots/`, `art-direction/`, `architecture/diagrams/`. The old landscape page sources stay in `sources/landscape-mockup/` (superseded).
 - Keep the Claude Doc, the interactive page and this file in sync when decisions change.
 
 ## Decision log
@@ -252,3 +257,5 @@ Architecture rules:
 - 2026-10-10: Cleared the npm install warnings: Vitest 3 → 5 (3 advisories in dev-only test tooling: `@vitest/mocker`, `tinypool`) and approved esbuild's install script in `allowScripts` (newer npm asks for it). The placeholder-logo tool now runs with plain `node`.
 - 2026-10-10: Published the playable build (main @ a1a96aa) to GitHub Pages at https://robinneefs.github.io/RPS-Fighter/. Static hosting is enough until online multiplayer, which will need a separate realtime server.
 - 2026-10-10: Added OPTIONS to the home menu with a Scaling setting: Pixel perfect (default) or Fill height (fractional nearest-neighbour scale that fills the screen; a player-chosen exception to pixel-perfect rule 2), remembered in localStorage. Also fixed the e2e smoke test, which was red on main because one big fake-clock jump let game time fall behind (now steps the clock in 50 ms chunks).
+- 2026-10-10: Design documents and README now show screenshots of the real build instead of the mock-ups (`docs/screenshots/{browser,phone}-{logo,home,pick,reveal,result}.png`, captured by `sources/screenshots/capture.mjs` with a seeded CPU). The interactive page, the Claude Doc and the README use them; the mock-up files stay in `docs/mockups/`. Taken from main before the Options screen landed, so the home shot has no OPTIONS item yet.
+- 2026-10-10: Versioning set up at the user's request: semver under 1.0, version in `apps/game/package.json` shown on the home screen, `CHANGELOG.md`, a git tag per build. Tagged the first playable v0.1.0; the Options build is v0.2.0. Every build gets a version bump and changelog entry.

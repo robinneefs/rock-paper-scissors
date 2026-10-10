@@ -13,6 +13,7 @@ import { LogoScene } from './scenes/LogoScene';
 import { OptionsScene } from './scenes/OptionsScene';
 import { ResultScene } from './scenes/ResultScene';
 import { TransitionScene } from './scenes/TransitionScene';
+import { VERSION } from './version';
 
 const settings = new SettingsStore(browserStore());
 const scaler = new PixelScaler(settings.value.scaling);
@@ -53,4 +54,5 @@ scaler.onChange((l) => {
   scenes: () => game.scene.getScenes(true).map((s) => s.scene.key),
   phase: () => flow.activeSession?.snapshot().phase ?? null,
   scale: () => scaler.layout.scale,
+  version: VERSION,
 };
