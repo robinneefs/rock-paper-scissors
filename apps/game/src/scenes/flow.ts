@@ -16,7 +16,8 @@ export interface ResultData extends FightData {
 }
 
 /**
- * The one place that changes screens: Logo -> Home -> Fight -> Result -> (Retry -> Fight | Home).
+ * The one place that changes screens: Logo -> Home -> Fight -> Result -> (Retry -> Fight | Home),
+ * and Home <-> Options.
  * Scenes never start each other by key. Owns the current match session's lifetime.
  */
 export class SceneFlow {
@@ -39,6 +40,10 @@ export class SceneFlow {
       this.endSession();
       this.show(SceneKey.home);
     });
+  }
+
+  toOptions(): void {
+    this.wipe(() => this.show(SceneKey.options));
   }
 
   /** Starts a match; pass the existing session for a rematch (Retry). */

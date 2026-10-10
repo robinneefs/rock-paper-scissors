@@ -10,4 +10,5 @@ export const homeMenu = (flow: SceneFlow): MenuItem[] => [
     onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }),
   },
   { id: 'online', label: 'ONLINE', tag: 'SOON', enabled: false }, // step 5: opens the lobby
+  { id: 'options', label: 'OPTIONS', enabled: true, onSelect: () => flow.toOptions() },
 ];

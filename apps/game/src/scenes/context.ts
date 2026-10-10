@@ -2,6 +2,7 @@ import { Emitter, type Move } from '@rps/core';
 import type Phaser from 'phaser';
 import type { InputRouter } from '../input/InputRouter';
 import type { PixelScaler } from '../platform/PixelScaler';
+import type { SettingsStore } from '../platform/settings';
 import type { SceneFlow } from './flow';
 
 /** Which cabinet button is lit (the player's current pick), shared by the fight and the cabinet. */
@@ -28,6 +29,7 @@ export class CabinetLights {
 export interface GameContext {
   input: InputRouter;
   scaler: PixelScaler;
+  settings: SettingsStore;
   flow: SceneFlow;
   lights: CabinetLights;
 }
