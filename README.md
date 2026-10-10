@@ -4,13 +4,15 @@ A pixel-art fighting game built on rock paper scissors, played in the browser.
 
 Two fighters face off inside an arcade cabinet. Each exchange, both players secretly pick **Attack**, **Throw** or **Block** before a 5 second countdown runs out. The picks are revealed together, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds.
 
-![Arcade cabinet mock-up in the browser, picking a move](docs/mockups/cabinet/cabinet-browser-pick.png)
+![The game in a desktop browser: picking a move with 3 seconds left](docs/screenshots/browser-pick.png)
 
 > **Status: first playable.** Logo intro, home menu, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
 
-| Home | Fight | Result |
-|---|---|---|
-| ![Home menu](docs/screenshots/first-playable-home.png) | ![A throw beats a block](docs/screenshots/first-playable-fight.png) | ![Result screen](docs/screenshots/first-playable-result.png) |
+| Logo intro | Home | Fight | Result |
+|---|---|---|---|
+| ![Placeholder logo intro](docs/screenshots/phone-logo.png) | ![Home menu](docs/screenshots/phone-home.png) | ![A throw beats a block](docs/screenshots/phone-reveal.png) | ![Result screen](docs/screenshots/phone-result.png) |
+
+Screenshots of the current build on a phone. Recapture them with `node sources/screenshots/capture.mjs`.
 
 ## Play it locally
 
@@ -57,7 +59,7 @@ Because the damage is uneven, this is not classic rock paper scissors. Throw is 
 
 | Browser | Phone |
 |---|---|
-| ![Reveal in the browser](docs/mockups/cabinet/cabinet-browser-reveal.png) | ![Reveal on a phone](docs/mockups/cabinet/cabinet-phone-reveal.png) |
+| ![Reveal in the browser: a throw beats a block](docs/screenshots/browser-reveal.png) | ![Picking on a phone](docs/screenshots/phone-pick.png) |
 
 ## Technology
 
@@ -92,10 +94,11 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 | [`docs/idea/`](docs/idea/) | The original idea brief |
 | [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
 | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured: layers, packages, online play, pixel-perfect rendering, tuning |
-| [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Current arcade cabinet mock-ups (browser and phone) |
+| [`docs/screenshots/`](docs/screenshots/) | Screenshots of the current build (browser and phone) |
+| [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Arcade cabinet mock-ups drawn before the build (browser and phone) |
 | [`docs/mockups/landscape-superseded/`](docs/mockups/landscape-superseded/) | Earlier landscape mock-ups, replaced by the cabinet layout |
 | [`docs/art-direction/`](docs/art-direction/) | Art direction samples: sprite sizes, character styles, body shapes |
-| [`sources/`](sources/) | The HTML/JS that draws the mock-ups, art samples and architecture diagrams, plus Playwright scripts to render them |
+| [`sources/`](sources/) | The HTML/JS that draws the mock-ups, art samples and architecture diagrams, plus Playwright scripts to render them and to capture game screenshots |
 
 ## License
 

@@ -15,10 +15,11 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `docs/idea/` | Original idea brief |
 | `docs/design/` | Interactive design document (saved HTML) |
 | `docs/architecture/` | Architecture document (`ARCHITECTURE.md`) and its diagrams (`diagrams/*.svg`) |
-| `docs/mockups/cabinet/` | Current arcade cabinet mock-ups |
+| `docs/screenshots/` | Screenshots of the current build, browser and phone (recapture with `node sources/screenshots/capture.mjs`) |
+| `docs/mockups/cabinet/` | Arcade cabinet mock-ups drawn before the build |
 | `docs/mockups/landscape-superseded/` | Old landscape mock-ups |
 | `docs/art-direction/` | Art direction samples (sizes, styles, body shapes) |
-| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) and builds the interactive design document (`design-doc/`) |
+| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`), builds the interactive design document (`design-doc/`) and captures game screenshots (`screenshots/`) |
 | `archive/old-draft/` | Discarded first draft (not in the repo) |
 
 New art samples go in `docs/art-direction/` (their source in `sources/art-direction/`); new mock-ups in `docs/mockups/`.
@@ -219,7 +220,7 @@ Architecture rules:
 ## Artifacts
 
 - Mock-up images (1280x720 PNG, superseded by the cabinet layout): `docs/mockups/landscape-superseded/1-pick-your-move.png`, `2-reveal-throw-beats-block.png`, `3-tie-clash.png`, `4-match-won.png`. Fighters are placeholders drawn in code.
-- Interactive design document: https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ (rebuilt 2026-10-10 around the cabinet: a playable 270x472 cabinet running logo intro → home → fight → result, plus all chapters, menu and cabinet mock-ups, art samples and diagrams). Saved copy: `docs/design/interactive-gdd.html`. Source: `sources/design-doc/gdd.html` (page template) + `sketch.js` (the playable cabinet), using `sources/cabinet-mockup/art.js`, `pixfont.js`, `screens.js`. Build with `node sources/design-doc/build.mjs [artifact-out.html]`; the artifact copy is published with the images under `mockups/`, `art-direction/`, `architecture/diagrams/`. The old landscape page sources stay in `sources/landscape-mockup/` (superseded).
+- Interactive design document: https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ (rebuilt 2026-10-10 around the cabinet: a playable 270x472 cabinet running logo intro → home → fight → result, plus all chapters, menu and cabinet mock-ups, art samples and diagrams). Saved copy: `docs/design/interactive-gdd.html`. Source: `sources/design-doc/gdd.html` (page template) + `sketch.js` (the playable cabinet), using `sources/cabinet-mockup/art.js`, `pixfont.js`, `screens.js`. Build with `node sources/design-doc/build.mjs [artifact-out.html]`; the artifact copy is published with the images under `screenshots/`, `art-direction/`, `architecture/diagrams/`. The old landscape page sources stay in `sources/landscape-mockup/` (superseded).
 - Keep the Claude Doc, the interactive page and this file in sync when decisions change.
 
 ## Decision log
@@ -244,3 +245,4 @@ Architecture rules:
 - 2026-10-10: First playable built (logo, home, best-of-three vs random CPU, result with Retry / Main menu) with placeholder art drawn in code; rules/referee/session tests, layer lint rules, Playwright smoke test and CI. PR from `claude/first-playable-8tihq6`.
 - 2026-10-10: User merged-approved; PR #3 (first playable) merged into main. Next steps agreed: tuning panel, juice, sound, then final art.
 - 2026-10-10: Cleared the npm install warnings: Vitest 3 → 5 (3 advisories in dev-only test tooling: `@vitest/mocker`, `tinypool`) and approved esbuild's install script in `allowScripts` (newer npm asks for it). The placeholder-logo tool now runs with plain `node`.
+- 2026-10-10: Design documents and README now show screenshots of the real build instead of the mock-ups (`docs/screenshots/{browser,phone}-{logo,home,pick,reveal,result}.png`, captured by `sources/screenshots/capture.mjs` with a seeded CPU). The interactive page, the Claude Doc and the README use them; the mock-up files stay in `docs/mockups/`.
