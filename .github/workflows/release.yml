@@ -1,0 +1,49 @@
+name: Release
+
+# Tags each new version and makes a GitHub release from its CHANGELOG.md entry.
+# On a push to main: if apps/game/package.json has a version with no tag yet, tag that commit.
+# By hand (Run workflow): tag an older commit, e.g. version 0.1.0 at the first playable.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to tag (without the v), e.g. 0.1.0
+        required: true
+      sha:
+        description: Commit to tag
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          version="${INPUT_VERSION:-$(node -p "require('./apps/game/package.json').version")}"
+          sha="${INPUT_SHA:-$GITHUB_SHA}"
+          tag="v$version"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists"
+            exit 0
+          fi
+          # the notes are this version's section of CHANGELOG.md (from its heading to the next)
+          awk -v v="$version" '
+            /^## / { on = (index($0, "## " v " ") == 1 || $0 == "## " v) ; next }
+            on' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::error::CHANGELOG.md has no entry for $version"
+            exit 1
+          fi
+          gh release create "$tag" --target "$sha" --title "$tag" --notes-file notes.md
