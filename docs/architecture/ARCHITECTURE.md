@@ -75,9 +75,10 @@ rock-paper-scissors/
 │   │       ├── platform/        pixel scaler, storage, haptics, device info
 │   │       ├── session/         MatchSession interface, LocalSession, move sources (CPU)
 │   │       ├── input/           maps keys, taps and cabinet buttons to game actions
-│   │       ├── scenes/          Boot, Cabinet, Title, Fight, Result (thin)
+│   │       ├── scenes/          Boot, Cabinet, Logo, Home, Fight, Result (thin) + flow.ts
+│   │       ├── menus/           menu definitions as data (homeMenu.ts, resultMenu.ts)
 │   │       ├── fight/           FightDirector: turns session events into choreography
-│   │       ├── views/           FighterView, HudView, MoveIconView, BannerView, ButtonsView, JoystickView
+│   │       ├── views/           FighterView, HudView, MoveIconView, BannerView, ButtonsView, JoystickView, MenuView, LogoView
 │   │       ├── fx/              shake, hit-pause, flash, sparks, dust (the "juice" kit)
 │   │       ├── audio/           AudioService, sound keys, music/sfx volumes
 │   │       ├── assets/          typed asset keys and the load manifest
@@ -212,11 +213,35 @@ The **juice kit** (`fx/`) is a set of small reusable effects (`shake`, `hitPause
 |---|---|---|
 | `BootScene` | Once | Loads assets, shows a pixel loading bar |
 | `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, marquee, control panel, the three buttons and the joystick |
-| `TitleScene` | On the monitor | Title, "press a button" |
+| `LogoScene` | Once per launch, on the monitor | Placeholder studio logo: fades in, holds, fades out. Any button or tap skips it |
+| `HomeScene` | On the monitor | Game title, idle fighters, the home menu (Start game vs CPU; Online greyed out until step 5) |
 | `FightScene` | On the monitor | Fighters, HUD, move icons, banners, effects |
-| `ResultScene` | On the monitor | Winner, rematch |
+| `ResultScene` | On the monitor, over the last fight frame | Winner banner, score, menu: Retry or Main menu |
 
 Monitor scenes use a **camera viewport** placed over the cabinet's screen, so they always draw in their own 216 × 288 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put (a small cabinet rattle on KO can be its own effect).
+
+### Screen flow and menus
+
+![Screen flow](diagrams/7-screen-flow.svg)
+
+The game always starts the same way: Boot, then the logo intro, then the home screen. From there **Start game** begins a match against the CPU, and when the match ends the result screen offers **Retry** (a new match with the same setup) or **Main menu**. This is deliberately small, but it is the infrastructure later menus plug into.
+
+- **Logo intro.** `LogoScene` shows one image, `assets/logo.png` (a placeholder until the company logo exists; replacing the file is the whole change). It fades in, holds and fades out using `tuning.intro` values. To stay pixel perfect the fade steps through a few darkened palette levels instead of a smooth alpha blend. Any button, key or tap skips it.
+- **Menus are data.** A menu is a list of items `{ id, label, tag?, enabled, onSelect }` in `menus/`. One reusable `MenuView` draws any list, moves the cursor, skips disabled items, blinks the cursor and plays the move and confirm sounds. The home menu today:
+
+  ```ts
+  // apps/game/src/menus/homeMenu.ts
+  export const homeMenu = (flow: SceneFlow): MenuItem[] => [
+    { id: 'cpu',    label: 'START GAME', tag: 'VS CPU', enabled: true,  onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }) },
+    { id: 'online', label: 'ONLINE',     tag: 'SOON',   enabled: false },   // step 5: opens LobbyScene
+  ];
+  ```
+
+  Adding online play, settings or a how-to-play screen is a new item here plus its scene; no other scene changes.
+- **One place for transitions.** Scenes never start each other by key. A small `SceneFlow` (`scenes/flow.ts`) has `toHome()`, `toFight(setup)`, `toResult(outcome)` and plays the transition (a short pixel wipe, timed by `tuning.transitions`). 
+- **`MatchSetup` describes a match.** `toFight(setup)` builds the session from the setup (`createSession(setup)` in `session/`): `{ mode: 'cpu', cpu: 'random' }` now, `{ mode: 'online', roomCode }` later. The setup travels to the result screen, so **Retry** is `session.requestRematch()`: the local session restarts at once; the online session asks the opponent and waits for both to agree.
+- **Menu input.** The `InputRouter` adds menu actions: `nav:up` / `nav:down` (joystick, arrow keys), `confirm` (any of the three cabinet buttons, Enter, Space) and `back` (Esc, Android back). Menu items on the monitor can also be tapped or clicked. In menus the joystick finally does something; in a fight it stays decoration.
+- **Music.** The menu loop plays on Home and Result; the fight loop in `FightScene`. `SceneFlow` asks `AudioService` to cross-fade on each transition.
 
 ### One reveal, as the director plays it
 
@@ -256,6 +281,9 @@ export const tuning = {
   buttons:  { pressDepthPx: 2, releaseMs: 80 },
   joystick: { springBackMs: 90 },
   idle:     { breatheEveryMs: 900 },
+  intro:    { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },   // logo intro
+  transitions: { wipeMs: 240 },
+  menu:     { cursorBlinkMs: 400, repeatDelayMs: 300 },
   audio:    { sfxVolume: 0.8, musicVolume: 0.5 },
 } as const;
 ```
@@ -271,7 +299,7 @@ There are two homes for numbers, on purpose:
 
 ## 9. Input, audio, assets, settings
 
-**Input.** One `InputRouter` turns every source into game actions: keys 1/2/3, taps or clicks on the cabinet buttons, arrow keys and drag for the joystick, and later a gamepad. Scenes only hear actions like `pick:attack` or `stick:upLeft`. Rebinding or adding a gamepad touches only `input/`.
+**Input.** One `InputRouter` turns every source into game actions: keys 1/2/3, taps or clicks on the cabinet buttons, arrow keys and drag for the joystick, and later a gamepad. Scenes only hear actions like `pick:attack`, `stick:upLeft`, or in menus `nav:down`, `confirm` and `back`. Rebinding or adding a gamepad touches only `input/`.
 
 **Audio.** An `AudioService` wraps Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds are referred to by typed keys (`Sfx.HitThrow`), and a key can map to several variations that are picked at random so hits don't repeat. Generated music (Tone.js) later plugs in as another music source.
 
@@ -301,7 +329,7 @@ Step 6 wraps the built `apps/game` in Capacitor. Nothing in the game changes; de
 |---|---|---|
 | Storage | localStorage | Capacitor Preferences |
 | Haptics on hits and button presses | no-op (or Vibration API) | Capacitor Haptics |
-| Back button | n/a | Pause menu, then exit |
+| Back button | n/a | `back` action: Result goes to the main menu, Home exits the app; in a fight it opens the pause menu (once that exists) |
 | Orientation | n/a | Locked to portrait |
 | Safe areas (notch, gesture bar) | n/a | Scaler leaves room; the extra space is backdrop |
 
@@ -353,7 +381,9 @@ What a typical future change touches, to show the structure holds up:
 | A fourth move | core config (`beats`, `damage`), one new icon, fighter animations, one button |
 | New fighter skin | new sprite sheet + an entry in `assets/keys.ts` |
 | Local two-player (hot-seat) | new `HotSeatSource` move source, input bindings for player 2 |
-| Online play | new `apps/server`, new `session/OnlineSession.ts`; scenes unchanged |
+| Online play | new `apps/server`, new `session/OnlineSession.ts`, a `LobbyScene` and enabling the Online item in `menus/homeMenu.ts`; fight and result scenes unchanged |
+| Another menu (settings, how to play, pause) | one scene + one menu file; add an item to an existing menu |
+| Real company logo | replace `assets/logo.png` |
 | Android | Capacitor config + `platform/` adapters; game unchanged |
 | Gamepad | `input/` only |
 
@@ -362,7 +392,7 @@ What a typical future change touches, to show the structure holds up:
 Matches the roadmap in the project context:
 
 1. **Rules core with tests.** Set up the monorepo, lint rules and CI. Write `@rps/core` rules and referee, fully tested. Console only.
-2. **Playable prototype.** `apps/game` with the pixel scaler, `CabinetScene`, `FightScene` with rectangles as fighters, `LocalSession` with `RandomCpu`, the HUD, timer and best of three. `tuning.ts` exists from the start, even with few values.
+2. **Playable prototype.** `apps/game` with the pixel scaler, `CabinetScene`, `FightScene` with rectangles as fighters, `LocalSession` with `RandomCpu`, the HUD, timer and best of three, and the menu flow from the start: `LogoScene` (placeholder logo), `HomeScene` with Start game, `ResultScene` with Retry and Main menu. `tuning.ts` exists from the start, even with few values.
 3. **Art and juice.** Real sprite sheets, the reveal timeline, the `fx/` kit, audio, the dev tuning panel.
 4. **Polish and web release.** The game-feel pass, screenshot tests, GitHub Pages deploy.
 5. **Online.** `apps/server`, `OnlineSession`, room codes.

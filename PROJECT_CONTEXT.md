@@ -18,7 +18,7 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `docs/mockups/cabinet/` | Current arcade cabinet mock-ups |
 | `docs/mockups/landscape-superseded/` | Old landscape mock-ups |
 | `docs/art-direction/` | Art direction samples (sizes, styles, body shapes) |
-| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) |
+| `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) and builds the interactive design document (`design-doc/`) |
 | `archive/old-draft/` | Discarded first draft (not in the repo) |
 
 New art samples go in `docs/art-direction/` (their source in `sources/art-direction/`); new mock-ups in `docs/mockups/`.
@@ -71,7 +71,7 @@ Uneven damage makes this different from classic RPS. Throw is the tempting big h
 3. Reveal: each fighter's move icon drops in above their head with a bounce, at the same time.
 4. Both fighters animate their move. Winner lands with hit flash, hit sound, small screen shake. Tie = clash, no damage.
 5. Loser's health bar drains.
-6. Next countdown, or KO, round banner ("Round 2", "Final round"), or winner screen with rematch.
+6. Next countdown, or KO, round banner ("Round 2", "Final round"), or the result screen with Retry / Main menu (see "Menus and screen flow").
 
 Online: the server runs the timer and the random fallback pick.
 
@@ -93,13 +93,31 @@ The whole game is drawn as an upright arcade machine. This gives a vertical layo
 |---|---|
 | Monitor (top ~2/3) | The fight: both fighters, health bars, round pips, timer, and the move coins/icons that show each player's pick on reveal. |
 | Control panel (bottom ~1/3) | Three physical arcade buttons: Attack, Throw, Block. Click/tap them or press keys 1/2/3. They press down visibly when used. |
-| Joystick (left of the buttons) | Just for fun, no effect on the game. Tilts in 8 directions with the arrow keys (two keys = diagonal) or by click-and-drag; springs back to center on release. |
+| Joystick (left of the buttons) | No effect in a fight (just for fun); in menus it moves the cursor. Tilts in 8 directions with the arrow keys (two keys = diagonal) or by click-and-drag; springs back to center on release. |
 
 - **Browser:** the cabinet stands centered and is scaled to fit the window height; the space around it is a dark arcade-room backdrop.
 - **Phone:** portrait; the cabinet fills the screen, with the control panel in thumb reach.
 - Monitor content is a 3:4 portrait screen (default picked by Claude; open to change). Game resolution 216x288 with 64 px fighters.
 - **Cabinet frame 270x472 native (decided 2026-10-10):** marquee 32, bezels 12, monitor 216x288, control panel 128. Shows at 2x in a 1080p browser window and 4x on most phones. Mock-ups redrawn at this size.
-- Mock-ups: `docs/mockups/cabinet/cabinet-browser-pick.png`, `cabinet-browser-reveal.png`, `cabinet-phone-pick.png`, `cabinet-phone-reveal.png`. Source in `sources/cabinet-mockup/` (`cabinet.html#browser-pick` etc.; render with `node shotcab.mjs browser-pick phone-reveal ...`). The older landscape mock-ups (`docs/mockups/landscape-superseded/`) are superseded.
+- Mock-ups: `docs/mockups/cabinet/cabinet-browser-pick.png`, `cabinet-browser-reveal.png`, `cabinet-phone-pick.png`, `cabinet-phone-reveal.png`, plus the menu screens (`cabinet-phone-logo.png`, `cabinet-phone-home.png`, `cabinet-phone-result.png`, `cabinet-browser-home.png`). Source in `sources/cabinet-mockup/` (`cabinet.html#browser-pick` etc.; render with `node shotcab.mjs browser-pick phone-reveal ...`). The older landscape mock-ups (`docs/mockups/landscape-superseded/`) are superseded.
+
+## Menus and screen flow (decided 2026-10-10)
+
+The user asked for menu infrastructure now, so multiplayer menus can be added later without restructuring. Flow: **Boot → Logo intro → Home → Fight → Result → (Retry → Fight | Main menu → Home)**. Diagram: `docs/architecture/diagrams/7-screen-flow.svg`; details in section 6 of the architecture doc.
+
+| Screen | What it shows / does |
+|---|---|
+| Logo intro | A **placeholder logo** ("YOUR STUDIO" + a simple pixel emblem) fades in, holds, fades out (about 0.5s / 1.5s / 0.5s, tunable). Any button or tap skips it. To be replaced by the company logo: swapping one image (`assets/logo.png`) is the whole change. Fades step through a few palette levels (pixel perfect, no smooth alpha). |
+| Home (main menu) | Game title, both fighters idling, and a menu: **START GAME (VS CPU)**; **ONLINE** shown greyed out with "SOON" as the slot for multiplayer. More buttons (online lobby, settings, how to play) are added as new menu items. |
+| Fight | The match vs the CPU, as before. |
+| Result | Shown over the last fight frame: "YOU WIN!" or "CPU WINS", the round score (e.g. 2-1), and a menu: **RETRY** (default, new match with the same setup) and **MAIN MENU**. |
+
+- Menu controls: joystick or arrow keys move the cursor; any of the three cabinet buttons, Enter or Space confirms; items can also be tapped/clicked on the monitor; Esc / Android back goes back. (Default picked by Claude: gives the joystick a use in menus; easy to change.)
+- Structure: menus are data (`menus/homeMenu.ts`, `menus/resultMenu.ts`) drawn by one reusable `MenuView`; one `SceneFlow` handles all screen changes and transitions; a `MatchSetup` (`{ mode: 'cpu' }` now, `{ mode: 'online', roomCode }` later) is passed Home → Fight → Result so Retry replays the same kind of match (online: both players must agree to the rematch).
+- Music: menu loop on Home and Result, fight loop in the fight.
+- Menu text uses a 5x7 bitmap pixel font (pixel-perfect rule 5).
+- Mock-ups: `docs/mockups/cabinet/cabinet-phone-logo.png`, `cabinet-phone-home.png`, `cabinet-phone-result.png`, `cabinet-browser-home.png` (source: `sources/cabinet-mockup/screens.js` + `pixfont.js`, render with `node shotcab.mjs phone-home ...`).
+- Later menus (not now): online lobby (create/join room code), settings (volumes, mute), pause, how to play.
 
 ## Pixel perfect (requirement, 2026-10-10)
 
@@ -153,7 +171,7 @@ Architecture rules:
 - Four layers, dependencies only point down: Platform, Presentation (scenes, director, views, fx, audio, input), Session, Core. Import rules enforced by ESLint.
 - Core = pure rules functions + a `Referee` phase machine (RoundIntro, Picking, Reveal, RoundOver, MatchOver) with injected clock and seeded RNG; the same referee runs in the Colyseus room later.
 - Scenes talk only to a `MatchSession` interface: `LocalSession` (referee + `RandomCpu` move source) now, `OnlineSession` later.
-- Scenes wire, a `FightDirector` choreographs, views are dumb. `CabinetScene` always runs; monitor scenes draw through a 216x288 camera viewport.
+- Scenes wire, a `FightDirector` choreographs, views are dumb. `CabinetScene` always runs; monitor scenes (Logo, Home, Fight, Result) draw through a 216x288 camera viewport. Menus are data + one `MenuView`; `SceneFlow` owns screen changes.
 - Two homes for numbers: rules and phase timings in `packages/core/src/config.ts` (shared with server); all feel values in `apps/game/src/config/tuning.ts`. Dev-only Tweakpane panel to tune live.
 - Pixel scaler in `platform/`: largest whole scale in device pixels, canvas fills the window, leftover is arcade room.
 - Defaults to confirm: monorepo shape, Tweakpane, `no-restricted-paths` for import rules. (Cabinet frame 270x472 is decided.)
@@ -161,7 +179,7 @@ Architecture rules:
 ## Roadmap
 
 1. Rules core with tests (console only).
-2. Playable prototype: rectangles as fighters, buttons, bars, timer, best of three.
+2. Playable prototype: rectangles as fighters, buttons, bars, timer, best of three, plus the menu flow (logo intro, home with Start game, result with Retry / Main menu).
 3. Art and juice: sprites, falling icons, hit flash, shake, SFX, music.
 4. Polish and release on the web (e.g. GitHub Pages), including a dedicated game-feel pass (see "Polish and game feel").
 5. Online play (Colyseus, room codes).
@@ -187,7 +205,7 @@ Architecture rules:
 ## Artifacts
 
 - Mock-up images (1280x720 PNG, superseded by the cabinet layout): `docs/mockups/landscape-superseded/1-pick-your-move.png`, `2-reveal-throw-beats-block.png`, `3-tie-clash.png`, `4-match-won.png`. Fighters are placeholders drawn in code.
-- Interactive design document: https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ. Its published HTML is saved at `docs/design/interactive-gdd.html`. Source pieces are in `sources/landscape-mockup/`: `src.html` is the page template with `{{HUDCSS}}`, `{{STAGEJS}}` and `{{HUDJS}}` placeholders, `stage.js` is the pixel renderer, and `hud.js`/`hud.css` are the HUD. To re-render the mock-ups, run `node shot.mjs <outdir>` with Playwright.
+- Interactive design document: https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ (rebuilt 2026-10-10 around the cabinet: a playable 270x472 cabinet running logo intro → home → fight → result, plus all chapters, menu and cabinet mock-ups, art samples and diagrams). Saved copy: `docs/design/interactive-gdd.html`. Source: `sources/design-doc/gdd.html` (page template) + `sketch.js` (the playable cabinet), using `sources/cabinet-mockup/art.js`, `pixfont.js`, `screens.js`. Build with `node sources/design-doc/build.mjs [artifact-out.html]`; the artifact copy is published with the images under `mockups/`, `art-direction/`, `architecture/diagrams/`. The old landscape page sources stay in `sources/landscape-mockup/` (superseded).
 - Keep the Claude Doc, the interactive page and this file in sync when decisions change.
 
 ## Decision log
@@ -208,3 +226,4 @@ Architecture rules:
 - 2026-10-10: Architecture document written (`docs/architecture/ARCHITECTURE.md`): layers, monorepo, core rules + referee, MatchSession, director/views, pixel scaler, tuning, online, Android, code rules, testing. Proposal pending the user's review.
 - 2026-10-10: Cabinet frame trimmed to 270x472 native (from 502) so it shows at 2x in a 1080p browser window; mock-ups redrawn.
 - 2026-10-10: Layout: vertical arcade cabinet (monitor on top, control panel with 3 physical buttons + decorative joystick below), in browser and on phone. Replaces landscape 16:9.
+- 2026-10-10: Menu flow added: placeholder logo intro (fade in/out, replaceable), home screen with Start game vs CPU and a greyed Online slot for later, result screen with Retry / Main menu. Menus as data so multiplayer menus slot in later. Architecture doc, design documents and mock-ups updated.
