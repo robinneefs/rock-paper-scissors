@@ -214,7 +214,7 @@ The **juice kit** (`fx/`) is a set of small reusable effects (`shake`, `hitPause
 |---|---|---|
 | `BootScene` | Once | Loads assets, shows a pixel loading bar |
 | `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, marquee, control panel, the three buttons and the joystick |
-| `LogoScene` | Once per launch, on the monitor | Placeholder studio logo: fades in, holds, fades out. Any button or tap skips it |
+| `LogoScene` | Once per launch, on the monitor | Studio logo (Chain Shift): fades in, holds, fades out. Any button or tap skips it |
 | `HomeScene` | On the monitor | Game title, idle fighters, the home menu (Start game vs CPU; Online greyed out until step 5; Options) |
 | `OptionsScene` | On the monitor, from Home | Settings menu; for now one setting, Scaling (Pixel perfect or Fill height), applied at once and saved |
 | `FightScene` | On the monitor | Fighters, HUD, move icons, banners, effects |
@@ -228,7 +228,7 @@ Monitor scenes use a **camera viewport** placed over the cabinet's screen, so th
 
 The game always starts the same way: Boot, then the logo intro, then the home screen. From there **Start game** begins a match against the CPU, and when the match ends the result screen offers **Retry** (a new match with the same setup) or **Main menu**. This is deliberately small, but it is the infrastructure later menus plug into.
 
-- **Logo intro.** `LogoScene` shows one image, `assets/logo.png` (a placeholder until the company logo exists; replacing the file is the whole change). It fades in, holds and fades out using `tuning.intro` values. To stay pixel perfect the fade steps through a few darkened palette levels instead of a smooth alpha blend. Any button, key or tap skips it.
+- **Logo intro.** `LogoScene` shows one image, `assets/logo.png` (the Chain Shift logo since v0.4.0, built from the master in `docs/brand/` by `python3 tools/make-logo.py`). It fades in, holds and fades out using `tuning.intro` values. To stay pixel perfect the fade steps through a few darkened palette levels instead of a smooth alpha blend. Any button, key or tap skips it.
 - **Menus are data.** A menu is a list of items `{ id, label, tag?, enabled, onSelect }` in `menus/`. One reusable `MenuView` draws any list, moves the cursor, skips disabled items, blinks the cursor and plays the move and confirm sounds. The home menu today:
 
   ```ts
@@ -395,7 +395,7 @@ What a typical future change touches, to show the structure holds up:
 | Local two-player (hot-seat) | new `HotSeatSource` move source, input bindings for player 2 |
 | Online play | new `apps/server`, new `session/OnlineSession.ts`, a `LobbyScene` and enabling the Online item in `menus/homeMenu.ts`; fight and result scenes unchanged |
 | Another menu (settings, how to play, pause) | one scene + one menu file; add an item to an existing menu |
-| Real company logo | replace `assets/logo.png` |
+| Real company logo | done in v0.4.0: master in `docs/brand/`, rebuild `assets/logo.png` with `tools/make-logo.py` |
 | Android | Capacitor config + `platform/` adapters; game unchanged |
 | Gamepad | `input/` only |
 
