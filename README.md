@@ -47,7 +47,7 @@ Because the damage is uneven, this is not classic rock paper scissors. Throw is 
 | Online play (later) | Node + Colyseus, server-authoritative |
 | Android (later) | Capacitor |
 
-The game rules live in a plain TypeScript module with no engine, timers or networking, so the same rules can run on a server for online play.
+The game rules live in a plain TypeScript module with no engine, timers or networking, so the same rules can run on a server for online play. See the [architecture document](docs/architecture/ARCHITECTURE.md) for the full plan.
 
 ## Roadmap
 
@@ -65,10 +65,11 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions, open questions and the decision log |
 | [`docs/idea/`](docs/idea/) | The original idea brief |
 | [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
+| [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code will be structured: layers, packages, online play, pixel-perfect rendering, tuning |
 | [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Current arcade cabinet mock-ups (browser and phone) |
 | [`docs/mockups/landscape-superseded/`](docs/mockups/landscape-superseded/) | Earlier landscape mock-ups, replaced by the cabinet layout |
 | [`docs/art-direction/`](docs/art-direction/) | Art direction samples: sprite sizes, character styles, body shapes |
-| [`sources/`](sources/) | The HTML/JS that draws the mock-ups and art samples, plus Playwright scripts to render them |
+| [`sources/`](sources/) | The HTML/JS that draws the mock-ups, art samples and architecture diagrams, plus Playwright scripts to render them |
 
 ## License
 
