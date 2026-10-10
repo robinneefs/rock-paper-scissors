@@ -10,14 +10,18 @@
     "dev": "npm run dev -w @rps/game",
     "build": "npm run build -w @rps/game",
     "preview": "npm run preview -w @rps/game",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
     "test:e2e": "npm run test:e2e -w @rps/game",
     "typecheck": "tsc -p packages/core && tsc -p apps/game",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run typecheck && npm test"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 110
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
