@@ -32,6 +32,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 - Play it online: https://robinneefs.github.io/RPS-Fighter/ (GitHub Pages, from the `RPS-Fighter/` folder of `robinneefs/robinneefs.github.io`)
 - Repository: https://github.com/robinneefs/rock-paper-scissors (game code in `packages/core` + `apps/game`, plus design docs, mock-ups and art samples)
 - Original idea brief: `docs/idea/rock-paper-scissors-idea.md`
+- Future plans and roadmap (Claude Doc, editable, made 2026-10-10): https://claude.ai/code/artifact/f1f3ff49-5ab1-4624-8d81-85bf111b8494 (every open decision, balancing thought and planned feature, each with a note on how to proceed, plus the suggested order of work). Tick items off there when they ship.
 - Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
 
 ## Where things stand
@@ -39,7 +40,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 - Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), merged into `main` as PR #3 on 2026-10-10. The user also runs it locally from `D:\Vibe Coding Projects\rock-paper-scissors` (`npm run dev`).
 - What works: Chain Shift studio logo intro in purple (skippable, since v0.4.0), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone. OPTIONS on the home menu opens an Options screen with one setting, Scaling: Fill height (default since v0.3.0, fills the screen) or Pixel perfect (whole-number), remembered between visits.
 - Art is **placeholder**, drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so final sprites swap in without touching views. No sound or music yet.
-- Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Open feel questions: 5s vs 3s timer, 100 health (rounds take about 6 to 8 exchanges).
+- Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane; **built in v0.5.0**, PR open), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Open feel questions: 5s vs 3s timer, 100 health (rounds take about 6 to 8 exchanges).
 - `archive/old-draft/` in this folder is an **earlier draft the user discarded**. Do not build on it. It is not in the repository.
 
 ## Code (2026-10-10)
@@ -51,13 +52,14 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 | `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
 | `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` (two scaling modes), `SettingsStore` (`platform/settings.ts`, localStorage) |
 | `apps/game/src/config/tuning.ts` | Every feel value |
+| `apps/game/src/dev/` | Dev tuning panel (v0.5.0): Tweakpane over `tuning.ts` (live) plus the core rules and phase timings (next match), with Restart match, Copy changes, Reset all; edits kept in localStorage; backquote hides it. Only in `npm run dev`. |
 | `apps/game/public/assets/logo.png` | Studio logo (Chain Shift as purple pixel art, 192x84 native): the master reduced to 94 blocks wide, each block 2x2 native pixels like the title's scaled font, violet #A35BFF fill with a light top edge, darker bottom edge, drop shadow in `palette.shadow` and a 1 px `palette.ink` outline. Built from the white master `docs/brand/logo-chain-shift-white.png` by `python3 tools/make-logo.py` (needs Pillow), which also writes the full-size `docs/brand/logo-chain-shift-purple.png` |
 
 Changelog: `CHANGELOG.md` at the repo root.
 
 Commands: `npm install`, `npm run dev`, `npm test` (51 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
 
-**Versions and changelog (rule, user's request 2026-10-10):** every build that goes online gets a version bump and a `CHANGELOG.md` entry, no exceptions. Semver under 1.0: new features bump the middle number (0.2.0 → 0.3.0), fix-only builds the last (0.2.1). The version is set in one place, `apps/game/package.json`; Vite injects it (`src/version.ts`) and the home screen shows it small in the bottom-right corner. Each version is tagged `vX.Y.Z` with a GitHub release by the Release workflow (`.github/workflows/release.yml`): on every push to main it tags a package.json version that has no tag yet, using its changelog entry as the notes (cloud sessions can't push tags themselves). Current: **v0.3.0** (Fill height by default), live at https://robinneefs.github.io/RPS-Fighter/ (main @ c49023e). v0.2.0 = Options + scaling. v0.1.0 = the first playable (main @ a1a96aa). v0.4.0 (Chain Shift logo intro) is in PR #7, not yet merged or published.
+**Versions and changelog (rule, user's request 2026-10-10):** every build that goes online gets a version bump and a `CHANGELOG.md` entry, no exceptions. Semver under 1.0: new features bump the middle number (0.2.0 → 0.3.0), fix-only builds the last (0.2.1). The version is set in one place, `apps/game/package.json`; Vite injects it (`src/version.ts`) and the home screen shows it small in the bottom-right corner. Each version is tagged `vX.Y.Z` with a GitHub release by the Release workflow (`.github/workflows/release.yml`): on every push to main it tags a package.json version that has no tag yet, using its changelog entry as the notes (cloud sessions can't push tags themselves). Current: **v0.4.0** (Chain Shift pixel-art logo intro), live at https://robinneefs.github.io/RPS-Fighter/ (main @ cdabb84, PR #7; site repo @ 2aa77f2). v0.3.0 = Fill height by default (main @ c49023e). v0.2.0 = Options + scaling. v0.1.0 = the first playable (main @ a1a96aa).
 
 Publishing (2026-10-10): bump the version and add the changelog entry in the PR, merge (the Release workflow tags it), `npm run build`, then replace the contents of `RPS-Fighter/` in `robinneefs/robinneefs.github.io` with `apps/game/dist/*` and push to its `main`; GitHub Pages redeploys on its own. Vite `base: './'` keeps paths relative, so no base-path change is needed. Nothing updates the online copy automatically: republish after changes the user wants online.
 
@@ -200,7 +202,7 @@ Architecture rules:
 - Scenes wire, a `FightDirector` choreographs, views are dumb. `CabinetScene` always runs; monitor scenes (Logo, Home, Fight, Result) draw through a 216x288 camera viewport. Menus are data + one `MenuView`; `SceneFlow` owns screen changes.
 - Two homes for numbers: rules and phase timings in `packages/core/src/config.ts` (shared with server); all feel values in `apps/game/src/config/tuning.ts`. Dev-only Tweakpane panel to tune live.
 - Pixel scaler in `platform/`: largest whole scale in device pixels, canvas fills the window, leftover is arcade room.
-- Built as proposed (2026-10-10): npm workspaces monorepo, `eslint-plugin-import` `no-restricted-paths` + `no-restricted-imports` (no Phaser in core/session, no `Referee` outside the session). Tweakpane not added yet (step 3). `MatchSession` gained `ready()` (scene is listening; local starts the match) and a `rematchAccepted` event for Retry.
+- Built as proposed (2026-10-10): npm workspaces monorepo, `eslint-plugin-import` `no-restricted-paths` + `no-restricted-imports` (no Phaser in core/session, no `Referee` outside the session). Tweakpane panel added in v0.5.0 (`apps/game/src/dev/`, dev builds only). `MatchSession` gained `ready()` (scene is listening; local starts the match) and a `rematchAccepted` event for Retry.
 
 ## Roadmap
 
@@ -220,6 +222,7 @@ Architecture rules:
 - Architecture defaults to confirm (see section 16 of the architecture doc): monorepo, Tweakpane, lint tool for import rules.
 - 100 starting health right? 5s or 3s timer?
 - Game name beyond "Rock Paper Scissors Fighter"?
+- Move animations (user's note 2026-10-10): Attack, Throw and Block currently look nearly the same. Either make each clearly read as a strike, a grab/throw and a block/counter, or relabel the moves Rock, Paper, Scissors with animations to match. Roadmap doc recommends trying distinct silhouettes on the placeholders first.
 
 ## How the user likes to work
 
@@ -264,3 +267,6 @@ Architecture rules:
 - 2026-10-10: v0.3.0: Fill height is now the default scaling for first-time players (user's request); a saved choice still wins. README play link moved directly under the title. Doc screenshots stay Pixel perfect (the capture script sets it). Merged as PR #6 (main @ c49023e, tagged v0.3.0) and published to GitHub Pages (robinneefs.github.io @ f3001c7).
 - 2026-10-10: v0.4.0: the startup intro shows the user's Chain Shift studio logo instead of the placeholder. The user dropped a white master; Claude made it purple (#A35BFF, 5.3:1 contrast on the intro's near-black, picked over paler lavender to stay clearly purple), sized 176 px wide at native resolution with hard edges (pixel perfect). Masters in `docs/brand/`, rebuilt with `tools/make-logo.py`; the placeholder painter and its tool were removed.
 - 2026-10-10: At the user's request (same thread) the in-game logo was then redrawn in a pixel-art style matching the game's title: 2x2-pixel blocks, highlight/lowlight edges, `palette.shadow` drop shadow, ink outline. The full-size purple copy in `docs/brand/` stays smooth for non-game use.
+- 2026-10-10: PR #7 merged (main @ cdabb84, Release workflow tagged v0.4.0) and v0.4.0 published to GitHub Pages (robinneefs.github.io @ 2aa77f2) at the user's request. The repo copy of this file lags this line until the next PR syncs it.
+- 2026-10-10: Wrote the future plans and roadmap Claude Doc (link under Links) collecting all plans so far by area, with a how-to-proceed note per item and a suggested order: game feel and sound, final art, polish and 1.0 on the web, online, Android. Re-added the move-animation open question, which had dropped out of this file.
+- 2026-10-10: Dev tuning panel built (v0.5.0, step 3 item 1) at the user's go-ahead: Tweakpane in dev builds only, editing feel values live and rules/timings for the next match, so the open 3s vs 5s timer and 100 health questions can be tried by feel. Each match now gets its own copy of the rules, and the fight HUD reads them from the session.

@@ -1,4 +1,4 @@
-import type { MatchState, Move, Phase, RefereeEvents, Side, Unsubscribe } from '@rps/core';
+import type { MatchState, Move, Phase, RefereeEvents, RulesConfig, Side, Unsubscribe } from '@rps/core';
 
 /** What a match looks like right now, from one player's seat. */
 export interface MatchView {
@@ -24,6 +24,8 @@ export interface SessionEvents extends Record<string, unknown> {
  */
 export interface MatchSession {
   readonly me: Side;
+  /** The rules this match is played with (start health, rounds to win, damage). */
+  readonly rules: RulesConfig;
   /** The scene is listening: locally this starts the match; online it tells the server this client is ready. */
   ready(): void;
   submitPick(move: Move): void;

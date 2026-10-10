@@ -55,6 +55,12 @@ export default tseslint.config(
               from: [`${game}/scenes`],
               message: 'The director must not depend on scenes.',
             },
+            // The dev tuning panel is loaded only by main.ts (dev builds); the game never depends on it
+            {
+              target: `${game}/!(dev)/**/*`,
+              from: `${game}/dev`,
+              message: 'Only main.ts loads the dev tuning panel.',
+            },
             // Platform: no game logic
             {
               target: `${game}/platform`,

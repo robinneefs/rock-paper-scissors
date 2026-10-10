@@ -1,5 +1,7 @@
+import { defaultRules, defaultTimings } from '@rps/core';
 import Phaser from 'phaser';
 import { palette } from './config/palette';
+import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
 import { PixelScaler } from './platform/PixelScaler';
 import { browserStore, SettingsStore } from './platform/settings';
@@ -48,6 +50,28 @@ scaler.onChange((l) => {
   game.scale.resize(l.width, l.height);
   game.scale.setZoom(scaler.zoom);
 });
+
+// Dev tuning panel (npm run dev only; never in a release build). Toggle with the ` key.
+if (import.meta.env.DEV) {
+  void import('./dev/tuningPanel').then(({ mountTuningPanel }) =>
+    mountTuningPanel({
+      groups: [
+        { file: 'apps/game/src/config/tuning.ts', title: 'Feel (live)', tree: tuning, expanded: true },
+        {
+          file: 'packages/core/src/config.ts (defaultRules)',
+          title: 'Rules (next match)',
+          tree: defaultRules,
+        },
+        {
+          file: 'packages/core/src/config.ts (defaultTimings)',
+          title: 'Phase timings (next match)',
+          tree: defaultTimings,
+        },
+      ],
+      restartMatch: () => flow.toFight({ mode: 'cpu', cpu: 'random' }),
+    }),
+  );
+}
 
 // A small read-only hook for the smoke tests: which screens are running, and the match phase.
 (window as unknown as { __rps: object }).__rps = {
