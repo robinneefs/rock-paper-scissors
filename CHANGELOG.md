@@ -4,7 +4,7 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 
 ## 0.4.0 (2026-10-10)
 
-- The startup intro now shows the Chain Shift studio logo in purple, replacing the placeholder logo.
+- The startup intro now shows the Chain Shift studio logo, redrawn as purple pixel art in the style of the game's title (chunky pixels, light top edge, drop shadow, dark outline), replacing the placeholder logo.
 
 ## 0.3.0 (2026-10-10)
 
