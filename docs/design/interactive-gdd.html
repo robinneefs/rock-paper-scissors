@@ -1,57 +1,64 @@
 <title>Rock Paper Scissors Fighter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
-/* Layout: one dusk-rooftop column; the playable stage is the hero, then the design document as numbered chapters. Single dark look on purpose (it is the game's own world). */
+/* Layout: the playable arcade cabinet is the hero, then the design document as chapters.
+   One dark neon look on purpose: it is the game's own world (arcade room at night). */
 :root {
-  --night: #141129;
-  --dusk: #1d1838;
-  --panel: #241d44;
-  --line: #3a3063;
-  --ink: #f6efe2;
-  --muted: #b9add6;
-  --attack: #e5483f;
-  --throw: #f0a92e;
-  --block: #2bb3a3;
-  --sun: #ffc27a;
+  --room: #0d0819;      /* page ground: the arcade room */
+  --panel: #1a1131;     /* raised surfaces */
+  --line: #33255a;      /* rules and borders */
+  --ink: #f4effc;       /* text */
+  --muted: #b3a7d3;     /* secondary text */
+  --pink: #ff2fbf;      /* neon accent */
+  --cyan: #3ff0ff;
+  --gold: #ffb321;
+  --attack: #ff3b6b; --throw: #ffb321; --block: #3ff0ff;
   --display: 'Pixelify Sans', 'Courier New', monospace;
-  --digits: 'Press Start 2P', 'Courier New', monospace;
   --body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
-html, body { background: var(--night); color: var(--ink); }
+html, body { background: var(--room); color: var(--ink); }
 body { font-family: var(--body); font-size: 17px; line-height: 1.6; padding-inline: 16px; padding-block: 0 64px; }
-.wrap { max-width: 1040px; margin: 0 auto; }
+.wrap { max-width: 1080px; margin: 0 auto; }
 h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
 p { margin: 0; max-width: 66ch; }
-a { color: var(--sun); }
-a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
-.num { font-variant-numeric: tabular-nums; }
+a { color: var(--cyan); }
+a:focus-visible, button:focus-visible, input:focus-visible, canvas:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
 /* Hero */
-header.hero { display: grid; gap: 18px; padding-block: 40px 20px; }
-.eyebrow { font-family: var(--display); letter-spacing: .18em; text-transform: uppercase; color: var(--sun); font-size: 14px; }
-h1 { font-size: clamp(38px, 7vw, 76px); letter-spacing: .01em; }
-h1 span.a { color: var(--attack); } h1 span.t { color: var(--throw); } h1 span.b { color: var(--block); }
-.lede { font-size: 19px; color: var(--muted); max-width: 60ch; }
-.stage-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; overflow: hidden; border: 4px solid #000; box-shadow: 0 0 0 4px var(--line), 0 18px 0 -4px rgba(0,0,0,.45); background: #171433; }
-.stage-wrap > .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.stage-note { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; color: var(--muted); font-size: 15px; }
-.kbd { font-family: var(--display); border: 2px solid var(--line); padding: 0 6px; color: var(--ink); }
-.touch-moves { display: none; gap: 10px; }
-.touch-moves button { flex: 1; font: 600 18px var(--display); padding: 12px 6px; border: 3px solid #000; color: #fff8ec; text-shadow: 2px 2px 0 rgba(0,0,0,.5); cursor: pointer; }
-.touch-moves .attack { background: var(--attack); } .touch-moves .throw { background: var(--throw); } .touch-moves .block { background: var(--block); }
-@media (max-width: 720px) { .touch-moves { display: flex; } }
+header.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center; padding-block: 36px 12px; }
+@media (max-width: 860px) { header.hero { grid-template-columns: 1fr; } }
+.hero-text { display: grid; gap: 18px; align-content: center; min-width: 0; }
+.eyebrow { font-family: var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-size: 14px; }
+h1 { font-size: clamp(40px, 6.4vw, 72px); color: var(--ink); text-shadow: 3px 3px 0 #5a0b4a; }
+h1 em { font-style: normal; color: var(--pink); }
+.lede { font-size: 19px; color: var(--muted); }
+.controls { display: grid; gap: 6px; font-size: 15px; color: var(--muted); margin: 0; padding: 0; list-style: none; }
+.controls b { color: var(--ink); font-weight: 700; }
+.kbd { font-family: var(--display); border: 2px solid var(--line); padding: 0 6px; color: var(--ink); white-space: nowrap; }
+.screens { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.screens span { font-family: var(--display); font-size: 14px; letter-spacing: .06em; padding: 3px 10px; border: 2px solid var(--line); color: var(--muted); }
+.screens span.on { border-color: var(--pink); color: var(--ink); background: #3a1458; }
+.screens i { color: var(--line); font-style: normal; }
+.ghost { font: 600 15px var(--display); background: transparent; color: var(--cyan); border: 2px solid var(--line); padding: 4px 12px; cursor: pointer; justify-self: start; }
+.ghost:hover { border-color: var(--cyan); }
+.cab-host { display: grid; justify-items: center; min-width: 0; }
+#cab { line-height: 0; filter: drop-shadow(0 0 28px rgba(255, 47, 191, .25)); }
+.cab-canvas { image-rendering: pixelated; touch-action: none; cursor: pointer; display: block; }
+.note { font-size: 14px; color: var(--muted); }
 
 /* Chapters */
 nav.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 20px 8px; border-top: 2px solid var(--line); margin-top: 28px; }
 nav.toc a { font-family: var(--display); font-size: 15px; text-decoration: none; color: var(--muted); border: 2px solid var(--line); padding: 4px 10px; }
 nav.toc a:hover { color: var(--ink); border-color: var(--muted); }
-section.ch { display: grid; gap: 20px; padding-block: 48px 8px; scroll-margin-top: 12px; }
-.ch-head { display: flex; align-items: baseline; gap: 14px; }
-.ch-head .no { font-family: var(--display); color: var(--sun); font-size: 18px; }
-h2 { font-size: clamp(28px, 4.4vw, 40px); }
-h3 { font-size: 20px; color: var(--ink); }
+nav.toc a.new { border-color: var(--pink); color: var(--ink); }
+section.ch { display: grid; gap: 20px; padding-block: 52px 8px; scroll-margin-top: 12px; }
+.ch-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.ch-head .no { font-family: var(--display); color: var(--gold); font-size: 18px; }
+.ch-head .tag { font-family: var(--display); font-size: 13px; color: var(--room); background: var(--pink); padding: 0 8px; letter-spacing: .08em; }
+h2 { font-size: clamp(28px, 4.2vw, 40px); }
+h3 { font-size: 20px; }
 .grid { display: grid; gap: 16px; }
 .cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .cols-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
@@ -59,155 +66,98 @@ h3 { font-size: 20px; color: var(--ink); }
 .tile { background: var(--panel); border: 2px solid var(--line); padding: 18px; display: grid; gap: 8px; align-content: start; }
 .tile h3 { font-size: 19px; }
 .tile p { color: var(--muted); font-size: 16px; }
-ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 66ch; }
-ul.plain li::marker { color: var(--sun); }
-.callout { border-left: 6px solid var(--sun); background: var(--dusk); padding: 14px 18px; max-width: 70ch; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 70ch; }
+ul.plain li::marker { color: var(--pink); }
+.callout { border-left: 6px solid var(--gold); background: var(--panel); padding: 14px 18px; max-width: 72ch; }
 .callout strong { font-family: var(--display); font-weight: 600; letter-spacing: .03em; }
 .table-scroll { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 16px; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--line); vertical-align: top; }
 th { font-family: var(--display); font-weight: 600; color: var(--muted); letter-spacing: .04em; font-size: 15px; }
 td.n { font-variant-numeric: tabular-nums; }
-.chip { display: inline-block; font-family: var(--display); font-size: 15px; padding: 1px 8px; color: #fff8ec; border: 2px solid #000; text-shadow: 1px 1px 0 rgba(0,0,0,.5); white-space: nowrap; }
+td b { font-family: var(--display); font-weight: 600; }
+.chip { display: inline-block; font-family: var(--display); font-size: 15px; padding: 1px 8px; color: var(--room); white-space: nowrap; }
 .chip.attack { background: var(--attack); } .chip.throw { background: var(--throw); } .chip.block { background: var(--block); }
+
+/* Figures */
+.figs { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); align-items: start; }
+.figs.wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure a { display: block; line-height: 0; border: 2px solid var(--line); background: #07040f; }
+figure a:hover { border-color: var(--cyan); }
+figure img { width: 100%; height: auto; display: block; }
+figcaption { font-size: 15px; color: var(--muted); }
+figcaption b { color: var(--ink); font-family: var(--display); font-weight: 600; }
+.diagram { overflow-x: auto; border: 2px solid var(--line); background: #fbfaff; }
+.diagram img { display: block; width: 100%; min-width: 640px; height: auto; }
 
 /* Rules triangle */
 .tri svg { width: 100%; max-width: 440px; height: auto; display: block; }
 
 /* Mind game */
-.mix { display: grid; gap: 14px; }
-.mix-row { display: grid; grid-template-columns: 80px 1fr 64px; align-items: center; gap: 12px; }
+.mix-row { display: grid; grid-template-columns: 72px 1fr 54px; align-items: center; gap: 12px; }
 .mix-row .lbl { font-family: var(--display); }
-.mix-bar { height: 26px; background: var(--dusk); border: 2px solid var(--line); position: relative; }
+.mix-bar { height: 22px; background: var(--room); border: 2px solid var(--line); position: relative; }
 .mix-bar > i { position: absolute; inset: 0 auto 0 0; transition: width .3s steps(8); }
-.mix-row .pct { font-family: var(--digits); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
-.sliders { display: grid; gap: 10px; }
-.slider { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 15px; }
-.slider input { width: 100%; accent-color: var(--sun); }
-.slider output { font-family: var(--digits); font-size: 12px; text-align: right; }
-.reset-btn { justify-self: start; font: 600 15px var(--display); background: transparent; color: var(--muted); border: 2px solid var(--line); padding: 4px 10px; cursor: pointer; }
+.mix-row .pct { font-family: var(--display); font-variant-numeric: tabular-nums; text-align: right; }
+.slider { display: grid; grid-template-columns: 130px 1fr 34px; gap: 10px; align-items: center; font-size: 15px; }
+.slider input { width: 100%; accent-color: var(--pink); min-width: 0; }
+.slider output { font-family: var(--display); text-align: right; font-variant-numeric: tabular-nums; }
 .insight { font-size: 16px; color: var(--muted); }
-.loop { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; counter-reset: lp; }
+.insight b { color: var(--ink); }
+.loop { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
 .loop li { list-style: none; background: var(--panel); border: 2px solid var(--line); padding: 12px 14px; font-size: 16px; }
 
 /* Flow */
-ol.flow { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; counter-reset: st; max-width: 760px; }
+ol.flow { margin: 0; padding: 0; list-style: none; display: grid; counter-reset: st; max-width: 780px; }
 ol.flow li { counter-increment: st; display: grid; grid-template-columns: 52px 1fr; gap: 14px; padding: 14px 0; border-bottom: 2px dashed var(--line); }
-ol.flow li::before { content: counter(st); font-family: var(--display); font-size: 26px; color: var(--night); background: var(--sun); width: 44px; height: 44px; display: grid; place-items: center; border: 3px solid #000; }
+ol.flow li::before { content: counter(st); font-family: var(--display); font-size: 24px; color: var(--room); background: var(--gold); width: 42px; height: 42px; display: grid; place-items: center; }
 ol.flow li b { font-family: var(--display); font-weight: 600; font-size: 18px; display: block; }
 ol.flow li span { color: var(--muted); }
 
-/* Mock-up gallery */
-.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
-.shot { display: grid; gap: 8px; margin: 0; min-width: 0; }
-.shot .stage-wrap { box-shadow: 0 0 0 3px var(--line); border-width: 3px; }
-.shot figcaption { font-size: 15px; color: var(--muted); }
-.shot figcaption b { color: var(--ink); font-family: var(--display); font-weight: 600; }
-.poses { overflow-x: auto; border: 2px solid var(--line); background: #171433; }
-.poses-inner { position: relative; width: 1000px; height: 250px; }
-.poses canvas { display: block; image-rendering: pixelated; width: 1000px; height: 210px; }
-.pose-labels span { position: absolute; top: 218px; transform: translateX(-50%); font-family: var(--display); font-size: 15px; color: var(--muted); white-space: nowrap; }
-
-/* Architecture */
-.arch { display: grid; gap: 14px; }
-.arch-top { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; }
-@media (max-width: 720px) { .arch-top { grid-template-columns: 1fr; } }
-.arch .box { border: 2px solid var(--line); padding: 14px; display: grid; gap: 10px; align-content: start; }
-.arch .box.later { border-style: dashed; }
-.arch .box > b { font-family: var(--display); font-weight: 600; }
-.arch .inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
-.arch .inner div { background: var(--panel); padding: 10px 12px; font-size: 15px; color: var(--muted); }
-.arch .inner div b { display: block; color: var(--ink); font-family: var(--display); font-weight: 600; }
-.arch .rules { border: 3px solid var(--sun); background: rgba(255,194,122,.08); padding: 14px 16px; }
-.arch .rules b { font-family: var(--display); font-weight: 600; color: var(--sun); }
-.arch .uses { font-family: var(--display); color: var(--muted); font-size: 14px; text-align: center; letter-spacing: .1em; }
-
 /* Roadmap */
-ol.road { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; counter-reset: rd; }
+ol.road { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; counter-reset: rd; }
 ol.road li { counter-increment: rd; background: var(--panel); border: 2px solid var(--line); padding: 12px; display: grid; gap: 4px; align-content: start; font-size: 15px; color: var(--muted); }
-ol.road li::before { content: 'Step ' counter(rd); font-family: var(--display); color: var(--sun); font-size: 14px; }
+ol.road li::before { content: 'Step ' counter(rd); font-family: var(--display); color: var(--gold); font-size: 14px; }
 ol.road li b { color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 17px; }
 ol.road li.later { border-style: dashed; }
-ul.qs { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 70ch; }
+ul.qs { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 72ch; }
 ul.qs li { padding-left: 30px; position: relative; }
-ul.qs li::before { content: '?'; position: absolute; left: 0; top: 1px; width: 20px; height: 20px; display: grid; place-items: center; font-family: var(--display); background: var(--line); color: var(--ink); font-size: 14px; }
+ul.qs li::before { content: '?'; position: absolute; left: 0; top: 2px; width: 20px; height: 20px; display: grid; place-items: center; font-family: var(--display); background: var(--line); color: var(--ink); font-size: 14px; }
 footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line); color: var(--muted); font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 24px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-.stage { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #171433; font-family: 'Pixelify Sans', 'Courier New', monospace; color: #fff8ec; user-select: none; }
-.stage canvas { position: absolute; inset: 0; width: 1280px; height: 720px; image-rendering: pixelated; }
-.hud-top { position: absolute; left: 40px; right: 40px; top: 28px; display: grid; grid-template-columns: 1fr 120px 1fr; align-items: start; gap: 24px; }
-.side { display: grid; gap: 8px; }
-.side.right { justify-items: end; }
-.name { font-size: 26px; letter-spacing: 2px; text-shadow: 3px 3px 0 #1a1326; display: flex; gap: 14px; align-items: baseline; }
-.name small { font-size: 18px; color: #d9cbe8; letter-spacing: 1px; }
-.bar { position: relative; width: 100%; height: 34px; background: #1a1326; border: 4px solid #1a1326; box-shadow: 0 0 0 4px #fff8ec; }
-.bar .lost { position: absolute; top: 0; bottom: 0; background: #f5e3a0; transition: width .5s ease .25s; }
-.bar .hp { position: absolute; top: 0; bottom: 0; background: linear-gradient(#7fe08a 0 45%, #3fb35a 45% 100%); transition: width .25s steps(6); }
-.side.left .bar .hp, .side.left .bar .lost { right: 0; }
-.side.right .bar .hp, .side.right .bar .lost { left: 0; }
-.bar .hp.low { background: linear-gradient(#ff8b6b 0 45%, #e5483f 45% 100%); }
-.bar .num { position: absolute; top: 2px; font-size: 22px; text-shadow: 2px 2px 0 #1a1326; }
-.side.left .bar .num { left: 10px; }
-.side.right .bar .num { right: 10px; }
-.pips { display: flex; gap: 10px; }
-.pip { width: 22px; height: 22px; background: #1a1326; border: 4px solid #fff8ec; transform: rotate(45deg); margin: 4px; }
-.pip.won { background: #f0a92e; }
-.timer { justify-self: center; width: 112px; height: 112px; display: grid; place-items: center; background: #1a1326; border: 6px solid #fff8ec; font-size: 64px; line-height: 1; text-shadow: 4px 4px 0 #3d2659; position: relative; }
-.timer.hurry { color: #ff8b6b; }
-.timer .lbl { position: absolute; bottom: -34px; font-size: 18px; letter-spacing: 3px; color: #f0e3ff; text-shadow: 2px 2px 0 #1a1326; white-space: nowrap; }
-.round-tag { display:none; position: absolute; left: 50%; top: 178px; transform: translateX(-50%); font-size: 20px; letter-spacing: 4px; color: #fff8ec; text-shadow: 2px 2px 0 #1a1326; }
-.moves { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; gap: 22px; }
-.move { width: 200px; height: 84px; display: grid; grid-template-columns: 50px 1fr; align-items: center; gap: 10px; padding: 0 16px; font: inherit; font-size: 28px; letter-spacing: 1px; color: #fff8ec; text-shadow: 3px 3px 0 rgba(26,19,38,.7); border: 5px solid #1a1326; cursor: pointer; position: relative; box-shadow: inset 0 -10px 0 rgba(0,0,0,.25), 0 6px 0 #1a1326; }
-.move .key { position: absolute; top: -14px; right: -10px; width: 34px; height: 34px; display: grid; place-items: center; font-size: 18px; background: #1a1326; color: #fff8ec; text-shadow: none; }
-.move canvas { position: static; width: 50px; height: 50px; image-rendering: pixelated; }
-.move.attack { background: #e5483f; }
-.move.throw { background: #f0a92e; }
-.move.block { background: #2bb3a3; }
-.move.dim { filter: saturate(.35) brightness(.7); }
-.move.sel { transform: translateY(-10px); box-shadow: inset 0 -10px 0 rgba(0,0,0,.25), 0 16px 0 #1a1326, 0 0 0 5px #fff8ec; }
-.move:focus-visible { outline: 5px solid #fff8ec; outline-offset: 4px; }
-.status { position: absolute; left: 50%; bottom: 119px; background: rgba(26,19,38,.82); padding: 2px 14px; border: 3px solid #1a1326; transform: translateX(-50%); font-size: 19px; letter-spacing: 2px; text-shadow: 2px 2px 0 #1a1326; white-space: nowrap; }
-.dmg { position: absolute; font-size: 56px; color: #fff3b0; text-shadow: 4px 4px 0 #8f1f22, -2px -2px 0 #1a1326; transform: translate(-50%, -50%); white-space: nowrap; }
-.dmg.tie { color: #e6defa; text-shadow: 4px 4px 0 #3d2659; font-size: 40px; }
-.banner { position: absolute; left: 0; right: 0; top: 168px; text-align: center; font-size: 120px; letter-spacing: 8px; color: #fff3b0; text-shadow: 8px 8px 0 #e5483f, 14px 14px 0 #1a1326; }
-.banner small { display: block; font-size: 36px; letter-spacing: 4px; color: #fff8ec; text-shadow: 3px 3px 0 #1a1326; margin-top: 10px; }
-.cta { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); display: flex; gap: 20px; }
-.cta button { font: inherit; font-size: 30px; padding: 14px 30px; background: #fff8ec; color: #1a1326; border: 5px solid #1a1326; box-shadow: 0 6px 0 #1a1326; cursor: pointer; }
-.cta button.alt { background: #3d2659; color: #fff8ec; }
-.vignette { position: absolute; inset: 0; background: rgba(23,20,51,.3); }
-.timer.vs .t { font-size: 44px; color: #f0a92e; }
-[hidden]{display:none!important}
-.status:empty{display:none}
-
-.stage .timer .t, .stage .bar .num, .stage .dmg { font-family: var(--digits); }
-.stage .timer .t { font-size: 44px; } .stage .timer.vs .t { font-size: 30px; } .stage .bar .num { font-size: 16px; top: 7px; } .stage .dmg { font-size: 40px; } .stage .dmg.tie { font-size: 30px; }
 </style>
 
 <div class="wrap">
 <header class="hero">
-  <div class="eyebrow">Game design document · web game</div>
-  <h1>Rock Paper Scissors <span class="a">F</span><span class="t">i</span><span class="b">g</span>hter</h1>
-  <p class="lede">Two fighters, three moves, five seconds to choose. Attack beats Throw, Throw beats Block, Block beats Attack, and each win hits for a different amount. Try the sketch below: it plays the exchange flow from this document against the random computer.</p>
-  <div class="stage-wrap" id="hero-wrap"><div id="hero-stage"></div></div>
-  <div class="touch-moves" id="touch-moves">
-    <button class="attack" data-move="attack">Attack</button><button class="throw" data-move="throw">Throw</button><button class="block" data-move="block">Block</button>
+  <div class="hero-text">
+    <div class="eyebrow">Game design document · browser arcade fighter</div>
+    <h1>Rock Paper Scissors <em>Fighter</em></h1>
+    <p class="lede">Two fighters, three moves, five seconds to choose. Attack beats Throw, Throw beats Block, Block beats Attack, and each win hits for a different amount. The cabinet is playable: it boots through the logo intro and the home menu into a best-of-three match against the random computer.</p>
+    <ul class="controls">
+      <li><b>Buttons:</b> click or tap Attack, Throw, Block, or press <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span>.</li>
+      <li><b>Menus:</b> joystick (drag it) or arrow keys move the cursor, any button or <span class="kbd">Enter</span> confirms, menu items can be tapped, <span class="kbd">Esc</span> goes back. Click the cabinet first to give it the keyboard.</li>
+    </ul>
+    <div class="screens" aria-label="Current screen"><span data-screen="logo">Logo intro</span><i>›</i><span data-screen="home">Home</span><i>›</i><span data-screen="fight">Fight</span><i>›</i><span data-screen="result">Result</span></div>
+    <button class="ghost" id="replay-intro" type="button">Replay intro</button>
+    <p class="note">Placeholder fighters and logo drawn in code. Native 270 × 472 cabinet, scaled by whole pixels.</p>
   </div>
-  <div class="stage-note"><span>Pick with the buttons or keys <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span>. Placeholder art drawn in code, not final sprites.</span><span>Best of three · 100 health · 5 second timer</span></div>
+  <div class="cab-host"><div id="cab"></div></div>
 </header>
 
 <nav class="toc" aria-label="Chapters">
-  <a href="#overview">Overview</a><a href="#rules">Rules</a><a href="#mind">Mind game</a><a href="#flow">Exchange flow</a><a href="#look">Look and feel</a><a href="#audio">Audio</a><a href="#tech">Technology</a><a href="#roadmap">Roadmap</a>
+  <a href="#overview">Overview</a><a href="#rules">Rules</a><a href="#mind">Mind game</a><a href="#menus" class="new">Menus</a><a href="#flow">Exchange flow</a><a href="#cabinet">Cabinet</a><a href="#art">Art direction</a><a href="#feel">Pixels and polish</a><a href="#audio">Audio</a><a href="#tech">Technology</a><a href="#roadmap">Roadmap</a>
 </nav>
 
 <section class="ch" id="overview">
   <div class="ch-head"><span class="no">01</span><h2>Overview</h2></div>
-  <p>A browser fighting game built on rock paper scissors. Version 1 is single player against a random computer. Online play and an Android app come later, and they shape every technical choice now.</p>
+  <p>A browser fighting game built on rock paper scissors, drawn as an upright arcade machine. Version 1 is single player against a random computer. Online play and an Android app come later, and they shape every technical choice now.</p>
   <div class="grid cols-3">
     <div class="tile"><h3>Simple to read</h3><p>Three moves, one clear winner each exchange, no hidden mechanics.</p></div>
-    <div class="tile"><h3>Satisfying reveal</h3><p>Both picks lock in, the move icons drop in, and the fighters act it out.</p></div>
-    <div class="tile"><h3>Built for online</h3><p>The rules never trust the client, so adding a server later changes how moves arrive, not the rules.</p></div>
+    <div class="tile"><h3>Satisfying reveal</h3><p>Both picks lock in, the move icons drop in, and the fighters act it out with flash, shake and sound.</p></div>
+    <div class="tile"><h3>Built for online</h3><p>The rules never trust the client, and the menus already have a slot for multiplayer.</p></div>
   </div>
-  <p><b>Platforms:</b> desktop and mobile web browsers first, then Android by wrapping the same build.</p>
+  <p><b>Platforms:</b> desktop and mobile browsers first (the same vertical cabinet on both), then Android by wrapping the same build.</p>
 </section>
 
 <section class="ch" id="rules">
@@ -215,22 +165,22 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line);
   <div class="grid cols-2">
     <div class="tri">
       <svg viewBox="0 0 440 360" role="img" aria-label="Attack beats Throw for 15, Throw beats Block for 20, Block beats Attack for 10">
-        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f6efe2"/></marker></defs>
-        <g stroke="#f6efe2" stroke-width="3" fill="none">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f4effc"/></marker></defs>
+        <g stroke="#f4effc" stroke-width="3" fill="none">
           <path d="M248 92 L350 246" marker-end="url(#ar)"/>
           <path d="M296 284 L146 284" marker-end="url(#ar)"/>
           <path d="M92 246 L192 92" marker-end="url(#ar)"/>
         </g>
         <g font-family="Pixelify Sans, monospace" text-anchor="middle">
-          <rect x="160" y="22" width="120" height="64" fill="#e5483f" stroke="#000" stroke-width="4"/>
-          <text x="220" y="62" font-size="24" fill="#fff8ec">Attack</text>
-          <rect x="300" y="252" width="120" height="64" fill="#f0a92e" stroke="#000" stroke-width="4"/>
-          <text x="360" y="292" font-size="24" fill="#fff8ec">Throw</text>
-          <rect x="20" y="252" width="120" height="64" fill="#2bb3a3" stroke="#000" stroke-width="4"/>
-          <text x="80" y="292" font-size="24" fill="#fff8ec">Block</text>
-          <text x="338" y="160" font-size="20" fill="#f6efe2">beats</text><text x="338" y="184" font-size="26" fill="#ffc27a">15</text>
-          <text x="220" y="330" font-size="20" fill="#f6efe2">beats · <tspan fill="#ffc27a" font-size="26">20</tspan></text>
-          <text x="102" y="160" font-size="20" fill="#f6efe2">beats</text><text x="102" y="184" font-size="26" fill="#ffc27a">10</text>
+          <rect x="160" y="22" width="120" height="64" fill="#ff3b6b"/>
+          <text x="220" y="62" font-size="24" fill="#0d0819">Attack</text>
+          <rect x="300" y="252" width="120" height="64" fill="#ffb321"/>
+          <text x="360" y="292" font-size="24" fill="#0d0819">Throw</text>
+          <rect x="20" y="252" width="120" height="64" fill="#3ff0ff"/>
+          <text x="80" y="292" font-size="24" fill="#0d0819">Block</text>
+          <text x="338" y="160" font-size="20" fill="#f4effc">beats</text><text x="338" y="184" font-size="26" fill="#ffb321">15</text>
+          <text x="220" y="330" font-size="20" fill="#f4effc">beats · <tspan fill="#ffb321" font-size="26">20</tspan></text>
+          <text x="102" y="160" font-size="20" fill="#f4effc">beats</text><text x="102" y="184" font-size="26" fill="#ffb321">10</text>
         </g>
       </svg>
     </div>
@@ -263,125 +213,198 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line);
     <li>Blocking too often gets punished by Throw. Repeat.</li>
   </ol>
   <div class="grid cols-2">
-    <div class="tile mix" aria-live="polite">
+    <div class="tile" aria-live="polite">
       <h3>The balanced mix</h3>
       <p>When both players play perfectly, these are the shares of picks where neither has an edge. Change the damage values to see how the mix moves.</p>
       <div class="mix-row"><span class="lbl">Attack</span><div class="mix-bar"><i id="bar-attack" style="background:var(--attack)"></i></div><span class="pct" id="pct-attack">44%</span></div>
       <div class="mix-row"><span class="lbl">Block</span><div class="mix-bar"><i id="bar-block" style="background:var(--block)"></i></div><span class="pct" id="pct-block">33%</span></div>
       <div class="mix-row"><span class="lbl">Throw</span><div class="mix-bar"><i id="bar-throw" style="background:var(--throw)"></i></div><span class="pct" id="pct-throw">22%</span></div>
-      <div class="sliders">
-        <label class="slider" for="d-attack">Attack damage<input id="d-attack" type="range" min="5" max="40" step="1" value="15"><output id="o-attack">15</output></label>
-        <label class="slider" for="d-throw">Throw damage<input id="d-throw" type="range" min="5" max="40" step="1" value="20"><output id="o-throw">20</output></label>
-        <label class="slider" for="d-block">Block damage<input id="d-block" type="range" min="5" max="40" step="1" value="10"><output id="o-block">10</output></label>
-      </div>
-      <button class="reset-btn" id="mix-reset" type="button">Reset to 15 / 20 / 10</button>
+      <label class="slider" for="d-attack">Attack damage<input id="d-attack" type="range" min="5" max="40" step="1" value="15"><output id="o-attack">15</output></label>
+      <label class="slider" for="d-throw">Throw damage<input id="d-throw" type="range" min="5" max="40" step="1" value="20"><output id="o-throw">20</output></label>
+      <label class="slider" for="d-block">Block damage<input id="d-block" type="range" min="5" max="40" step="1" value="10"><output id="o-block">10</output></label>
+      <button class="ghost" id="mix-reset" type="button">Reset to 15 / 20 / 10</button>
     </div>
     <div class="grid">
-      <p class="insight"><b style="color:var(--ink)">The rule of thumb:</b> each move's share is proportional to the damage of the move it beats. Attack beats the 20 damage Throw, so Attack is picked most. Throw beats the 10 damage Block, so Throw, the biggest hit, is picked least.</p>
-      <p class="insight"><b style="color:var(--ink)">Health changes the stakes.</b> With 15 health left, an Attack or Throw win ends the round but a 10 damage Block counter does not. Late-round picks feel different from early ones.</p>
-      <p class="insight"><b style="color:var(--ink)">Against the random computer,</b> Attack and Throw each gain about 1.7 net damage per exchange on average, while Block loses about 3.3. A computer that plays the balanced mix, or punishes patterns, would make a stronger opponent later.</p>
+      <p class="insight"><b>Rule of thumb:</b> each move's share is proportional to the damage of the move it beats. Attack beats the 20 damage Throw, so Attack is picked most. Throw beats the 10 damage Block, so Throw, the biggest hit, is picked least.</p>
+      <p class="insight"><b>Health changes the stakes.</b> With 15 health left, an Attack or Throw win ends the round but a 10 damage Block counter does not. Late-round picks feel different from early ones.</p>
+      <p class="insight"><b>Against the random computer,</b> Attack and Throw each gain about 1.7 net damage per exchange on average, while Block loses about 3.3. A computer that plays the balanced mix, or punishes patterns, would make a stronger opponent later.</p>
     </div>
   </div>
 </section>
 
+<section class="ch" id="menus">
+  <div class="ch-head"><span class="no">04</span><h2>Menus and screen flow</h2><span class="tag">NEW</span></div>
+  <p>The game starts with a logo intro, then the home screen, where Start game begins a match against the CPU. After the match, Retry plays again and Main menu goes home. This small flow is the frame the multiplayer menus plug into later.</p>
+  <div class="diagram"><img src="../architecture/diagrams/7-screen-flow.svg" alt="Screen flow: Boot, Logo intro, Home, Fight, Result; Retry goes back to Fight, Main menu goes back to Home; later screens hang off Home" width="1000" height="560"></div>
+  <div class="figs">
+    <figure><a href="../mockups/cabinet/cabinet-phone-logo.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-phone-logo.png" alt="Phone: placeholder studio logo on a black monitor" loading="lazy" width="1140" height="2400"></a><figcaption><b>Logo intro.</b> A placeholder "YOUR STUDIO" mark fades in, holds and fades out. Any button skips it.</figcaption></figure>
+    <figure><a href="../mockups/cabinet/cabinet-phone-home.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-phone-home.png" alt="Phone: home menu with Start game vs CPU and a greyed Online item" loading="lazy" width="1140" height="2400"></a><figcaption><b>Home.</b> Start game (vs CPU) is live; Online sits greyed out with "SOON" as the multiplayer slot.</figcaption></figure>
+    <figure><a href="../mockups/cabinet/cabinet-phone-result.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-phone-result.png" alt="Phone: result screen, You win 2-1, Retry and Main menu" loading="lazy" width="1140" height="2400"></a><figcaption><b>Result.</b> Winner and round score over the last fight frame, with Retry (selected first) and Main menu.</figcaption></figure>
+  </div>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Screen</th><th>Shows</th><th>Options</th></tr></thead>
+    <tbody>
+      <tr><td><b>Logo intro</b></td><td>Placeholder logo, fade in 0.5 s, hold 1.5 s, fade out 0.5 s (tunable). Swapping one image puts the company logo in.</td><td>Any button or tap skips</td></tr>
+      <tr><td><b>Home</b></td><td>Game title, both fighters idling, menu loop music</td><td>START GAME (VS CPU) · ONLINE (later)</td></tr>
+      <tr><td><b>Fight</b></td><td>The match, best of three, fight loop music</td><td>None</td></tr>
+      <tr><td><b>Result</b></td><td>YOU WIN! or CPU WINS, round score</td><td>RETRY · MAIN MENU</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="plain">
+    <li><b>Controls in menus:</b> the joystick or arrow keys move the cursor, any of the three buttons (or Enter, Space, a tap on the item) confirms, Esc or Android back goes back. In a fight the joystick stays decoration.</li>
+    <li><b>Built to grow:</b> every menu is a list of items drawn by one menu component, so online play, settings, pause or a how-to-play screen is a new item plus its screen.</li>
+    <li><b>Retry</b> starts a new match with the same setup. Online, it becomes a rematch request that both players must accept.</li>
+    <li><b>Pixel perfect:</b> fades step through four palette levels instead of a smooth blend, and menu text uses a 5 × 7 pixel font.</li>
+  </ul>
+</section>
+
 <section class="ch" id="flow">
-  <div class="ch-head"><span class="no">04</span><h2>Exchange flow</h2></div>
+  <div class="ch-head"><span class="no">05</span><h2>Exchange flow</h2></div>
   <p>Every exchange runs the same way: a 5 second countdown, a simultaneous reveal, then the animation and damage.</p>
   <ol class="flow">
-    <li><div><b>Pick</b><span>A 5 second countdown starts (3 seconds is the alternative to playtest). Tap or click Attack, Throw or Block, or press 1, 2, 3. You can change your pick until the timer ends.</span></div></li>
+    <li><div><b>Pick</b><span>A 5 second countdown starts (3 seconds is the alternative to playtest). Press Attack, Throw or Block on the cabinet, or 1, 2, 3. You can change your pick until the timer ends; only you see it.</span></div></li>
     <li><div><b>Lock in</b><span>At 0, anyone without a pick gets a random move. Picks stay hidden until both are locked.</span></div></li>
-    <li><div><b>Reveal</b><span>Each fighter's move icon drops in above their head with a bounce, at the same moment for both.</span></div></li>
+    <li><div><b>Reveal</b><span>Each fighter's move coin drops in above their head with a bounce, at the same moment for both.</span></div></li>
     <li><div><b>Act it out</b><span>Both fighters play their move. The winner lands with a hit flash, a hit sound and a small screen shake. On a tie the moves clash and nobody takes damage.</span></div></li>
     <li><div><b>Resolve</b><span>The loser's health bar drains by the damage amount.</span></div></li>
-    <li><div><b>Next</b><span>Next countdown, or a knockout: the round goes to the other fighter, a "Round 2" or "Final round" banner starts the next one, or the match ends with a winner screen and a rematch button.</span></div></li>
+    <li><div><b>Next</b><span>Next countdown, or a knockout: a "Round 2" or "Final round" banner starts the next round, or the match ends on the result screen with Retry and Main menu.</span></div></li>
   </ol>
   <p class="insight">In online play the timer and the random fallback pick run on the server, so both players see the same reveal at the same time.</p>
 </section>
 
-<section class="ch" id="look">
-  <div class="ch-head"><span class="no">05</span><h2>Look and feel</h2></div>
-  <p>Two pixel-art fighters stand close together near the center, about one body-width apart, so attacks and throws visibly connect. Health bars and round markers sit above them, the three move buttons below. The screen is landscape 16:9 and scales to fit.</p>
-  <div class="shots" id="shots"></div>
-  <h3>Animations each fighter needs</h3>
-  <div class="poses"><div class="poses-inner"><canvas id="poses" width="400" height="84"></canvas><div class="pose-labels" id="pose-labels"></div></div></div>
-  <div class="callout"><strong>Art decision.</strong> The free packs we checked (Jestaa's free character, LuizMelo's Fantasy Martial Characters, Pixel Moon Studio's Fighter v2) don't look good enough and none include block or throw. Before building starts, we either find better packs (paid ones included) or generate our own fighters with AI image tools and clean them up into sprite sheets. The fighters on this page are placeholders drawn in code.</div>
-  <p>Move icons can come from <a href="https://kenney.nl/assets" target="_blank" rel="noopener">Kenney</a>, whose packs are CC0.</p>
+<section class="ch" id="cabinet">
+  <div class="ch-head"><span class="no">06</span><h2>The arcade cabinet</h2></div>
+  <p>The whole game is an upright arcade machine, so the layout is vertical and works the same in a desktop browser and on a phone held upright. In the browser the cabinet stands in a dark arcade room; on a phone it fills the screen with the buttons in thumb reach.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Part</th><th>Size (game pixels)</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><b>Whole frame</b></td><td class="n">270 × 472</td><td>Shows at 2× in a 1080p browser window and 4× on most phones</td></tr>
+      <tr><td><b>Marquee</b></td><td class="n">270 × 32</td><td>Backlit game name</td></tr>
+      <tr><td><b>Monitor</b></td><td class="n">216 × 288 (3:4)</td><td>The game: menus, fighters, health bars, round pips, timer, move coins</td></tr>
+      <tr><td><b>Control panel</b></td><td class="n">270 × 128</td><td>Three arcade buttons (Attack, Throw, Block) that press down, and the joystick: decoration in a fight, cursor in menus</td></tr>
+    </tbody>
+  </table></div>
+  <div class="figs wide">
+    <figure><a href="../mockups/cabinet/cabinet-browser-pick.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-browser-pick.png" alt="Browser: cabinet in an arcade room, player picking Throw with 3 seconds left" loading="lazy" width="1920" height="1200"></a><figcaption><b>Browser, picking.</b> Throw is pressed, the CPU's coin shows a question mark.</figcaption></figure>
+    <figure><a href="../mockups/cabinet/cabinet-browser-reveal.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-browser-reveal.png" alt="Browser: reveal, Block counters Attack for 10 damage" loading="lazy" width="1920" height="1200"></a><figcaption><b>Browser, reveal.</b> Block counters Attack for 10.</figcaption></figure>
+    <figure><a href="../mockups/cabinet/cabinet-browser-home.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-browser-home.png" alt="Browser: cabinet showing the home menu" loading="lazy" width="1920" height="1200"></a><figcaption><b>Browser, home.</b> The same menu as on the phone, at 2×.</figcaption></figure>
+  </div>
+  <div class="figs">
+    <figure><a href="../mockups/cabinet/cabinet-phone-pick.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-phone-pick.png" alt="Phone: picking" loading="lazy" width="1140" height="2400"></a><figcaption><b>Phone, picking.</b></figcaption></figure>
+    <figure><a href="../mockups/cabinet/cabinet-phone-reveal.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-phone-reveal.png" alt="Phone: reveal" loading="lazy" width="1140" height="2400"></a><figcaption><b>Phone, reveal.</b></figcaption></figure>
+    <figure><a href="../mockups/cabinet/cabinet-phone-reveal-bigpixels.png" target="_blank" rel="noopener"><img src="../mockups/cabinet/cabinet-phone-reveal-bigpixels.png" alt="Phone: reveal with bigger pixels" loading="lazy" width="1140" height="2400"></a><figcaption><b>Bigger pixels test.</b> A 144 × 192 monitor; mixes pixel sizes, so not the plan.</figcaption></figure>
+  </div>
+</section>
+
+<section class="ch" id="art">
+  <div class="ch-head"><span class="no">07</span><h2>Art direction</h2></div>
+  <p>The fighters are martial artists in gi, drawn short, wide and cute with a slight Japanese chibi feel: white gi with a red headband against blue gi with a gold band. The tone is an '80s neon arcade: synthwave sunset, neon grid floor, a neon torii. Sprites are 64 pixels tall.</p>
+  <div class="figs">
+    <figure><a href="../art-direction/2-medium-64px.png" target="_blank" rel="noopener"><img src="../art-direction/2-medium-64px.png" alt="64 pixel fighters on the neon stage" loading="lazy"></a><figcaption><b>64 px, chosen.</b> The medium size.</figcaption></figure>
+    <figure><a href="../art-direction/1-small-48px.png" target="_blank" rel="noopener"><img src="../art-direction/1-small-48px.png" alt="48 pixel fighters" loading="lazy"></a><figcaption><b>48 px.</b> The small option.</figcaption></figure>
+    <figure><a href="../art-direction/3-large-80px.png" target="_blank" rel="noopener"><img src="../art-direction/3-large-80px.png" alt="80 pixel fighters" loading="lazy"></a><figcaption><b>80 px.</b> The large option.</figcaption></figure>
+    <figure><a href="../art-direction/4-sizes-and-poses.png" target="_blank" rel="noopener"><img src="../art-direction/4-sizes-and-poses.png" alt="Sizes and poses side by side" loading="lazy"></a><figcaption><b>Sizes and poses.</b> The same fighter at 48, 64 and 80 px, in idle, attack and block.</figcaption></figure>
+    <figure><a href="../art-direction/5-six-character-styles.png" target="_blank" rel="noopener"><img src="../art-direction/5-six-character-styles.png" alt="Six character style options" loading="lazy"></a><figcaption><b>Six pixel styles.</b> Neon arcade chibi, soft pastel, 8-bit tiny, big-head mascot, 16-bit hero, Game Boy.</figcaption></figure>
+    <figure><a href="../art-direction/6-soft-pastel-branches.png" target="_blank" rel="noopener"><img src="../art-direction/6-soft-pastel-branches.png" alt="Soft pastel style branches" loading="lazy"></a><figcaption><b>Soft pastel, branching out.</b> Nine drawing styles, from anime cel to flat graphic.</figcaption></figure>
+    <figure><a href="../art-direction/7-body-shapes.png" target="_blank" rel="noopener"><img src="../art-direction/7-body-shapes.png" alt="Body shape options" loading="lazy"></a><figcaption><b>Nine body shapes.</b> From dumpling and bean to brawler and a cat fighter.</figcaption></figure>
+  </div>
+  <div class="callout"><strong>Still open.</strong> The overall look is parked to revisit later, and the real fighter art is not settled. The free packs checked lack block and throw frames, so the plan is better paid packs or AI-generated fighters (PixelLab is the best fit found) cleaned up into sprite sheets. Everything on this page is a placeholder drawn in code.</div>
+  <p>Animations each fighter needs: idle, attack, throw, block (with counter strike), hurt, KO and a win pose.</p>
+</section>
+
+<section class="ch" id="feel">
+  <div class="ch-head"><span class="no">08</span><h2>Pixel perfect and polished</h2></div>
+  <div class="grid cols-2">
+    <div class="tile"><h3>Pixel perfect rules</h3>
+      <ul class="plain">
+        <li>One pixel size for everything: fighters, cabinet, HUD, icons, effects.</li>
+        <li>Whole-number scaling only (2×, 3×, 4×), nearest neighbour; leftover space is arcade room.</li>
+        <li>Everything snaps to whole pixels, including camera, shake and tweens.</li>
+        <li>No free rotation or scaling of sprites; turns and squash are drawn as frames.</li>
+        <li>Pixel UI: a pixel font at native size, bars and glows drawn as pixels.</li>
+        <li>One limited palette shared by all art.</li>
+      </ul></div>
+    <div class="tile"><h3>Game feel</h3>
+      <ul class="plain">
+        <li>Screen shake that is short, punchy and scaled to damage.</li>
+        <li>Hit flash, sparks, impact frames, dust and a brief hit-pause on big hits.</li>
+        <li>Lively animation with anticipation, overshoot and follow-through; idle is never still.</li>
+        <li>A sound for every action, layered and varied.</li>
+        <li>Buttons press down, bars drain smoothly, banners slam in.</li>
+        <li>A dedicated tuning pass before release, with every value in one tuning file.</li>
+      </ul></div>
+  </div>
 </section>
 
 <section class="ch" id="audio">
-  <div class="ch-head"><span class="no">06</span><h2>Audio</h2></div>
-  <p>Version 1 ships with free hit sounds and one looping fight track. Custom music made with Claude comes later.</p>
+  <div class="ch-head"><span class="no">09</span><h2>Audio</h2></div>
   <div class="grid cols-2">
     <div class="tile"><h3>Sound effects</h3>
       <ul class="plain">
         <li>Countdown ticks for the last 3 seconds and a lock-in sound at the reveal.</li>
-        <li>A different hit per winning move (attack, throw slam, block counter) and a clash on a tie.</li>
-        <li>KO, "Round 1, fight" and a win jingle.</li>
-        <li>Source: <a href="https://opengameart.org/content/37-hitspunches" target="_blank" rel="noopener">37 hits/punches</a> by Independent.nu, CC0.</li>
+        <li>A different hit per winning move and a clash on a tie.</li>
+        <li>KO, "Round 1, fight", a win jingle, and menu cursor and confirm blips.</li>
+        <li>Source: <a href="https://opengameart.org/content/37-hitspunches" target="_blank" rel="noopener">37 hits/punches</a>, CC0.</li>
       </ul></div>
     <div class="tile"><h3>Music</h3>
       <ul class="plain">
-        <li>A menu loop and a fight loop, with mute and separate music and effects volume.</li>
-        <li>To start: a CC0 chiptune loop from OpenGameArt.</li>
-        <li>Later: Claude composes chiptune music as code (for example note sequences played with Tone.js) or writes MIDI files a free tool turns into audio.</li>
+        <li>A menu loop on Home and Result, a fight loop in the match, with mute and separate volumes.</li>
+        <li>To start: a CC0 chiptune loop.</li>
+        <li>Later: music composed by Claude as code (Tone.js) or as MIDI rendered to audio.</li>
       </ul></div>
   </div>
 </section>
 
 <section class="ch" id="tech">
-  <div class="ch-head"><span class="no">07</span><h2>Technology</h2></div>
-  <p>Phaser 3 and TypeScript, bundled with Vite, with the rules in a separate module that a future online server reuses unchanged.</p>
+  <div class="ch-head"><span class="no">10</span><h2>Technology</h2></div>
+  <p>Phaser 3 and TypeScript, bundled with Vite, with the rules in a separate package that the future online server reuses unchanged. The full plan is in the <a href="https://github.com/robinneefs/rock-paper-scissors/blob/main/docs/architecture/ARCHITECTURE.md" target="_blank" rel="noopener">architecture document</a>.</p>
   <div class="table-scroll"><table>
     <thead><tr><th>Part</th><th>Choice</th><th>Why</th></tr></thead>
     <tbody>
       <tr><td>Game engine</td><td><a href="https://phaser.io" target="_blank" rel="noopener">Phaser 3</a></td><td>2D sprites, animations, tweens and audio for the browser</td></tr>
-      <tr><td>Language</td><td>TypeScript</td><td>One language for game, rules and server; types catch mistakes</td></tr>
-      <tr><td>Build tool</td><td>Vite</td><td>Fast dev server, simple production build</td></tr>
-      <tr><td>Tests</td><td>Vitest</td><td>Tests the rules module without a browser</td></tr>
-      <tr><td>Online play (later)</td><td>Node + <a href="https://colyseus.io" target="_blank" rel="noopener">Colyseus</a></td><td>Rooms, matchmaking and state sync made for games like this</td></tr>
-      <tr><td>Android (later)</td><td><a href="https://capacitorjs.com" target="_blank" rel="noopener">Capacitor</a></td><td>Wraps the same web build as an Android app</td></tr>
+      <tr><td>Language</td><td>TypeScript</td><td>One language for game, rules and server</td></tr>
+      <tr><td>Build and tests</td><td>Vite, Vitest</td><td>Fast dev server; rules tested without a browser</td></tr>
+      <tr><td>Online play (later)</td><td>Node + <a href="https://colyseus.io" target="_blank" rel="noopener">Colyseus</a></td><td>Server-authoritative rooms; only the server knows both picks</td></tr>
+      <tr><td>Android (later)</td><td><a href="https://capacitorjs.com" target="_blank" rel="noopener">Capacitor</a></td><td>Wraps the same web build</td></tr>
     </tbody>
   </table></div>
-  <div class="arch" role="img" aria-label="The browser game and a future server both use the shared rules module">
-    <div class="arch-top">
-      <div class="box"><b>Browser game: Phaser 3 + TypeScript</b>
-        <div class="inner">
-          <div><b>Fight scene</b>Fighters, health bars, move icons, timer, sounds. Only displays results.</div>
-          <div><b>Move source</b>Your pick and the random computer pick now; the online opponent later.</div>
-        </div>
-        <span class="insight" style="font-size:14px">Capacitor wraps this build for Android.</span>
-      </div>
-      <div class="box later"><b>Game server (later)</b>
-        <div class="inner"><div><b>Colyseus room</b>Runs the timer and random fallback pick, sends results to both players.</div></div>
-      </div>
-    </div>
-    <div class="uses">BOTH USE</div>
-    <div class="rules"><b>Shared rules module, plain TypeScript.</b> Decides each exchange from both moves and tracks health, rounds and the match. No Phaser, no timers, no network code.</div>
-  </div>
+  <div class="diagram"><img src="../architecture/diagrams/1-layers.svg" alt="Layers: platform, presentation, session and core; dependencies only point down" loading="lazy" width="1000" height="640"></div>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Scene</th><th>Runs</th><th>Draws</th></tr></thead>
+    <tbody>
+      <tr><td>Boot</td><td>Once</td><td>Loads assets, pixel loading bar</td></tr>
+      <tr><td>Cabinet</td><td>Always, underneath</td><td>Arcade room, cabinet, buttons, joystick</td></tr>
+      <tr><td>Logo</td><td>Once per launch</td><td>Placeholder logo fade in and out</td></tr>
+      <tr><td>Home</td><td>On the monitor</td><td>Title, fighters, home menu</td></tr>
+      <tr><td>Fight</td><td>On the monitor</td><td>Fighters, HUD, move coins, banners, effects</td></tr>
+      <tr><td>Result</td><td>On the monitor</td><td>Winner, score, Retry and Main menu</td></tr>
+    </tbody>
+  </table></div>
   <ul class="plain">
-    <li>The game never decides a result inside a scene. Scenes only display what the rules module returns.</li>
-    <li>Going online swaps the move source for the server; the fight scene and rules stay as they are.</li>
-    <li>In online play only the server knows both picks before the reveal, so nobody can peek or cheat.</li>
+    <li>Scenes only display what the rules return; they never decide a result.</li>
+    <li>Scenes talk to one match session: local with the random CPU now, online later, with the same events.</li>
+    <li>Menus are data drawn by one menu component, and one scene-flow helper owns every screen change, so new screens are small additions.</li>
   </ul>
 </section>
 
 <section class="ch" id="roadmap">
-  <div class="ch-head"><span class="no">08</span><h2>Roadmap</h2></div>
+  <div class="ch-head"><span class="no">11</span><h2>Roadmap</h2></div>
   <p>Each step ends with something playable.</p>
   <ol class="road">
-    <li><b>Rules core</b>Shared rules module with tests, played in the console.</li>
-    <li><b>Prototype</b>Phaser scene with rectangles, buttons, bars, timer, best of three.</li>
-    <li><b>Art and juice</b>Sprites, falling icons, hit flash, shake, sound and music.</li>
-    <li><b>Release</b>Title screen, rematch, settings, mobile check, published on the web.</li>
-    <li class="later"><b>Online play</b>Colyseus server, room codes, server runs timer and rules.</li>
+    <li><b>Rules core</b>Shared rules and referee with tests, played in the console.</li>
+    <li><b>Prototype</b>Cabinet, rectangles as fighters, bars, timer, best of three, plus the logo intro, home and result menus.</li>
+    <li><b>Art and juice</b>Sprites, falling coins, hit flash, shake, sound and music.</li>
+    <li><b>Release</b>Settings, mobile check, the game-feel pass, published on the web.</li>
+    <li class="later"><b>Online play</b>Colyseus server, room codes, the Online menu item comes alive.</li>
     <li class="later"><b>Android</b>Capacitor wrapper and a Play Store test build.</li>
   </ol>
   <h3>Open questions</h3>
   <ul class="qs">
-    <li>Before building: find better fighter art, or generate our own with AI, including block and throw frames.</li>
-    <li>Is 100 starting health the right round length?</li>
-    <li>5 or 3 second timer? Starting with 5.</li>
-    <li>Does the game get a name beyond Rock Paper Scissors Fighter?</li>
+    <li>Fighter art: a better pack or AI-generated fighters, including block and throw frames?</li>
+    <li>The overall look is parked: revisit the cute chibi plus neon '80s style later.</li>
+    <li>Is 100 starting health the right round length? 5 or 3 second timer?</li>
+    <li>The real company logo for the intro, and a game name beyond Rock Paper Scissors Fighter.</li>
+    <li>Architecture defaults to confirm: monorepo, Tweakpane tuning panel, import lint rules.</li>
   </ul>
 </section>
 
@@ -393,354 +416,424 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line);
 </div>
 
 <script>
-// Pixel-art stage renderer for Rock Paper Scissors Fighter mock-ups.
-// Draws on a 320x180 canvas, scaled up 4x with crisp pixels.
-(function () {
-  const W = 320, H = 180, GROUND = 140;
+const INK=[26,15,46];
+const P={
+ p1:{gi:[242,236,255],giS:[169,155,214],belt:[36,28,58],beltS:[20,14,36],band:[255,59,107],bandS:[176,24,70],skin:[255,207,158],skinS:[224,154,110],hair:[45,36,82],hairS:[24,18,48],rim:[63,240,255]},
+ p2:{gi:[74,74,170],giS:[44,40,108],belt:[255,207,74],beltS:[196,140,30],band:[255,207,74],bandS:[196,140,30],skin:[236,170,120],skinS:[184,112,74],hair:[30,22,40],hairS:[14,10,22],rim:[255,47,191]},
+};
+// ---------- SDF helpers (design units, fighter is 48 units tall) ----------
+const len=(x,y)=>Math.hypot(x,y);
+const circle=(cx,cy,r)=>(x,y)=>len(x-cx,y-cy)-r;
+const ellipse=(cx,cy,rx,ry)=>(x,y)=>(len((x-cx)/rx,(y-cy)/ry)-1)*Math.min(rx,ry);
+const capsule=(ax,ay,bx,by,r)=>(x,y)=>{const pax=x-ax,pay=y-ay,bax=bx-ax,bay=by-ay;
+ const h=Math.max(0,Math.min(1,(pax*bax+pay*bay)/(bax*bax+bay*bay)));return len(pax-bax*h,pay-bay*h)-r;};
+const rbox=(cx,cy,hw,hh,r)=>(x,y)=>{const qx=Math.abs(x-cx)-hw+r,qy=Math.abs(y-cy)-hh+r;
+ return len(Math.max(qx,0),Math.max(qy,0))+Math.min(Math.max(qx,qy),0)-r;};
+const poly=(pts)=>(x,y)=>{let d=1e9,s=1;for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+ const [ax,ay]=pts[j],[bx,by]=pts[i];const ex=bx-ax,ey=by-ay,wx=x-ax,wy=y-ay;
+ const h=Math.max(0,Math.min(1,(wx*ex+wy*ey)/(ex*ex+ey*ey)));d=Math.min(d,len(wx-ex*h,wy-ey*h));
+ if((ay>y)!==(by>y)&&x<(bx-ax)*(y-ay)/(by-ay)+ax)s=-s;}return s*d;};
+const U=(...f)=>(x,y)=>Math.min(...f.map(g=>g(x,y)));
+const I=(...f)=>(x,y)=>Math.max(...f.map(g=>g(x,y)));
+const above=(yy)=>(x,y)=>y-yy;
+const between=(a,b)=>(x,y)=>Math.max(a-y,y-b);
+const tri=(c,a,b,d)=>poly([[c.x+a[0],c.y+a[1]],[c.x+b[0],c.y+b[1]],[c.x+d[0],c.y+d[1]]]);
 
-  const INK = '#1a1326';
-  const SKIN = '#eab68c', SKIN_D = '#c58a63', HAIR = '#2a1b14';
-  const PAL = {
-    p1: { gi: '#e9e2d2', giD: '#b7ad99', belt: '#1c1c1c', band: '#d83a3f' },
-    p2: { gi: '#2f4675', giD: '#1f2f52', belt: '#e2a93b', band: '#e2a93b' },
-  };
-  const MOVE = {
-    attack: { color: '#e5483f', dark: '#8f1f22', label: 'Attack' },
-    throw: { color: '#f0a92e', dark: '#8a5410', label: 'Throw' },
-    block: { color: '#2bb3a3', dark: '#11645b', label: 'Block' },
-  };
+const POSES={
+ idle:{head:[1,13],torso:[0,28],shF:[4,23.5],elF:[9.5,27],fiF:[12.5,21.5],shB:[-5,23.5],elB:[2,29.5],fiB:[8,26],
+  hipF:[3.5,33],knF:[8,39.5],ftF:[10.5,46],hipB:[-3.5,33],knB:[-7.5,39.5],ftB:[-10,46]},
+ attack:{head:[4,14],torso:[2,28.5],shF:[6,23.5],elF:[13,23.5],fiF:[21,23.5],shB:[-3,24],elB:[-2,30],fiB:[4,29],
+  hipF:[5,33],knF:[11,39],ftF:[14.5,46],hipB:[-2,33],knB:[-7,40],ftB:[-12.5,46]},
+ block:{head:[0,15.5],torso:[0,29.5],shF:[4,25],elF:[9.5,29],fiF:[9,18.5],shB:[-4,25],elB:[5.5,30],fiB:[11,22],
+  hipF:[3.5,34.5],knF:[9,40],ftF:[11,46],hipB:[-3.5,34.5],knB:[-9,40],ftB:[-11,46]},
+};
 
-  // Angles in degrees: 0 = toward opponent, 90 = down, -90 = up.
-  const POSES = {
-    idle:    { torso: -82, legF: [60, 96], legB: [116, 100], armF: [58, -62], armB: [78, -78] },
-    attack:  { torso: -70, legF: [36, 88], legB: [136, 140], armF: [-6, -4], armB: [112, -118], lean: 4 },
-    throw:   { torso: -52, legF: [48, 92], legB: [128, 118], armF: [14, 26], armB: [28, 8], lean: 5 },
-    block:   { torso: -96, legF: [74, 96], legB: [112, 94], armF: [34, -100], armB: [46, -96] },
-    counter: { torso: -76, legF: [50, 92], legB: [126, 120], armF: [-2, -12], armB: [62, -92], lean: 3 },
-    hurt:    { torso: -116, legF: [80, 104], legB: [104, 82], armF: [-150, -120], armB: [-170, 160], lean: -4 },
-    air:     { torso: -150, legF: [-40, -20], legB: [-20, 0], armF: [-110, -150], armB: [-90, -130], air: 36, lean: -6 },
-    ko:      { torso: 178, legF: [2, 0], legB: [-6, 4], armF: [166, 178], armB: [190, 182], air: 6 },
-    win:     { torso: -88, legF: [66, 94], legB: [114, 92], armF: [-78, -94], armB: [70, -76] },
-  };
+// ---------- fighter rasteriser ----------
+function drawFighter(img,W,H,who,ox,oy,k,facing,poseName){
+ const C=P[who],p=POSES[poseName];
+ const buf=new Array(W*H).fill(null);   // [r,g,b,kind] kind: 0 ink,1 fill
+ const toD=(px,py)=>[(px+0.5-ox)/(k*facing),(py+0.5-oy)/k+48];
+ const sh=Math.max(1,Math.round(1.1*k));             // shade thickness in px
+ const bx0=Math.max(0,Math.floor(ox-30*k)),bx1=Math.min(W,Math.ceil(ox+30*k)),by0=Math.max(0,Math.floor(oy-50*k)),by1=Math.min(H,oy+2);
+ function part(f,base,shade,opt={}){
+  const ink=opt.ink!==false;
+  for(let py=by0;py<by1;py++)for(let px=bx0;px<bx1;px++){
+   const [X,Y]=toD(px,py);const d=f(X,Y)*k;
+   if(d<0){let col=base;
+     if(shade){const [X2,Y2]=toD(px+sh*0.7,py+sh);if(f(X2,Y2)>=0)col=shade;}
+     buf[py*W+px]=[...col,1];}
+   else if(ink&&d<1)buf[py*W+px]=[...INK,0];
+  }}
+ const v=(a)=>a; const [hx,hy]=p.head; const c={x:hx,y:hy};
+ const leg=(hip,kn,ft)=>U(capsule(...hip,...kn,3.9),capsule(...kn,...ft,3.4));
+ const foot=(ft)=>ellipse(ft[0]+1.6,ft[1]+0.4,3.7,1.9);
+ // back leg + foot
+ part(foot(p.ftB),C.skinS,null);
+ part(leg(p.hipB,p.knB,p.ftB),C.gi.map((v,i)=>Math.round((v+C.giS[i])/2)),C.giS);
+ // back arm
+ part(capsule(...p.shB,...p.elB,3.2),C.giS,null);
+ part(capsule(...p.elB,...p.fiB,2.3),C.skinS,null);
+ part(circle(...p.fiB,3.2),C.skinS,null);
+ // torso
+ const [tx,ty]=p.torso;
+ part(rbox(tx,ty,8.6,6.6,3.2),C.gi,C.giS);
+ part(poly([[tx-2.6,ty-6.5],[tx+3.8,ty-6.5],[tx+1,ty-0.8]]),C.skin,C.skinS,{ink:false});
+ part(capsule(tx-2.6,ty-6.5,tx+1.4,ty+2,0.45),C.giS,null,{ink:false});
+ part(capsule(tx+3.8,ty-6.5,tx+1.2,ty-0.6,0.45),C.giS,null,{ink:false});
+ // front leg + foot
+ part(leg(p.hipF,p.knF,p.ftF),C.gi,C.giS);
+ part(foot(p.ftF),C.skin,C.skinS);
+ // belt
+ part(rbox(tx,ty+4.6,8.8,1.4,0.6),C.belt,C.beltS);
+ part(U(capsule(tx+3,ty+5,tx+4.5,ty+9.5,0.9),capsule(tx+4,ty+5,tx+7,ty+8.5,0.9)),C.belt,C.beltS);
+ // head
+ part(circle(c.x-3.2,c.y+1.5,1.9),C.skin,C.skinS);
+ part(ellipse(c.x,c.y,9.6,9),C.skin,C.skinS);
+ part(circle(c.x-3.2,c.y+1.2,1.6),C.skin,C.skinS,{ink:true});
+ // headband tails (behind hair knot)
+ part(U(capsule(c.x-9,c.y-3.2,c.x-15.5,c.y-5.5,1.15),capsule(c.x-9,c.y-2.6,c.x-14.5,c.y+1.5,1.05)),C.band,C.bandS);
+ // hair
+ const hair=U(
+  I(ellipse(c.x-1,c.y-2.6,10.4,8.2),above(c.y-1.6)),
+  I(ellipse(c.x-5.2,c.y-0.5,5.6,6.4),(x,y)=>x-(c.x-3.8)),
+  tri(c,[-9,-1],[-16,-3.5],[-8.5,-6]),
+  tri(c,[-8,-5],[-13,-11.5],[-3.5,-8.5]),
+  tri(c,[-4,-8],[-3,-15],[2,-8.5]),
+  tri(c,[1,-8.5],[6.5,-13.5],[7,-6]),
+  tri(c,[5,-6],[11.5,-4],[8.5,-1.5]),
+  tri(c,[3,-3],[8.5,0],[6.5,-5]));
+ part(hair,C.hair,C.hairS);
+ // headband
+ part(I(ellipse(c.x,c.y-0.3,10.2,9.6),between(c.y-4.4,c.y-2.3)),C.band,C.bandS);
+ part(circle(c.x-9.3,c.y-3,1.7),C.band,C.bandS);
+ // front arm (on top)
+ part(capsule(...p.shF,...p.elF,3.3),C.gi,C.giS);
+ part(capsule(...p.elF,...p.fiF,2.4),C.skin,C.skinS);
+ part(circle(...p.fiF,3.4),C.skin,C.skinS);
+ if(poseName==='block') part(circle(...p.fiB,3.3),C.skin,C.skinS);
 
-  const L = { thigh: 15, shin: 15, torso: 18, upper: 11, fore: 11 };
-  const rad = (d) => (d * Math.PI) / 180;
-  const pt = (x, y, ang, len) => [x + Math.cos(rad(ang)) * len, y + Math.sin(rad(ang)) * len];
+ // rim light on back edge + top
+ for(let py=by0;py<by1;py++)for(let px=bx0;px<bx1;px++){
+  const q=buf[py*W+px];if(!q||q[3]!==1)continue;
+  const n1=buf[py*W+px-facing],n2=buf[py*W+px-2*facing];
+  if(n1&&n1[3]===0&&!n2)buf[py*W+px]=[...C.rim,1];
+ }
+ // face (pixel rects)
+ const rect=(dx,dy,w,h,col,minw=1,minh=1)=>{
+  const pw=Math.max(minw,Math.round(w*k)),ph=Math.max(minh,Math.round(h*k));
+  const cx=ox+facing*dx*k,cy=oy+(dy-48)*k;
+  const x0=Math.round(cx-pw/2),y0=Math.round(cy-ph/2);
+  for(let y=y0;y<y0+ph;y++)for(let x=x0;x<x0+pw;x++)buf[y*W+x]=[...col,1];
+  return [x0,y0,pw,ph];};
+ const eyeY=c.y+1.2;
+ for(const ex of [c.x+2.6,c.x+7]){
+  const [x0,y0,pw]=rect(ex,eyeY,1.6,3.4,INK,1,2);
+  if(k>1.2)buf[y0*W+(facing>0?x0+pw-1:x0)]=[255,255,255,1];
+  // brow, slanting down toward the nose
+  const bw=Math.max(2,Math.round(2.4*k));
+  for(let i=0;i<bw;i++){const xx=Math.round(ox+facing*(ex-1.2)*k)+facing*i;
+   const yy=y0-Math.max(2,Math.round(1.6*k))+(i>=bw/2?1:0);buf[yy*W+xx]=[...INK,1];}
+ }
+ if(k>=1.3){rect(c.x+4.6,c.y+5.6,1.4,0.7,[150,60,70]);}
+ if(k>=1.6){rect(c.x+1.2,c.y+4,1.4,0.7,[255,140,160]);}
+ // composite
+ for(let i=0;i<W*H;i++){const q=buf[i];if(!q)continue;img.data[i*4]=q[0];img.data[i*4+1]=q[1];img.data[i*4+2]=q[2];img.data[i*4+3]=255;}
+}
 
-  function seg(ctx, s, ox, x0, y0, x1, y1, w, color) {
-    ctx.fillStyle = color;
-    const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 2) + 1;
-    for (let i = 0; i <= n; i++) {
-      const t = i / n;
-      const x = ox + s * (x0 + (x1 - x0) * t), y = y0 + (y1 - y0) * t;
-      ctx.fillRect(Math.round(x - w / 2), Math.round(y - w / 2), w, w);
-    }
-  }
-  function box(ctx, s, ox, cx, cy, w, h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(Math.round(ox + s * cx - w / 2), Math.round(cy - h / 2), w, h);
-  }
+// ---------- neon backdrop (parametric: horizon hz, any aspect) ----------
+function backdrop(ctx,W,H,hz){
+ const S=Math.min(W,H);
+ const bands=[[11,6,32],[22,8,52],[40,12,78],[70,16,100],[118,22,112],[170,30,112],[214,52,110]];
+ const bayer=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+ const img=ctx.createImageData(W,H);
+ const put=(x,y,c)=>{if(x<0||y<0||x>=W||y>=H)return;const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;};
+ const skyTop=Math.max(0,hz-S*0.6);
+ for(let y=0;y<hz;y++){const t=Math.max(0,(y-skyTop)/(hz-skyTop))*(bands.length-1);const b=Math.floor(t),f=t-b;
+  for(let x=0;x<W;x++){put(x,y,bands[Math.min(bands.length-1,b+(f*16>bayer[y&3][x&3]?1:0))]);}}
+ let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+ for(let i=0;i<W*hz/450;i++){const x=Math.floor(rnd()*W),y=Math.floor(rnd()*hz*0.6);put(x,y,rnd()>0.7?[255,255,255]:[160,140,220]);}
+ const R=Math.round(S*0.2),cx=Math.round(W/2),cy=hz-Math.round(S*0.06);
+ for(let y=cy-R;y<=cy+R&&y<hz;y++){const t=(y-(cy-R))/(2*R);
+  const gap=t>0.45&&((y-cy+R)%Math.max(4,Math.round(R/5)))<Math.max(1,Math.round((t-0.4)*R/4));if(gap)continue;
+  const col=[255,Math.round(214-t*170),Math.round(70+t*80)];
+  for(let x=cx-R;x<=cx+R;x++){if((x-cx)**2+(y-cy)**2<=R*R)put(x,y,col);}}
+ const mtn=(pts,fill,edge)=>{for(let x=0;x<W;x++){let top=hz;const u=(x-W/2)/S;
+   for(let i=0;i<pts.length-1;i++){const [ax,ay]=pts[i],[bx,by]=pts[i+1];if(u>=ax&&u<=bx)top=Math.round(hz-(ay+(by-ay)*((u-ax)/(bx-ax)))*S);}
+   for(let y=top;y<hz;y++)put(x,y,fill);if(top<hz)put(x,top,edge);}};
+ mtn([[-1.6,.1],[-1.2,.16],[-.95,.08],[-.6,.18],[-.37,.08],[-.25,.14],[-.1,0],[.1,0],[.3,.16],[.46,.1],[.68,.19],[.95,.11],[1.3,.17],[1.6,.09]],[44,14,84],[255,47,191]);
+ mtn([[-1.6,.05],[-1.1,.07],[-.75,.03],[-.45,.06],[-.25,.02],[-.1,0],[.1,0],[.3,.05],[.6,.03],[.9,.07],[1.6,.04]],[28,10,60],[63,240,255]);
+ for(let y=hz;y<H;y++)for(let x=0;x<W;x++)put(x,y,[18,6,42]);
+ const grid=[196,36,160],gridD=[96,20,96],FH=S*0.4;
+ for(let i=1;i<60;i++){const y=hz+Math.round(FH*Math.pow(i/13,2.2));if(y>=H)break;for(let x=0;x<W;x++)put(x,y,i<4?gridD:grid);}
+ for(let i=-40;i<=40;i++){const xb=cx+i*S/5;for(let y=hz;y<H;y++){const t=(y-hz)/FH;const x=Math.round(cx+(xb-cx)*t);if(t>0.06&&x>=0&&x<W)put(x,y,t<0.2?gridD:grid);}}
+ for(let x=0;x<W;x++)put(x,hz,[255,120,220]);
+ ctx.putImageData(img,0,0);
+ const T=(x,y,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
+ const g=Math.max(1,Math.round(S/180));
+ const topY=hz-Math.round(S*0.38),nY=topY+Math.round(S*0.065),hw=S*0.33,pw=S*0.27;
+ const shape=(pad,col)=>{
+  T(cx-hw-pad,topY-pad,hw*2+2*pad,g+2*pad,col);
+  T(cx-hw-pad,topY-g-pad,g*2+2*pad,g+2*pad,col);T(cx+hw-2*g-pad,topY-g-pad,g*2+2*pad,g+2*pad,col);
+  T(cx-hw*0.88-pad,nY-pad,hw*1.76+2*pad,g+2*pad,col);
+  T(cx-pw-pad,topY-pad,g+2*pad,hz-topY+pad,col);T(cx+pw-pad,topY-pad,g+2*pad,hz-topY+pad,col);
+  T(cx-pad,topY-pad,g+2*pad,nY-topY+2*pad,col);};
+ shape(2*g,'rgba(255,47,120,0.18)');shape(g,'rgba(255,47,120,0.35)');shape(0,'#ff6f9a');
+}
 
-  // Draw one fighter. who: 'p1' | 'p2'. facing: 1 right, -1 left.
-  function drawFighter(ctx, who, x, pose, opts = {}) {
-    const p = Object.assign({}, POSES[pose] || POSES.idle);
-    const pal = PAL[who];
-    const s = opts.facing || 1;
-    const bob = opts.bob || 0;
-    // Leg geometry relative to hip at (0,0)
-    const kneeF = pt(0, 0, p.legF[0], L.thigh), footF = pt(kneeF[0], kneeF[1], p.legF[1], L.shin);
-    const kneeB = pt(0, 0, p.legB[0], L.thigh), footB = pt(kneeB[0], kneeB[1], p.legB[1], L.shin);
-    let hipY = p.air != null ? GROUND - p.air : GROUND - Math.max(footF[1], footB[1]);
-    hipY += bob + (opts.dy || 0);
-    const ox = x + (p.lean || 0) * s;
-    const T = (pts) => pts.map(([a, b]) => [a, b + hipY]);
-    const [kF, fF, kB, fB] = T([kneeF, footF, kneeB, footB]);
-    const neck = pt(0, hipY, p.torso, L.torso);
-    const shF = pt(0, hipY, p.torso, L.torso - 3), shB = pt(0, hipY, p.torso, L.torso - 4);
-    const elF = pt(shF[0], shF[1], p.armF[0], L.upper), haF = pt(elF[0], elF[1], p.armF[1], L.fore);
-    const elB = pt(shB[0], shB[1], p.armB[0], L.upper), haB = pt(elB[0], elB[1], p.armB[1], L.fore);
-    const head = pt(0, hipY, p.torso, L.torso + 7);
-
-    const limb = (a, b, c, w, col, foot) => {
-      seg(ctx, s, ox, a[0], a[1], b[0], b[1], w, col);
-      seg(ctx, s, ox, b[0], b[1], c[0], c[1], w, col);
-      if (foot) box(ctx, s, ox, c[0] + 2, c[1], w + 2, 4, foot);
-    };
-    // Shadow
-    ctx.fillStyle = 'rgba(10,6,20,0.35)';
-    ctx.fillRect(Math.round(ox - 16), GROUND + 1, 32, 4);
-
-    // Back limbs (outline + fill)
-    limb([0, hipY], kB, fB, 8, INK); limb([0, hipY], kB, fB, 6, pal.giD, SKIN_D);
-    limb(shB, elB, haB, 7, INK); limb(shB, elB, haB, 5, pal.giD);
-    box(ctx, s, ox, haB[0], haB[1], 8, 8, INK); box(ctx, s, ox, haB[0], haB[1], 6, 6, SKIN_D);
-
-    // Front silhouette outline
-    seg(ctx, s, ox, 0, hipY, neck[0], neck[1], 13, INK);
-    limb([0, hipY], kF, fF, 8, INK);
-    box(ctx, s, ox, head[0], head[1], 12, 13, INK);
-    limb(shF, elF, haF, 7, INK);
-    box(ctx, s, ox, haF[0], haF[1], 8, 8, INK);
-    // Fills
-    seg(ctx, s, ox, 0, hipY, neck[0], neck[1], 11, pal.gi);
-    // gi lapel
-    seg(ctx, s, ox, neck[0], neck[1], (neck[0] * 0.5), hipY - 7, 2, pal.giD);
-    limb([0, hipY], kF, fF, 6, pal.gi, SKIN);
-    // belt
-    const bx = pt(0, hipY, p.torso, 2);
-    box(ctx, s, ox, bx[0], bx[1], 12, 3, pal.belt);
-    box(ctx, s, ox, bx[0] - 4, bx[1] + 3, 2, 5, pal.belt);
-    // head
-    box(ctx, s, ox, head[0], head[1], 10, 11, SKIN);
-    box(ctx, s, ox, head[0] - 1, head[1] - 4, 10, 4, HAIR);
-    box(ctx, s, ox, head[0], head[1] - 1, 10, 2, pal.band);
-    box(ctx, s, ox, head[0] - 7, head[1] - 1, 4, 2, pal.band);
-    box(ctx, s, ox, head[0] - 10, head[1] + 1, 3, 2, pal.band);
-    if (pose === 'ko') {
-      box(ctx, s, ox, head[0] + 2, head[1] + 2, 4, 1, INK);
-    } else {
-      box(ctx, s, ox, head[0] + 3, head[1] + 1, 2, 3, INK); box(ctx, s, ox, head[0] + 5, head[1] + 4, 1, 1, SKIN_D);
-    }
-    // front arm
-    limb(shF, elF, haF, 5, pal.gi);
-    box(ctx, s, ox, haF[0], haF[1], 6, 6, SKIN);
-    return { hand: [ox + s * haF[0], haF[1]], head: [ox + s * head[0], head[1]] };
-  }
-
-  // 11x11 glyphs
-  const GLYPH = {
-    attack: [
-      '..XXXXXXX..', '.XX.X.X.XX.', '.XXXXXXXXX.', 'XXXXXXXXXX.', 'XXXXXXXXXX.',
-      'XXXXXXXXX..', '.XXXXXXXX..', '..XXXXXX...', '..XXXXXX...', '..XXXXXX...', '...........'],
-    throw: [
-      '...XXXXX...', '..X.....X..', '.X.......X.', 'X.........X', 'X.........X',
-      'X......XXXXX', 'X.......XXX.', '.X.......X..', '..X........', '...XXXX....', '...........'],
-    block: [
-      'XXXXXXXXXXX', 'X.........X', 'X...XXX...X', 'X..XXXXX..X', 'X...XXX...X',
-      'X....X....X', '.X.......X.', '.X.......X.', '..X.....X..', '...X...X...', '....XXX....'],
-  };
-  function drawIcon(ctx, move, cx, cy) {
-    const m = MOVE[move];
-    const r = 10;
-    for (let y = -r - 1; y <= r + 1; y++) for (let x = -r - 1; x <= r + 1; x++) {
-      const d = Math.hypot(x, y);
-      if (d <= r + 1.2) { ctx.fillStyle = d > r ? INK : (y > 3 ? m.dark : m.color); ctx.fillRect(cx + x, cy + y, 1, 1); }
-    }
-    const g = GLYPH[move];
-    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) {
-      if (g[y][x] === 'X') { ctx.fillStyle = '#fff8ec'; ctx.fillRect(cx - 5 + x, cy - 5 + y, 1, 1); }
-    }
-  }
-  function drawQuestion(ctx, cx, cy) {
-    const r = 10;
-    for (let y = -r - 1; y <= r + 1; y++) for (let x = -r - 1; x <= r + 1; x++) {
-      const d = Math.hypot(x, y);
-      if (d <= r + 1.2) { ctx.fillStyle = d > r ? INK : '#4a3f63'; ctx.fillRect(cx + x, cy + y, 1, 1); }
-    }
-    const q = ['.XXXX.', 'XX..XX', '....XX', '...XX.', '..XX..', '..XX..', '......', '..XX..'];
-    q.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'X') { ctx.fillStyle = '#d9d0ef'; ctx.fillRect(cx - 3 + x, cy - 4 + y, 1, 1); } }));
-  }
-
-  function drawBackdrop(ctx) {
-    const bands = ['#171433', '#1f1a44', '#2b2052', '#3d2659', '#552c5d', '#743460', '#9a3f5d', '#c2555a', '#e07a58', '#f0a066'];
-    const top = 0, bot = 100, step = (bot - top) / bands.length;
-    bands.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(0, Math.floor(top + i * step), W, Math.ceil(step) + 1); });
-    // dither between bands
-    for (let i = 1; i < bands.length; i++) {
-      const y = Math.floor(top + i * step);
-      ctx.fillStyle = bands[i - 1];
-      for (let x = (i % 2); x < W; x += 2) ctx.fillRect(x, y, 1, 1);
-    }
-    // stars
-    ctx.fillStyle = '#cfc6f0';
-    [[22, 9], [61, 18], [96, 6], [140, 14], [201, 8], [244, 19], [281, 7], [305, 23], [176, 26], [40, 30]].forEach(([x, y]) => ctx.fillRect(x, y, 1, 1));
-    // sun
-    const sx = 160, sy = 96, sr = 30;
-    for (let y = -sr; y <= 0; y++) for (let x = -sr; x <= sr; x++) {
-      if (x * x + y * y <= sr * sr) {
-        const yy = sy + y;
-        if (yy > 78 && (yy % 5 === 0 || (yy > 88 && yy % 3 === 0))) continue;
-        ctx.fillStyle = y < -18 ? '#ffd9a0' : '#ffc27a'; ctx.fillRect(sx + x, yy, 1, 1);
-      }
-    }
-    // mountains
-    const ridge = (base, amp, f, ph, col) => {
-      ctx.fillStyle = col;
-      for (let x = 0; x < W; x++) {
-        const h = Math.round(base - amp * (0.55 * Math.sin(x * f + ph) + 0.3 * Math.sin(x * f * 2.3 + ph * 2) + 0.15 * Math.sin(x * f * 5.1)));
-        ctx.fillRect(x, h, 1, 110 - h);
-      }
-    };
-    ridge(86, 16, 0.021, 1.2, '#5a2d55');
-    ridge(96, 10, 0.034, 3.1, '#3c2245');
-    // rooftop floor
-    ctx.fillStyle = '#2a1830'; ctx.fillRect(0, 100, W, 4);
-    ctx.fillStyle = '#6b3f2e'; ctx.fillRect(0, 104, W, H - 104);
-    for (let y = 104; y < H; y += 6) { ctx.fillStyle = '#5a3426'; ctx.fillRect(0, y, W, 1); }
-    for (let y = 104, r = 0; y < H; y += 6, r++) {
-      ctx.fillStyle = '#4b2a20';
-      for (let x = (r * 37) % 53; x < W; x += 53) ctx.fillRect(x, y, 1, 6);
-    }
-    ctx.fillStyle = '#8a5640'; ctx.fillRect(0, 104, W, 1);
-    // fighting ring mat
-    ctx.fillStyle = '#7d4a36'; ctx.fillRect(76, 124, 168, 20);
-    ctx.fillStyle = '#9b5e43'; ctx.fillRect(76, 124, 168, 1);
-    ctx.fillStyle = '#5a3426'; ctx.fillRect(76, 143, 168, 1);
-    // lanterns
-    const lantern = (x) => {
-      ctx.fillStyle = '#2a1830'; ctx.fillRect(x, 58, 2, 64);
-      ctx.fillRect(x - 6, 58, 14, 2);
-      ctx.fillStyle = '#d8432f'; ctx.fillRect(x - 4, 62, 10, 12);
-      ctx.fillStyle = '#ff9a4a'; ctx.fillRect(x - 2, 64, 6, 8);
-      ctx.fillStyle = '#2a1830'; ctx.fillRect(x - 4, 62, 10, 1); ctx.fillRect(x - 4, 73, 10, 1);
-    };
-    lantern(30); lantern(288);
-  }
-
-  function drawSpark(ctx, x, y, big) {
-    const c = ['#fff6d6', '#ffd36b', '#ff8a3d'];
-    const arms = big ? 9 : 6;
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI) / 4, len = i % 2 ? arms * 0.55 : arms;
-      for (let t = 0; t <= len; t++) {
-        ctx.fillStyle = c[Math.min(2, Math.floor(t / (len / 3)))];
-        ctx.fillRect(Math.round(x + Math.cos(a) * t), Math.round(y + Math.sin(a) * t), 1, 1);
-      }
-    }
-    ctx.fillStyle = '#fff'; ctx.fillRect(x - 2, y - 2, 5, 5);
-  }
-
-  // state: { p1:{x,pose,dy,icon,iconY}, p2:{...}, spark:{x,y,big}, flash }
-  function render(ctx, st) {
-    ctx.imageSmoothingEnabled = false;
-    ctx.save();
-    if (st.shake) ctx.translate(st.shake[0], st.shake[1]);
-    drawBackdrop(ctx);
-    const order = st.p1.front ? ['p2', 'p1'] : ['p1', 'p2'];
-    const out = {};
-    order.forEach((k) => {
-      const f = st[k];
-      out[k] = drawFighter(ctx, k, f.x, f.pose, { facing: k === 'p1' ? 1 : -1, bob: f.bob || 0, dy: f.dy || 0 });
-    });
-    ['p1', 'p2'].forEach((k) => {
-      const f = st[k];
-      const ix = Math.round(f.iconX ?? (k === 'p1' ? 124 : 196)), iy = Math.round(f.iconY ?? 40);
-      if (f.icon === '?') drawQuestion(ctx, ix, iy);
-      else if (f.icon) drawIcon(ctx, f.icon, ix, iy);
-    });
-    if (st.spark) drawSpark(ctx, st.spark.x, st.spark.y, st.spark.big);
-    ctx.restore();
-    if (st.flash) { ctx.fillStyle = `rgba(255,248,230,${st.flash})`; ctx.fillRect(0, 0, W, H); }
-    return out;
-  }
-
-  window.RPSArt = { W, H, GROUND, POSES, MOVE, PAL, render, drawFighter, drawIcon, drawBackdrop };
-})();
-
-// HUD overlay for the 1280x720 stage. Coordinates for popups are in 320x180 canvas pixels.
-(function () {
-  function iconCanvas(move) {
-    const c = document.createElement('canvas');
-    c.width = 25; c.height = 25;
-    window.RPSArt.drawIcon(c.getContext('2d'), move, 12, 12);
-    return c;
-  }
-  function buildStage(host) {
-    host.classList.add('stage');
-    host.innerHTML = `
-      <canvas width="320" height="180"></canvas>
-      <div class="hud-top">
-        <div class="side left"><div class="name">YOU <small>Red Band</small></div><div class="bar"><div class="lost"></div><div class="hp"></div><span class="num"></span></div><div class="pips"><span class="pip"></span><span class="pip"></span></div></div>
-        <div class="timer"><span class="t">5</span><span class="lbl">PICK!</span></div>
-        <div class="side right"><div class="name"><small>Gold Band</small> CPU</div><div class="bar"><div class="lost"></div><div class="hp"></div><span class="num"></span></div><div class="pips"><span class="pip"></span><span class="pip"></span></div></div>
-      </div>
-      <div class="round-tag"></div>
-      <div class="status"></div>
-      <div class="pops"></div>
-      <div class="overlay"></div>
-      <div class="moves">
-        <button class="move attack" data-move="attack"><span class="ic"></span>Attack<span class="key">1</span></button>
-        <button class="move throw" data-move="throw"><span class="ic"></span>Throw<span class="key">2</span></button>
-        <button class="move block" data-move="block"><span class="ic"></span>Block<span class="key">3</span></button>
-      </div>`;
-    host.querySelectorAll('.move').forEach((b) => b.querySelector('.ic').replaceWith(iconCanvas(b.dataset.move)));
-    const q = (s) => host.querySelector(s);
-    const canvas = q('canvas');
-    const sides = host.querySelectorAll('.side');
-    function setBar(side, hp, lost) {
-      const bar = side.querySelector('.bar');
-      bar.querySelector('.hp').style.width = hp + '%';
-      bar.querySelector('.hp').classList.toggle('low', hp <= 25);
-      bar.querySelector('.lost').style.width = (lost ?? hp) + '%';
-      bar.querySelector('.num').textContent = hp;
-    }
-    function setHud(h) {
-      if (h.hp1 != null) setBar(sides[0], h.hp1, h.lost1);
-      if (h.hp2 != null) setBar(sides[1], h.hp2, h.lost2);
-      if (h.won1 != null) sides[0].querySelectorAll('.pip').forEach((p, i) => p.classList.toggle('won', i < h.won1));
-      if (h.won2 != null) sides[1].querySelectorAll('.pip').forEach((p, i) => p.classList.toggle('won', i < h.won2));
-      if (h.timer !== undefined) {
-        q('.timer .t').textContent = h.timer ?? 'VS';
-        q('.timer').classList.toggle('vs', h.timer === null);
-        q('.timer').classList.toggle('hurry', h.timer !== null && h.timer <= 2);
-      }
-      if (h.timerLabel !== undefined) q('.timer .lbl').textContent = h.timerLabel;
-      if (h.round !== undefined) q('.round-tag').textContent = h.round;
-      if (h.status !== undefined) q('.status').textContent = h.status;
-      if (h.selected !== undefined || h.locked !== undefined) {
-        host.querySelectorAll('.move').forEach((b) => {
-          b.classList.toggle('sel', b.dataset.move === h.selected);
-          b.classList.toggle('dim', !!h.locked && b.dataset.move !== h.selected);
-        });
-      }
-      if (h.showMoves !== undefined) q('.moves').hidden = !h.showMoves;
-      if (h.pops !== undefined) {
-        q('.pops').innerHTML = h.pops.map((p) => `<div class="dmg ${p.cls || ''}" style="left:${p.x * 4}px;top:${p.y * 4}px">${p.text}</div>`).join('');
-      }
-      if (h.banner !== undefined) {
-        q('.overlay').innerHTML = h.banner
-          ? `${h.banner.dim ? '<div class="vignette"></div>' : ''}<div class="banner">${h.banner.title}${h.banner.sub ? `<small>${h.banner.sub}</small>` : ''}</div>${h.banner.cta ? `<div class="cta">${h.banner.cta}</div>` : ''}`
-          : '';
-      }
-    }
-    return { host, canvas, ctx: canvas.getContext('2d'), setHud };
-  }
-  window.RPSHud = { buildStage };
-})();
+// ---------- move icons (pixel art via the same SDF raster) ----------
+const MOVES={attack:{c:[255,59,107],s:[176,24,70],css:'#ff3b6b',label:'Attack'},
+ throw:{c:[255,179,33],s:[196,108,20],css:'#ffb321',label:'Throw'},
+ block:{c:[63,240,255],s:[20,150,190],css:'#3ff0ff',label:'Block'}};
+function iconSdf(move){
+ if(move==='attack'){const pts=[];for(let i=0;i<16;i++){const a=i*Math.PI/8-Math.PI/2,r=i%2?2.8:6.4;pts.push([Math.cos(a)*r,Math.sin(a)*r]);}return poly(pts);}
+ if(move==='throw'){const ring=(x,y)=>Math.abs(len(x,y)-4.2)-1.3;
+  return U(I(ring,(x,y)=>(x>0&&y<0)?1:-1),poly([[0,-7.4],[3.8,-4.2],[0,-1]]));}
+ if(move==='block')return poly([[-5.2,-5.8],[5.2,-5.8],[5.2,0],[0,6.4],[-5.2,0]]);
+ if(move==='?'){return U(capsule(-2.3,-3,0,-5,1.3),capsule(0,-5,2.4,-3,1.3),capsule(2.4,-3,0,0,1.3),capsule(0,0,0,1.5,1.3),circle(0,4.8,1.4));}
+}
+// draws a round badge with an icon into an ImageData at (cx,cy), radius r px
+function badge(img,W,H,cx,cy,move,r){
+ const buf=new Array(W*H).fill(null);
+ const k=r/9;
+ const raster=(f,base,shade,ink=true)=>{for(let py=Math.floor(cy-r-2);py<cy+r+2;py++)for(let px=Math.floor(cx-r-2);px<cx+r+2;px++){
+   if(px<0||py<0||px>=W||py>=H)continue;const X=(px+0.5-cx)/k,Y=(py+0.5-cy)/k,d=f(X,Y)*k;
+   if(d<0){let col=base;if(shade&&f(X+0.9/k,Y+1.2/k)>=0)col=shade;buf[py*W+px]=col;}else if(ink&&d<1)buf[py*W+px]=INK;}};
+ const m=MOVES[move]||{c:[242,236,255],s:[150,130,200]};
+ raster(circle(0,0,8.6),[36,20,70],null);
+ raster((x,y)=>Math.abs(len(x,y)-7.6)-0.9,m.c,null,false);
+ raster(iconSdf(move),m.c,m.s);
+ for(let i=0;i<W*H;i++){const q=buf[i];if(!q)continue;img.data[i*4]=q[0];img.data[i*4+1]=q[1];img.data[i*4+2]=q[2];img.data[i*4+3]=255;}
+}
+function iconCanvas(move,px){ // standalone icon for buttons
+ const n=20,cv=document.createElement('canvas');cv.width=n;cv.height=n;const ctx=cv.getContext('2d');const img=ctx.createImageData(n,n);
+ const buf=new Array(n*n).fill(null),k=1.3,f=iconSdf(move),m=MOVES[move];
+ for(let py=0;py<n;py++)for(let px=0;px<n;px++){const X=(px+0.5-n/2)/k,Y=(py+0.5-n/2)/k,d=f(X,Y)*k;
+  if(d<0)buf[py*n+px]=f(X+0.9/k,Y+1.2/k)>=0?m.s:m.c;else if(d<1)buf[py*n+px]=INK;}
+ for(let i=0;i<n*n;i++){const q=buf[i];if(!q)continue;img.data[i*4]=q[0];img.data[i*4+1]=q[1];img.data[i*4+2]=q[2];img.data[i*4+3]=255;}
+ ctx.putImageData(img,0,0);cv.style.width=cv.style.height=px+'px';cv.style.imageRendering='pixelated';return cv;
+}
+function spark(img,W,cx,cy,r){
+ const put=(x,y,c)=>{const i=(y*W+x)*4;img.data[i]=c[0];img.data[i+1]=c[1];img.data[i+2]=c[2];img.data[i+3]=255;};
+ for(let a=0;a<8;a++){const ang=a*Math.PI/4+Math.PI/8,L=a%2?r:r*0.6;
+  for(let t=2;t<L;t++){put(Math.round(cx+Math.cos(ang)*t),Math.round(cy+Math.sin(ang)*t),t<L*0.5?[255,255,255]:[255,214,90]);}}
+ for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=4)put(cx+x,cy+y,[255,255,255]);
+}
 
 </script>
 <script>
+// 5x7 bitmap font for pixel-perfect text on the game canvas (no smoothing, no web font).
+// Each glyph is 7 rows of 5 bits. Used by the menu mock-ups and the interactive design document.
+const PIXFONT=(()=>{const G={
+A:'01110 10001 10001 11111 10001 10001 10001',B:'11110 10001 10001 11110 10001 10001 11110',C:'01110 10001 10000 10000 10000 10001 01110',
+D:'11110 10001 10001 10001 10001 10001 11110',E:'11111 10000 10000 11110 10000 10000 11111',F:'11111 10000 10000 11110 10000 10000 10000',
+G:'01110 10001 10000 10111 10001 10001 01111',H:'10001 10001 10001 11111 10001 10001 10001',I:'01110 00100 00100 00100 00100 00100 01110',
+J:'00111 00010 00010 00010 00010 10010 01100',K:'10001 10010 10100 11000 10100 10010 10001',L:'10000 10000 10000 10000 10000 10000 11111',
+M:'10001 11011 10101 10101 10001 10001 10001',N:'10001 10001 11001 10101 10011 10001 10001',O:'01110 10001 10001 10001 10001 10001 01110',
+P:'11110 10001 10001 11110 10000 10000 10000',Q:'01110 10001 10001 10001 10101 10010 01101',R:'11110 10001 10001 11110 10100 10010 10001',
+S:'01111 10000 10000 01110 00001 00001 11110',T:'11111 00100 00100 00100 00100 00100 00100',U:'10001 10001 10001 10001 10001 10001 01110',
+V:'10001 10001 10001 10001 10001 01010 00100',W:'10001 10001 10001 10101 10101 10101 01010',X:'10001 10001 01010 00100 01010 10001 10001',
+Y:'10001 10001 01010 00100 00100 00100 00100',Z:'11111 00001 00010 00100 01000 10000 11111',
+0:'01110 10001 10011 10101 11001 10001 01110',1:'00100 01100 00100 00100 00100 00100 01110',2:'01110 10001 00001 00010 00100 01000 11111',
+3:'11110 00001 00001 01110 00001 00001 11110',4:'00010 00110 01010 10010 11111 00010 00010',5:'11111 10000 11110 00001 00001 10001 01110',
+6:'00110 01000 10000 11110 10001 10001 01110',7:'11111 00001 00010 00100 01000 01000 01000',8:'01110 10001 10001 01110 10001 10001 01110',
+9:'01110 10001 10001 01111 00001 00010 01100',' ':'00000 00000 00000 00000 00000 00000 00000',
+'-':'00000 00000 00000 01110 00000 00000 00000','!':'00100 00100 00100 00100 00100 00000 00100','?':'01110 10001 00001 00010 00100 00000 00100',
+'.':'00000 00000 00000 00000 00000 00000 00100',':':'00000 00100 00000 00000 00000 00100 00000','/':'00001 00010 00010 00100 01000 01000 10000',
+'>':'01000 00100 00010 00001 00010 00100 01000','<':'00010 00100 01000 10000 01000 00100 00010',"'":'00100 00100 01000 00000 00000 00000 00000',
+'+':'00000 00100 00100 11111 00100 00100 00000','(':'00010 00100 01000 01000 01000 00100 00010',')':'01000 00100 00010 00010 00010 00100 01000',
+'·':'00000 00000 00000 00100 00000 00000 00000',
+};const M={};for(const k in G)M[k]=G[k].split(' ');
+const width=(s,sc=1,sp=1)=>s.length?(s.length*(5+sp)-sp)*sc:0;
+// draw text with its top-left at (x,y); align 'left'|'center'|'right'; optional 1px drop shadow colour
+function draw(ctx,s,x,y,col,o={}){const sc=o.scale||1,sp=o.space??1;s=String(s).toUpperCase();
+ let X=Math.round(o.align==='center'?x-width(s,sc,sp)/2:o.align==='right'?x-width(s,sc,sp):x);const Y=Math.round(y);
+ const pass=(dx,dy,c)=>{ctx.fillStyle=c;let cx=X+dx;for(const ch of s){const g=M[ch]||M['?'];
+  for(let r=0;r<7;r++)for(let q=0;q<5;q++)if(g[r][q]==='1')ctx.fillRect(cx+q*sc,Y+dy+r*sc,sc,sc);cx+=(5+sp)*sc;}};
+ if(o.shadow)pass(sc,sc,o.shadow);if(o.outline)for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]])pass(dx*sc,dy*sc,o.outline);pass(0,0,col);
+ return width(s,sc,sp);}
+return {draw,width};})();
+
+</script>
+<script>
+// Menu screens drawn on the 216x288 monitor canvas: logo intro, home menu, result menu.
+// Pixel-perfect: whole pixels only, text from the 5x7 bitmap font (pixfont.js), fades in palette steps.
+// Needs art.js (backdrop, drawFighter, INK) and pixfont.js loaded first.
+const SCREENS=(()=>{
+const MW=216,MH=288,GY=232;
+const C={ink:'#1a0f2e',txt:'#f6f0ff',pink:'#ff2fbf',cyan:'#3ff0ff',gold:'#ffb321',dim:'#6e6096',panel:'#140a2a',sel:'#3a1458',shadow:'#5a0b4a'};
+const fill=(ctx,x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
+const frame=(ctx,x,y,w,h,c)=>{fill(ctx,x,y,w,1,c);fill(ctx,x,y+h-1,w,1,c);fill(ctx,x,y,1,h,c);fill(ctx,x+w-1,y,1,h,c);};
+
+// fighters are rasterised once per pose into small sprites, then blitted
+const cache={};
+function fighter(who,pose){const key=who+pose;if(cache[key])return cache[key];
+ const W=84,H=74,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),img=c.createImageData(W,H);
+ drawFighter(img,W,H,who,42,72,64/48,who==='p1'?1:-1,pose);c.putImageData(img,0,0);return cache[key]=cv;}
+function putFighter(ctx,who,pose,x,gy){ctx.fillStyle='rgba(5,0,20,0.6)';ctx.fillRect(Math.round(x-15),gy-1,30,3);ctx.drawImage(fighter(who,pose),Math.round(x-42),gy-72);}
+
+let bgCache=null;
+function stage(ctx){if(!bgCache){bgCache=document.createElement('canvas');bgCache.width=MW;bgCache.height=MH;backdrop(bgCache.getContext('2d'),MW,MH,150);}ctx.drawImage(bgCache,0,0);}
+
+// CRT scanlines + rounded corners, same as the fight mock-ups
+function crt(ctx){const img=ctx.getImageData(0,0,MW,MH),d=img.data;
+ for(let y=0;y<MH;y+=2)for(let x=0;x<MW;x++){const i=(y*MW+x)*4;d[i]*=0.86;d[i+1]*=0.86;d[i+2]*=0.86;}
+ for(let y=0;y<4;y++)for(let x=0;x<4-y;x++)for(const [ax,ay] of [[x,y],[MW-1-x,y],[x,MH-1-y],[MW-1-x,MH-1-y]]){const i=(ay*MW+ax)*4;d[i]=24;d[i+1]=16;d[i+2]=40;}
+ ctx.putImageData(img,0,0);}
+
+// A menu is data: [{label, tag?, enabled}]. Returns each item's rect so taps can hit-test it.
+function menu(ctx,items,sel,y,o={}){const w=o.w||136,x=Math.round((MW-w)/2),ih=17,gap=4,pad=6,blink=o.blink??true;
+ const h=pad*2+items.length*ih+(items.length-1)*gap;
+ fill(ctx,x-1,y-1,w+2,h+2,C.ink);fill(ctx,x,y,w,h,C.panel);frame(ctx,x,y,w,h,'#4a2f86');
+ const rects=[];
+ items.forEach((it,i)=>{const iy=y+pad+i*(ih+gap),ix=x+pad,iw=w-pad*2,on=i===sel&&it.enabled!==false;
+  if(on){fill(ctx,ix,iy,iw,ih,C.sel);frame(ctx,ix,iy,iw,ih,C.pink);fill(ctx,ix+1,iy+ih,iw,1,C.shadow);
+   if(blink)PIXFONT.draw(ctx,'>',ix+4,iy+5,C.gold);}
+  else frame(ctx,ix,iy,iw,ih,it.enabled===false?'#2c1d50':'#3b2768');
+  const col=it.enabled===false?C.dim:on?'#ffffff':C.txt;
+  PIXFONT.draw(ctx,it.label,ix+13,iy+5,col,on?{shadow:C.ink}:{});
+  if(it.tag)PIXFONT.draw(ctx,it.tag,ix+iw-4,iy+5,it.enabled===false?'#8c6a2a':C.cyan,{align:'right'});
+  rects.push({x:ix,y:iy,w:iw,h:ih,i});});
+ return {rects,bottom:y+h};}
+
+// ---- 1. logo intro: level 0..4 (0 = black, 4 = full). Fades in palette steps, never smooth alpha.
+function logo(ctx,level){
+ fill(ctx,0,0,MW,MH,'#07040f');if(level<=0)return;
+ const k=level/4,q=(r,g,b)=>`rgb(${Math.round(r*k)},${Math.round(g*k)},${Math.round(b*k)})`;
+ const cx=108,cy=112;
+ // emblem: a pixel diamond with a star, the placeholder for the studio mark
+ for(let r=0;r<=22;r++){const w=22-r;for(const s of [-1,1]){fill(ctx,cx-w,cy+s*r,1,1,q(255,47,191));fill(ctx,cx+w,cy+s*r,1,1,q(63,240,255));}}
+ for(let r=0;r<=18;r++){const w=18-r;for(const s of [-1,1])fill(ctx,cx-w,cy+s*r,w*2+1,1,q(40+r*3,14,70+r*2));}
+ const star=['00100','00100','11111','01110','01010'];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(star[y][x]==='1')fill(ctx,cx-10+x*4,cy-10+y*4,4,4,q(255,214,90));
+ PIXFONT.draw(ctx,'YOUR STUDIO',cx,cy+34,q(246,240,255),{align:'center',scale:2,shadow:q(90,11,74)});
+ PIXFONT.draw(ctx,'PLACEHOLDER LOGO',cx,cy+56,q(140,124,190),{align:'center'});}
+
+// ---- 2. home menu
+const HOME_ITEMS=[{label:'START GAME',tag:'VS CPU',enabled:true},{label:'ONLINE',tag:'SOON',enabled:false}];
+function home(ctx,sel=0,t=0){stage(ctx);
+ PIXFONT.draw(ctx,'RPS',108,24,C.pink,{align:'center',scale:4,outline:C.ink,shadow:C.shadow});
+ PIXFONT.draw(ctx,'FIGHTER',108,60,C.cyan,{align:'center',scale:2,shadow:C.ink});
+ PIXFONT.draw(ctx,'ATTACK · THROW · BLOCK',108,80,C.gold,{align:'center',shadow:C.ink});
+ const bob=Math.floor(t/420)%2;
+ putFighter(ctx,'p1','idle',46,270+bob);putFighter(ctx,'p2','idle',170,270+1-bob);
+ const m=menu(ctx,HOME_ITEMS,sel,140,{blink:Math.floor(t/400)%2===0});
+ fill(ctx,0,m.bottom+5,MW,13,'rgba(10,4,24,0.75)');
+ PIXFONT.draw(ctx,'STICK MOVES · BUTTON SELECTS',108,m.bottom+8,'#c9b8ff',{align:'center',shadow:C.ink});
+ return m;}
+
+// ---- 3. result menu (shown over the frozen last frame of the fight)
+const RESULT_ITEMS=[{label:'RETRY',enabled:true},{label:'MAIN MENU',enabled:true}];
+function result(ctx,o={},t=0){const win=o.win??true,sc=o.score||[2,1],sel=o.sel??0;
+ stage(ctx);
+ putFighter(ctx,'p1',win?'attack':'block',84,GY);putFighter(ctx,'p2',win?'block':'attack',132,GY);
+ ctx.fillStyle='rgba(10,4,24,0.62)';ctx.fillRect(0,0,MW,156);
+ PIXFONT.draw(ctx,win?'YOU WIN!':'CPU WINS',108,26,win?C.gold:C.pink,{align:'center',scale:3,outline:C.ink,shadow:win?'#b3165f':C.shadow});
+ PIXFONT.draw(ctx,`${sc[0]} - ${sc[1]}`,108,58,C.txt,{align:'center',scale:2,shadow:C.ink});
+ PIXFONT.draw(ctx,'ROUNDS',108,76,C.cyan,{align:'center'});
+ const m=menu(ctx,RESULT_ITEMS,sel,96,{w:112,blink:Math.floor(t/400)%2===0});
+ return m;}
+
+return {MW,MH,GY,C,fill,frame,crt,menu,logo,home,result,putFighter,stage,HOME_ITEMS,RESULT_ITEMS};})();
+
+</script>
+<script>
+// Playable arcade cabinet for the interactive design document.
+// Native 270x472 frame, monitor 216x288, everything drawn in whole pixels and scaled by whole device pixels.
+// Screen flow: logo intro -> home menu -> fight vs random CPU (best of three) -> result (retry / main menu).
+// Needs art.js, pixfont.js and screens.js loaded first.
 (function () {
-  const A = window.RPSArt, HUD = window.RPSHud;
-  const DMG = { attack: 15, throw: 20, block: 10 };
-  const BEATS = { attack: 'throw', throw: 'block', block: 'attack' };
-  const MOVES = ['attack', 'throw', 'block'];
-  const LABEL = { attack: 'Attack', throw: 'Throw', block: 'Block' };
+  const host = document.getElementById('cab');
+  if (!host) return;
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CW = 270, CH = 472, MX = 27, MY = 44, MW = 216, MH = 288, PY = 344;
+  const BTN = [{ m: 'attack', x: 112 }, { m: 'throw', x: 170 }, { m: 'block', x: 228 }], BY = PY + 50, JX = 44, JY = PY + 58;
+  const DMG = { attack: 15, throw: 20, block: 10 }, BEATS = { attack: 'throw', throw: 'block', block: 'attack' };
+  const MOVES_ = ['attack', 'throw', 'block'], LABEL = { attack: 'ATTACK', throw: 'THROW', block: 'BLOCK' };
+  const S = SCREENS, F = PIXFONT;
 
-  function fit(wrap, stage) {
-    const apply = () => { stage.style.transform = `scale(${wrap.clientWidth / 1280})`; };
-    apply();
-    if (window.ResizeObserver) new ResizeObserver(apply).observe(wrap); else addEventListener('resize', apply);
+  // ---------- canvas + whole-device-pixel scaling ----------
+  const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH; cv.className = 'cab-canvas';
+  cv.tabIndex = 0; cv.setAttribute('role', 'application');
+  cv.setAttribute('aria-label', 'Playable arcade cabinet. Keys 1, 2, 3 press Attack, Throw, Block. Arrow keys move the joystick. Enter confirms, Escape goes back.');
+  host.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  function fit() {
+    const dpr = window.devicePixelRatio || 1;
+    const wrap = host.closest('.wrap') || document.body, twoCol = window.innerWidth > 860;
+    const availW = wrap.clientWidth * (twoCol ? 0.5 : 1), availH = Math.max(480, window.innerHeight - 40);
+    const k = Math.max(1, Math.floor(Math.min(availW * dpr / CW, availH * dpr / CH)));
+    cv.style.width = (CW * k / dpr) + 'px'; cv.style.height = (CH * k / dpr) + 'px';
+  }
+  fit(); addEventListener('resize', fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(host.parentElement);
+
+  // ---------- pixel helpers (same as the cabinet mock-up) ----------
+  const rgb = (c) => Array.isArray(c) ? `rgb(${c[0]},${c[1]},${c[2]})` : c;
+  const R = (c2, x, y, w, h, c) => { c2.fillStyle = rgb(c); c2.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+  function ell(c2, cx, cy, rx, ry, c) { c2.fillStyle = rgb(c); for (let y = -ry; y <= ry; y++) { const w = Math.round(rx * Math.sqrt(Math.max(0, 1 - (y / (ry + 0.5)) ** 2))); c2.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1); } }
+  function sdfDraw(c2, cx, cy, k, f, base, shade) {
+    for (let py = Math.floor(cy - 10 * k); py < cy + 10 * k; py++) for (let px = Math.floor(cx - 10 * k); px < cx + 10 * k; px++) {
+      const X = (px + 0.5 - cx) / k, Y = (py + 0.5 - cy) / k, d = f(X, Y) * k;
+      if (d < 0) R(c2, px, py, 1, 1, shade && f(X + 0.9 / k, Y + 1.2 / k) >= 0 ? shade : base); else if (d < 1) R(c2, px, py, 1, 1, INK);
+    }
+  }
+  const shadeOf = (c, f) => c.map((v) => Math.round(v * f));
+
+  // ---------- the cabinet body, redrawn only when a button or the stick changes ----------
+  const cab = document.createElement('canvas'); cab.width = CW; cab.height = CH; const cc = cab.getContext('2d');
+  let cabKey = '';
+  function drawCabinet(pressed, dimOthers, tilt) {
+    const key = pressed + '|' + dimOthers + '|' + tilt;
+    if (key === cabKey) return; cabKey = key;
+    const W = CW, body = [44, 22, 88], bodyD = [28, 12, 60], edge = [255, 47, 191];
+    cc.clearRect(0, 0, W, CH);
+    R(cc, 0, 0, W, CH, body); R(cc, 0, 0, 6, CH, bodyD); R(cc, W - 6, 0, 6, CH, bodyD); R(cc, 2, 0, 1, CH, edge); R(cc, W - 3, 0, 1, CH, edge);
+    const mq = [[120, 20, 120], [170, 30, 140], [220, 50, 160]];
+    for (let i = 0; i < 26; i++) R(cc, 8, 3 + i, W - 16, 1, mq[Math.min(2, Math.floor(i / 26 * 3))]);
+    R(cc, 8, 3, W - 16, 1, [255, 170, 230]); R(cc, 8, 28, W - 16, 1, [60, 10, 70]);
+    F.draw(cc, 'RPS FIGHTER', W / 2, 7, '#ffffff', { align: 'center', scale: 2, shadow: '#5a0b4a' });
+    R(cc, 15, 32, MW + 2 * 12, MH + 24, [11, 7, 22]); R(cc, MX - 3, MY - 3, MW + 6, MH + 6, [24, 16, 40]);
+    R(cc, 0, PY, W, 128, [58, 32, 112]); R(cc, 0, PY, W, 2, [90, 56, 160]);
+    for (let i = 0; i < 3; i++) R(cc, 8, PY + 98 + i * 5, W - 16, 2, [[255, 47, 191], [255, 179, 33], [63, 240, 255]][i]);
+    R(cc, 0, PY + 116, W, 12, bodyD); R(cc, 0, PY + 116, W, 1, [90, 56, 160]);
+    // joystick
+    ell(cc, JX, JY + 4, 20, 12, [20, 10, 40]); ell(cc, JX, JY + 2, 17, 10, [36, 22, 66]); ell(cc, JX, JY + 2, 6, 3, [12, 6, 24]);
+    const [tx, ty] = tilt.split(',').map(Number), bx = JX + tx * 9, by = JY - 26 + ty * 6;
+    for (let t = 0; t <= 1; t += 0.02) R(cc, JX + (bx - JX) * t - 1.5, JY + (by + 6 - JY) * t, 4, 1, t < 0.2 ? [60, 60, 80] : [150, 150, 175]);
+    ell(cc, bx, by, 11, 10, [150, 20, 60]); ell(cc, bx - 1, by - 1, 10, 9, [230, 40, 90]); ell(cc, bx - 3, by - 4, 4, 3, [255, 150, 180]); R(cc, bx - 5, by - 6, 2, 1, [255, 255, 255]);
+    // buttons
+    for (const b of BTN) {
+      const col = MOVES[b.m].c, press = pressed === b.m, dim = dimOthers && !press;
+      const top = press ? BY + 4 : BY, side = press ? 2 : 7;
+      ell(cc, b.x, BY + 9, 25, 16, [18, 8, 34]);
+      if (press) { cc.globalAlpha = 0.35; ell(cc, b.x, BY + 6, 32, 22, col); cc.globalAlpha = 1; ell(cc, b.x, BY + 9, 25, 16, [18, 8, 34]); }
+      for (let s = side; s >= 0; s--) ell(cc, b.x, top + s, 22, 15, shadeOf(col, dim ? 0.25 : 0.55));
+      ell(cc, b.x, top, 22, 15, shadeOf(col, dim ? 0.35 : press ? 1 : 0.88));
+      ell(cc, b.x - 5, top - 5, 10, 5, shadeOf(col.map((v) => Math.min(255, v + 60)), dim ? 0.4 : 1));
+      sdfDraw(cc, b.x, top + 1, 1.15, iconSdf(b.m), dim ? [60, 40, 90] : [255, 255, 255], dim ? [40, 30, 70] : [200, 190, 230]);
+      F.draw(cc, LABEL[b.m], b.x, BY + 26, MOVES[b.m].css, { align: 'center', shadow: '#1a0f2e' });
+    }
+    F.draw(cc, '1', BTN[0].x + 20, BY - 16, '#c9b8ff'); F.draw(cc, '2', BTN[1].x + 20, BY - 16, '#c9b8ff'); F.draw(cc, '3', BTN[2].x + 20, BY - 16, '#c9b8ff');
   }
 
-  // ---------- Hero: playable sketch ----------
-  const S = HUD.buildStage(document.getElementById('hero-stage'));
-  fit(document.getElementById('hero-wrap'), S.host);
-  const HOME = { p1: 130, p2: 190 };
-  const scene = { p1: { x: HOME.p1, pose: 'idle' }, p2: { x: HOME.p2, pose: 'idle' } };
-  const game = { hp: [100, 100], won: [0, 0], round: 1, pick: null, picking: false, running: false };
-
-  function frame(t) {
-    const bob = reduce ? 0 : Math.floor(t / 420) % 2;
-    scene.p1.bob = scene.p1.pose === 'idle' ? bob : 0;
-    scene.p2.bob = scene.p2.pose === 'idle' ? 1 - bob : 0;
-    A.render(S.ctx, scene);
-    requestAnimationFrame(frame);
+  // ---------- game state ----------
+  const mon = document.createElement('canvas'); mon.width = MW; mon.height = MH; const mc = mon.getContext('2d');
+  const G = {
+    scene: 'logo', t0: performance.now(), sel: 0, toast: null, trans: null,
+    pressed: '', pressT: 0, tilt: [0, 0], keyTilt: [0, 0], dragTilt: null,
+    match: null,
+  };
+  const listeners = new Set();
+  const onScene = (fn) => listeners.add(fn);
+  function setScene(name) { G.scene = name; G.t0 = performance.now(); G.sel = 0; listeners.forEach((fn) => fn(name)); }
+  // one place for screen changes: a short blinds wipe, then the next scene
+  function go(name, before) {
+    if (G.trans) return;
+    G.trans = { t0: performance.now(), name, before, switched: false };
   }
-  requestAnimationFrame(frame);
 
-  const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? Math.min(ms, 250) : ms));
+  // ---------- fight ----------
+  const HOME = { p1: 84, p2: 132 };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? Math.min(ms, 200) : ms));
   function tween(ms, fn) {
     return new Promise((res) => {
       if (reduce) { fn(1); return res(); }
@@ -750,160 +843,244 @@ footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line);
     });
   }
   const bounce = (k) => { const n = 7.5625, d = 2.75; if (k < 1 / d) return n * k * k; if (k < 2 / d) return n * (k -= 1.5 / d) * k + .75; if (k < 2.5 / d) return n * (k -= 2.25 / d) * k + .9375; return n * (k -= 2.625 / d) * k + .984375; };
-  const roundName = () => game.round === 3 ? 'FINAL ROUND' : 'ROUND ' + game.round;
 
-  function hudBase(extra) {
-    S.setHud(Object.assign({ hp1: game.hp[0], hp2: game.hp[1], won1: game.won[0], won2: game.won[1], timerLabel: roundName() }, extra));
+  function newMatch() {
+    const M = {
+      id: Math.random(), hp: [100, 100], shown: [100, 100], won: [0, 0], round: 1, timer: null, pick: null, picking: false,
+      p1: { x: HOME.p1, pose: 'idle' }, p2: { x: HOME.p2, pose: 'idle' }, icons: null, iconY: 0, spark: null,
+      status: '', pops: [], banner: null, shake: 0, blink: null,
+    };
+    G.match = M; run(M);
   }
-  function choose(m) {
-    if (!game.picking) return;
-    game.pick = m;
-    S.setHud({ selected: m, status: `You picked ${LABEL[m]}. You can still change it.` });
-  }
-  S.host.querySelectorAll('.move').forEach((b) => b.addEventListener('click', () => choose(b.dataset.move)));
-  document.querySelectorAll('#touch-moves button').forEach((b) => b.addEventListener('click', () => choose(b.dataset.move)));
-  addEventListener('keydown', (e) => {
-    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-    const m = { '1': 'attack', '2': 'throw', '3': 'block' }[e.key];
-    if (m && game.picking) { e.preventDefault(); choose(m); }
-  });
-
-  function ready(title, sub, label) {
-    S.setHud({ banner: { title, sub, dim: true, cta: `<button type="button" class="go">${label}</button>` }, showMoves: false, status: '', pops: [] });
-    S.host.querySelector('.go').addEventListener('click', start, { once: true });
-  }
-
-  async function exchange() {
-    scene.p1 = { x: HOME.p1, pose: 'idle' };
-    scene.p2 = { x: HOME.p2, pose: 'idle', icon: '?' };
-    scene.spark = null; scene.flash = 0;
-    game.pick = null; game.picking = true;
-    const cpu = MOVES[Math.floor(Math.random() * 3)];
-    hudBase({ selected: null, locked: false, showMoves: true, status: 'Pick your move', pops: [], banner: null });
-    for (let t = 5; t > 0; t--) { S.setHud({ timer: t }); await sleep(1000); }
-    game.picking = false;
-    let mine = game.pick, auto = false;
-    if (!mine) { mine = MOVES[Math.floor(Math.random() * 3)]; auto = true; }
-    S.setHud({ timer: null, selected: mine, locked: true, status: auto ? `Time's up! Random pick: ${LABEL[mine]}` : 'Locked in' });
-
-    // Reveal: icons drop in
-    scene.p1.icon = mine; scene.p2.icon = cpu;
-    await tween(520, (k) => { const y = -14 + 54 * bounce(k); scene.p1.iconY = y; scene.p2.iconY = y; });
-    await sleep(250);
-
-    const res = mine === cpu ? 0 : BEATS[mine] === cpu ? 1 : -1;
-    if (res === 0) {
-      scene.p1.pose = poseFor(mine, true); scene.p2.pose = poseFor(cpu, true);
-      await tween(160, (k) => { scene.p1.x = HOME.p1 + 8 * k; scene.p2.x = HOME.p2 - 8 * k; });
-      scene.spark = { x: 160, y: 102, big: false };
-      S.setHud({ status: 'Tie! No damage', pops: [{ x: 160, y: 80, text: 'CLASH!', cls: 'tie' }] });
-      await shake(4);
-      scene.spark = null;
-      await sleep(700);
-      return;
-    }
-    const W = res === 1 ? 'p1' : 'p2', L = res === 1 ? 'p2' : 'p1';
-    const wm = res === 1 ? mine : cpu, lm = res === 1 ? cpu : mine;
-    const dir = W === 'p1' ? 1 : -1;
-    scene[W].pose = poseFor(wm, true); scene[L].pose = poseFor(lm, false);
-    await tween(150, (k) => { scene[W].x = HOME[W] + dir * 12 * k; scene[L].x = HOME[L] - dir * 4 * k; });
-    // impact
-    scene[L].pose = wm === 'throw' ? 'air' : 'hurt';
-    scene.spark = { x: 160 + dir * 10, y: wm === 'throw' ? 106 : 98, big: wm === 'throw' };
-    scene.flash = .55;
-    const li = L === 'p1' ? 0 : 1;
-    const before = game.hp[li];
-    game.hp[li] = Math.max(0, before - DMG[wm]);
-    const hpKey = li === 0 ? 'hp1' : 'hp2', lostKey = li === 0 ? 'lost1' : 'lost2';
-    S.setHud({ [hpKey]: game.hp[li], [lostKey]: before, status: `${LABEL[wm]} beats ${LABEL[lm]}`, pops: [{ x: L === 'p2' ? 212 : 108, y: 78, text: '-' + DMG[wm] }] });
-    const startX = scene[L].x;
-    const fly = wm === 'throw' ? tween(380, (k) => { scene[L].x = startX + dir * 22 * k; scene[L].dy = -Math.sin(k * Math.PI) * 10; }) : tween(200, (k) => { scene[L].x = startX + dir * 8 * k; });
-    await Promise.all([shake(wm === 'throw' ? 6 : 4), tween(220, (k) => { scene.flash = .55 * (1 - k); }), fly]);
-    scene[L].dy = 0; scene.spark = null;
-    await sleep(80);
-    S.setHud({ [hpKey]: game.hp[li], [lostKey]: game.hp[li] });
-    await sleep(750);
-    if (game.hp[li] === 0) return W;
-  }
-  function poseFor(m, win) { return m === 'block' ? (win ? 'counter' : 'block') : m; }
-  async function shake(n) {
-    if (reduce) return;
-    for (let i = 0; i < n; i++) { scene.shake = [(i % 2 ? -1 : 1) * 2, (i % 3) - 1]; await new Promise((r) => setTimeout(r, 40)); }
-    scene.shake = null;
-  }
-
-  async function start() {
-    if (game.running) return;
-    game.running = true;
-    if (game.won[0] === 2 || game.won[1] === 2 || game.round > 3) { game.won = [0, 0]; game.round = 1; }
-    game.hp = [100, 100];
-    hudBase({ timer: null, banner: { title: roundName(), sub: 'Fight!' }, showMoves: true, pops: [], status: '', selected: null, locked: false, lost1: 100, lost2: 100 });
-    await sleep(1100);
-    for (;;) {
-      const winner = await exchange();
-      if (!winner) continue;
-      const wi = winner === 'p1' ? 0 : 1;
-      game.won[wi]++;
-      scene[winner] = { x: winner === 'p1' ? 122 : 198, pose: 'win' };
-      const loser = winner === 'p1' ? 'p2' : 'p1';
-      scene[loser] = { x: loser === 'p1' ? 112 : 206, pose: 'ko' };
-      hudBase({ status: '', pops: [], showMoves: false, banner: { title: 'K.O.', sub: winner === 'p1' ? 'You take the round' : 'CPU takes the round' } });
-      await sleep(1600);
-      if (game.won[wi] === 2) {
-        game.running = false;
-        ready(winner === 'p1' ? 'YOU WIN' : 'CPU WINS', `${Math.max(...game.won)} rounds to ${Math.min(...game.won)}`, 'Rematch');
-        return;
+  const alive = (M) => G.match === M && G.scene === 'fight';
+  async function run(M) {
+    await sleep(350);
+    while (alive(M)) {
+      M.hp = [100, 100]; M.shown = [100, 100];
+      M.banner = { text: M.round === 3 ? 'FINAL ROUND' : 'ROUND ' + M.round, col: '#3ff0ff' }; await sleep(900);
+      M.banner = { text: 'FIGHT!', col: '#ffb321' }; await sleep(600); M.banner = null;
+      while (alive(M) && M.hp[0] > 0 && M.hp[1] > 0) await exchange(M);
+      if (!alive(M)) return;
+      const w = M.hp[0] > 0 ? 0 : 1; M.won[w]++;
+      M.banner = { text: 'K.O.', col: '#ff2fbf' }; await sleep(1100); if (!alive(M)) return;
+      if (M.won[w] === 2) {
+        G.result = { win: w === 0, score: [M.won[0], M.won[1]] };
+        M.banner = null; go('result'); return;
       }
-      game.round++;
-      game.hp = [100, 100];
-      scene.p1 = { x: HOME.p1, pose: 'idle' }; scene.p2 = { x: HOME.p2, pose: 'idle' };
-      hudBase({ lost1: 100, lost2: 100, timer: null, banner: { title: roundName(), sub: 'Fight!' } });
-      await sleep(1300);
+      M.round++; M.banner = null;
+      M.p1 = { x: HOME.p1, pose: 'idle' }; M.p2 = { x: HOME.p2, pose: 'idle' };
     }
   }
-  hudBase({ timer: 5, selected: null });
-  ready('READY?', 'Best of three against the computer', 'Start fight');
+  async function exchange(M) {
+    M.p1 = { x: HOME.p1, pose: 'idle' }; M.p2 = { x: HOME.p2, pose: 'idle' };
+    M.icons = null; M.spark = null; M.pops = []; M.pick = null; M.picking = true; M.blink = null;
+    const cpu = MOVES_[Math.floor(Math.random() * 3)];
+    M.status = 'PICK YOUR MOVE';
+    for (let t = 5; t > 0; t--) { M.timer = t; await sleep(1000); if (!alive(M)) return; }
+    M.picking = false; M.timer = null;
+    let mine = M.pick, auto = false;
+    if (!mine) { mine = MOVES_[Math.floor(Math.random() * 3)]; auto = true; }
+    M.lockedPick = mine;
+    M.status = auto ? 'TIME UP! RANDOM: ' + LABEL[mine] : 'LOCKED IN';
+    M.icons = [mine, cpu];
+    await tween(480, (k) => { M.iconY = Math.round(-24 + 24 * bounce(k)); });
+    await sleep(220); if (!alive(M)) return;
+    const res = mine === cpu ? 0 : BEATS[mine] === cpu ? 1 : -1;
+    const pose = (m) => m === 'block' ? 'block' : 'attack';
+    M.p1.pose = pose(mine); M.p2.pose = pose(cpu);
+    if (res === 0) {
+      await tween(140, (k) => { M.p1.x = HOME.p1 + Math.round(6 * k); M.p2.x = HOME.p2 - Math.round(6 * k); });
+      M.spark = [108, 190]; M.shake = 2; M.status = 'TIE! NO DAMAGE';
+      M.pops = [{ x: 108, y: 96, text: 'CLASH!', col: '#c9b8ff' }];
+      await sleep(900); return;
+    }
+    const winMove = res > 0 ? mine : cpu, loser = res > 0 ? 1 : 0, dmg = DMG[winMove];
+    const wSide = res > 0 ? 'p1' : 'p2', lSide = res > 0 ? 'p2' : 'p1', dir = res > 0 ? 1 : -1;
+    await tween(130, (k) => { M[wSide].x = HOME[wSide] + dir * Math.round(8 * k); });
+    M.spark = [108 + dir * 6, 190]; M.shake = dmg / 5; M.blink = lSide;
+    M.hp[loser] = Math.max(0, M.hp[loser] - dmg);
+    M.pops = [{ x: loser ? 172 : 44, y: 96, text: '-' + dmg, col: '#fff1a8' }];
+    M.status = winMove === 'throw' ? 'THROW BEATS BLOCK' : winMove === 'attack' ? 'ATTACK BEATS THROW' : 'BLOCK COUNTERS ATTACK';
+    await tween(220, (k) => { M[lSide].x = HOME[lSide] + dir * Math.round(10 * k); });
+    const from = M.shown[loser];
+    await tween(420, (k) => { M.shown[loser] = Math.round(from + (M.hp[loser] - from) * k); });
+    M.blink = null;
+    await sleep(700);
+  }
 
-  // ---------- Mock-up gallery (static stills) ----------
-  const STILLS = [
-    { cap: '<b>Pick your move.</b> Five seconds to choose; the computer\'s pick stays hidden.', sc: { p1: { x: 130, pose: 'idle' }, p2: { x: 190, pose: 'idle', icon: '?' } },
-      hud: { hp1: 70, hp2: 55, won1: 1, won2: 0, timer: 3, timerLabel: 'ROUND 2', selected: 'throw', status: 'You picked Throw. You can still change it.' } },
-    { cap: '<b>Reveal.</b> Icons drop in together; Throw beats Block for 20.', sc: { p1: { x: 146, pose: 'throw', icon: 'throw', front: true }, p2: { x: 180, pose: 'air', icon: 'block' }, spark: { x: 170, y: 106, big: true } },
-      hud: { hp1: 70, hp2: 35, lost2: 55, won1: 1, won2: 0, timer: null, timerLabel: 'ROUND 2', selected: 'throw', locked: true, status: 'Throw beats Block', pops: [{ x: 212, y: 78, text: '-20' }] } },
-    { cap: '<b>Tie.</b> Same move on both sides: the moves clash and nobody takes damage.', sc: { p1: { x: 140, pose: 'attack', icon: 'attack' }, p2: { x: 180, pose: 'attack', icon: 'attack' }, spark: { x: 160, y: 102 } },
-      hud: { hp1: 45, hp2: 35, won1: 1, won2: 1, timer: null, timerLabel: 'FINAL ROUND', selected: 'attack', locked: true, status: 'Tie! No damage', pops: [{ x: 160, y: 80, text: 'CLASH!', cls: 'tie' }] } },
-    { cap: '<b>Match won.</b> Best of three ends with a winner screen and a rematch button.', sc: { p1: { x: 120, pose: 'win' }, p2: { x: 200, pose: 'ko' } },
-      hud: { hp1: 45, hp2: 0, won1: 2, won2: 1, timer: null, timerLabel: 'FINAL ROUND', showMoves: false, banner: { title: 'YOU WIN', sub: '2 rounds to 1', dim: true, cta: '<button type="button" tabindex="-1">Rematch</button><button type="button" class="alt" tabindex="-1">Main menu</button>' } } },
-  ];
-  const shots = document.getElementById('shots');
-  STILLS.forEach((s) => {
-    const fig = document.createElement('figure'); fig.className = 'shot';
-    fig.innerHTML = '<div class="stage-wrap"><div></div></div><figcaption></figcaption>';
-    fig.querySelector('figcaption').innerHTML = s.cap;
-    shots.appendChild(fig);
-    const st = HUD.buildStage(fig.querySelector('.stage-wrap > div'));
-    st.host.setAttribute('aria-hidden', 'true');
-    st.host.querySelectorAll('button').forEach((b) => { b.tabIndex = -1; });
-    fit(fig.querySelector('.stage-wrap'), st.host);
-    A.render(st.ctx, s.sc);
-    st.setHud(s.hud);
+  // ---------- drawing the monitor ----------
+  function hud(M) {
+    const bar = (x, hpS, hp, right) => {
+      R(mc, x - 1, 15, 86, 9, '#1a0f2e'); R(mc, x, 16, 84, 7, '#120826');
+      const w = Math.round(84 * hpS / 100), w2 = Math.round(84 * hp / 100);
+      const lost = right ? [x, w] : [x + 84 - w, w];
+      R(mc, lost[0], 16, lost[1], 7, '#fff1a8');
+      const xx = right ? x : x + 84 - w2;
+      R(mc, xx, 16, w2, 7, hp <= 30 ? '#ff3b6b' : '#3ff0c8'); R(mc, xx, 16, w2, 2, hp <= 30 ? '#ff8fae' : '#b4ffe9');
+      R(mc, x - 2, 14, 88, 1, right ? '#ff2fbf' : '#3ff0ff'); R(mc, x - 2, 24, 88, 1, right ? '#ff2fbf' : '#3ff0ff');
+    };
+    F.draw(mc, 'YOU', 6, 5, '#f6f0ff', { shadow: '#1a0f2e' }); F.draw(mc, 'CPU', 210, 5, '#f6f0ff', { align: 'right', shadow: '#1a0f2e' });
+    bar(6, M.shown[0], Math.min(M.shown[0], M.hp[0]), false); bar(126, M.shown[1], Math.min(M.shown[1], M.hp[1]), true);
+    for (let i = 0; i < 2; i++) {
+      for (const [x, w] of [[6 + i * 8, M.won[0] > i], [204 - i * 8, M.won[1] > i]]) { R(mc, x, 28, 6, 6, '#c9b8ff'); R(mc, x + 1, 29, 4, 4, w ? '#ffb321' : '#120826'); }
+    }
+    R(mc, 94, 4, 28, 24, '#120826'); S.frame(mc, 94, 4, 28, 24, '#ff2fbf');
+    if (M.timer != null) F.draw(mc, String(M.timer), 108, 9, M.timer <= 2 ? '#ff8fc7' : '#f6f0ff', { align: 'center', scale: 2, shadow: '#3d1f66' });
+    else F.draw(mc, 'VS', 108, 12, '#ffb321', { align: 'center' });
+    F.draw(mc, M.round === 3 ? 'FINAL' : 'ROUND ' + M.round, 108, 32, '#3ff0ff', { align: 'center', shadow: '#1a0f2e' });
+    if (M.status) { const w = F.width(M.status) + 10; R(mc, 108 - w / 2, 252, w, 13, '#120826'); S.frame(mc, 108 - w / 2, 252, w, 13, '#3ff0ff'); F.draw(mc, M.status, 108, 255, '#f6f0ff', { align: 'center' }); }
+  }
+  function drawFight(t) {
+    const M = G.match; if (!M) return;
+    S.stage(mc);
+    const bob = reduce ? 0 : Math.floor(t / 420) % 2;
+    const blinkOff = M.blink && Math.floor(t / 60) % 3 === 0;
+    if (!(blinkOff && M.blink === 'p1')) S.putFighter(mc, 'p1', M.p1.pose, M.p1.x, S.GY + (M.p1.pose === 'idle' ? bob : 0));
+    if (!(blinkOff && M.blink === 'p2')) S.putFighter(mc, 'p2', M.p2.pose, M.p2.x, S.GY + (M.p2.pose === 'idle' ? 1 - bob : 0));
+    if (M.icons || M.spark) {
+      const img = mc.getImageData(0, 0, MW, MH);
+      if (M.icons) { badge(img, MW, MH, M.p1.x + 2, 128 + M.iconY, M.icons[0], 11); badge(img, MW, MH, M.p2.x - 2, 128 + M.iconY, M.icons[1], 11); }
+      if (M.spark) spark(img, MW, M.spark[0], M.spark[1], 12);
+      mc.putImageData(img, 0, 0);
+    } else if (M.picking) {
+      const img = mc.getImageData(0, 0, MW, MH);
+      badge(img, MW, MH, M.p2.x - 2, 128, '?', 11);
+      if (M.pick) badge(img, MW, MH, M.p1.x + 2, 128, M.pick, 11);
+      mc.putImageData(img, 0, 0);
+      if (M.pick) F.draw(mc, 'ONLY YOU SEE THIS', M.p1.x + 2, 108, '#c9b8ff', { align: 'center', shadow: '#1a0f2e' });
+    }
+    for (const p of M.pops) F.draw(mc, p.text, p.x, p.y, p.col, { align: 'center', scale: 2, outline: '#1a0f2e', shadow: '#b3165f' });
+    hud(M);
+    if (M.banner) {
+      R(mc, 0, 110, MW, 30, 'rgba(10,4,24,0.7)');
+      F.draw(mc, M.banner.text, 108, 115, M.banner.col, { align: 'center', scale: 3, outline: '#1a0f2e', shadow: '#5a0b4a' });
+    }
+  }
+
+  let homeRects = [], resultRects = [];
+  function frame(t) {
+    // transition bookkeeping
+    let cover = 0;
+    if (G.trans) {
+      const k = (t - G.trans.t0) / (reduce ? 1 : 260);
+      if (k >= 0.5 && !G.trans.switched) { G.trans.switched = true; if (G.trans.before) G.trans.before(); setScene(G.trans.name); if (G.trans.name === 'fight') newMatch(); }
+      cover = k < 0.5 ? k * 2 : Math.max(0, 2 - k * 2);
+      if (k >= 1) G.trans = null;
+    }
+    const lt = t - G.t0;
+    if (G.scene === 'logo') {
+      const level = lt < 500 ? Math.floor(lt / 125) : lt < 2000 ? 4 : lt < 2500 ? 4 - Math.floor((lt - 2000) / 125) : 0;
+      S.logo(mc, reduce ? 4 : Math.max(0, Math.min(4, level)));
+      if (lt > 2700 && !G.trans) go('home');
+    } else if (G.scene === 'home') {
+      homeRects = S.home(mc, G.sel, reduce ? 0 : lt).rects;
+    } else if (G.scene === 'fight') {
+      drawFight(t);
+    } else if (G.scene === 'result') {
+      resultRects = S.result(mc, { win: G.result.win, score: G.result.score, sel: G.sel }, reduce ? 0 : lt).rects;
+    }
+    if (G.toast && t < G.toast.until) {
+      const w = F.width(G.toast.text) + 10; R(mc, 108 - w / 2, 195, w, 13, '#120826'); S.frame(mc, 108 - w / 2, 195, w, 13, '#ffb321'); F.draw(mc, G.toast.text, 108, 198, '#ffb321', { align: 'center' });
+    }
+    if (cover > 0) { const h = Math.ceil(cover * 18); for (let y = 0; y < MH; y += 18) R(mc, 0, y, MW, h, '#07040f'); }
+    S.crt(mc);
+    // cabinet + monitor (with whole-pixel screen shake)
+    const M = G.match;
+    let sx = 0, sy = 0;
+    if (G.scene === 'fight' && M && M.shake > 0 && !reduce) { const a = Math.round(M.shake); sx = Math.round((Math.random() * 2 - 1) * a); sy = Math.round((Math.random() * 2 - 1) * a); M.shake = M.shake > 0.5 ? M.shake * 0.82 : 0; }
+    const tilt = G.dragTilt || (G.keyTilt[0] || G.keyTilt[1] ? G.keyTilt : [0, 0]);
+    const pressed = G.pressed && t < G.pressT ? G.pressed : (G.scene === 'fight' && M ? (M.picking ? M.pick : M.lockedPick && !M.picking && M.icons ? M.lockedPick : '') || '' : '');
+    const dim = G.scene === 'fight' && M && !M.picking && !!M.icons;
+    drawCabinet(pressed, dim, tilt.join(','));
+    ctx.drawImage(cab, 0, 0);
+    R(ctx, MX, MY, MW, MH, '#07040f');
+    ctx.save(); ctx.beginPath(); ctx.rect(MX, MY, MW, MH); ctx.clip(); ctx.drawImage(mon, MX + sx, MY + sy); ctx.restore();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---------- input: one router for buttons, keys, stick and taps ----------
+  function toast(text) { G.toast = { text, until: performance.now() + 1400 }; }
+  function confirmMenu(i) {
+    if (G.trans) return;
+    if (G.scene === 'home') {
+      const it = S.HOME_ITEMS[i];
+      if (!it.enabled) return toast('ONLINE COMES LATER');
+      go('fight');
+    } else if (G.scene === 'result') {
+      go(i === 0 ? 'fight' : 'home');
+    }
+  }
+  function action(a) {
+    if (G.scene === 'logo') { if (!G.trans) go('home'); return; }
+    if (a.startsWith('pick:')) {
+      const m = a.slice(5);
+      G.pressed = m; G.pressT = performance.now() + 160;
+      if (G.scene === 'fight') { const M = G.match; if (M && M.picking) { M.pick = m; M.status = 'YOU PICKED ' + LABEL[m]; } }
+      else confirmMenu(G.sel);
+    } else if (a === 'confirm') confirmMenu(G.sel);
+    else if (a === 'nav:up' || a === 'nav:down') {
+      const items = G.scene === 'home' ? S.HOME_ITEMS : G.scene === 'result' ? S.RESULT_ITEMS : null;
+      if (!items) return;
+      let i = G.sel;
+      for (let n = 0; n < items.length; n++) { i = (i + (a === 'nav:up' ? -1 : 1) + items.length) % items.length; if (items[i].enabled !== false) break; }
+      if (i === G.sel && items.length > 1 && G.scene === 'home') toast('ONLINE COMES LATER');
+      G.sel = i;
+    } else if (a === 'back') { if (G.scene === 'result') go('home'); }
+  }
+  const held = new Set();
+  function syncKeyTilt() {
+    G.keyTilt = [(held.has('ArrowRight') ? 1 : 0) - (held.has('ArrowLeft') ? 1 : 0), (held.has('ArrowDown') ? 1 : 0) - (held.has('ArrowUp') ? 1 : 0)];
+  }
+  let focused = false;
+  cv.addEventListener('focus', () => { focused = true; }); cv.addEventListener('blur', () => { focused = false; held.clear(); syncKeyTilt(); });
+  addEventListener('keydown', (e) => {
+    if (e.target && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(e.target.tagName)) return;
+    const pickKey = { '1': 'attack', '2': 'throw', '3': 'block' }[e.key];
+    const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    if (arrows.includes(e.key) && !focused) return; // let the page scroll unless the cabinet has focus
+    if (pickKey) { e.preventDefault(); action('pick:' + pickKey); }
+    else if (arrows.includes(e.key)) { e.preventDefault(); if (!held.has(e.key)) { held.add(e.key); syncKeyTilt(); if (e.key === 'ArrowUp') action('nav:up'); if (e.key === 'ArrowDown') action('nav:down'); } }
+    else if ((e.key === 'Enter' || e.key === ' ') && focused) { e.preventDefault(); action('confirm'); }
+    else if (e.key === 'Escape' && focused) action('back');
   });
+  addEventListener('keyup', (e) => { if (held.delete(e.key)) syncKeyTilt(); });
 
-  // ---------- Pose sheet ----------
-  const pc = document.getElementById('poses').getContext('2d');
-  pc.imageSmoothingEnabled = false;
-  pc.fillStyle = '#171433'; pc.fillRect(0, 0, 400, 84);
-  pc.fillStyle = '#2b2052'; pc.fillRect(0, 72, 400, 12);
-  const POSE_LIST = [['idle', 'Idle', 26], ['attack', 'Attack', 76], ['throw', 'Throw', 126], ['block', 'Block', 174], ['counter', 'Counter', 220], ['hurt', 'Hurt', 268], ['ko', 'Knocked out', 324], ['win', 'Win', 378]];
-  const pl = document.getElementById('pose-labels');
-  POSE_LIST.forEach(([p, name, x], i) => {
-    pc.save(); pc.translate(0, -70);
-    A.drawFighter(pc, i % 2 ? 'p2' : 'p1', x, p, { facing: 1 });
-    pc.restore();
-    const sp = document.createElement('span'); sp.textContent = name; sp.style.left = (x * 2.5) + 'px'; pl.appendChild(sp);
+  const toNative = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * CW / r.width, (e.clientY - r.top) * CH / r.height]; };
+  let drag = null;
+  cv.addEventListener('pointerdown', (e) => {
+    cv.focus({ preventScroll: true });
+    const [x, y] = toNative(e);
+    for (const b of BTN) if (((x - b.x) / 26) ** 2 + ((y - BY - 2) / 19) ** 2 <= 1) { action('pick:' + b.m); return; }
+    if (Math.hypot(x - JX, y - (JY - 22)) < 22) { drag = { x, y, last: [0, 0] }; cv.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+    if (x >= MX && x < MX + MW && y >= MY && y < MY + MH) {
+      const mx = x - MX, my = y - MY;
+      const rects = G.scene === 'home' ? homeRects : G.scene === 'result' ? resultRects : [];
+      for (const r of rects) if (mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h) { G.sel = r.i; confirmMenu(r.i); return; }
+      if (G.scene === 'logo') action('confirm');
+    }
   });
+  cv.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const [x, y] = toNative(e), dx = x - drag.x, dy = y - drag.y;
+    const q = (v) => (v > 6 ? 1 : v < -6 ? -1 : 0), tilt = [q(dx), q(dy)];
+    if (tilt[1] !== drag.last[1]) { if (tilt[1] === -1) action('nav:up'); if (tilt[1] === 1) action('nav:down'); }
+    drag.last = tilt; G.dragTilt = tilt;
+  });
+  const endDrag = () => { drag = null; G.dragTilt = null; };
+  cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
 
-  // ---------- Mix calculator ----------
+  // ---------- page controls ----------
+  const chips = document.querySelectorAll('[data-screen]');
+  onScene((name) => chips.forEach((c) => c.classList.toggle('on', c.dataset.screen === name)));
+  const replay = document.getElementById('replay-intro');
+  if (replay) replay.addEventListener('click', () => { G.match = null; G.trans = null; setScene('logo'); cv.focus({ preventScroll: true }); });
+  setScene('logo');
+})();
+
+</script>
+<script>
+(function () {
   const ids = ['attack', 'throw', 'block'];
   function mix() {
     const d = {}; ids.forEach((m) => { d[m] = +document.getElementById('d-' + m).value; document.getElementById('o-' + m).textContent = d[m]; });

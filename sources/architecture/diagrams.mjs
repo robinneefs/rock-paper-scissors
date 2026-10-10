@@ -322,3 +322,49 @@ function card(x, y, w, h, kind, title, lines = [], o = {}) {
   b += box(700, y - 12, 260, 46, 'pres', { r: 8 }) + text(830, y + 16, 'play reveal within revealMs', { anchor: 'middle', size: 12.5 });
   svg('6-online-exchange.svg', W, H, 'Online exchange sequence', b);
 }
+
+// =====================================================================
+// 7. Screen flow (menus)
+// =====================================================================
+{
+  const W = 1000, H = 560;
+  let b = text(32, 44, 'Screen flow: from power-on to rematch', { size: 22, weight: 800 });
+  b += text(32, 68, 'Every screen is a monitor scene. Dashed boxes are later screens: they slot in as new menu items, no other scene changes.', { fill: C.sub });
+  const n = (x, y, w, h, kind, title, lines, o = {}) => card(x, y, w, h, kind, title, lines, { center: true, ...o });
+  b += n(32, 110, 150, 112, 'plat', 'Boot', ['load assets', 'pixel loading bar']);
+  b += n(222, 110, 170, 112, 'pres', 'Logo intro', ['placeholder logo', 'fades in, holds, out', 'any button skips']);
+  b += n(432, 110, 190, 172, 'pres', 'Home', ['game title', '', '', '', '']);
+  b += box(450, 180, 154, 30, ['#ffffff', C.pres[1]], { r: 6, sw: 1.5 }) + text(527, 200, '▶ START GAME  vs CPU', { anchor: 'middle', size: 12.5, weight: 700 });
+  b += box(450, 218, 154, 30, ['#ffffff', C.line], { r: 6, sw: 1.5, dash: true }) + text(527, 238, 'ONLINE  (later)', { anchor: 'middle', size: 12.5, fill: C.sub });
+  b += text(527, 268, 'room for more buttons', { anchor: 'middle', size: 11.5, fill: C.sub, italic: true });
+  b += n(662, 110, 140, 112, 'session', 'Fight', ['best of three', 'vs the CPU']);
+  b += n(842, 110, 140, 172, 'core', 'Result', ['winner banner', 'score 2-1', '', '']);
+  b += box(861, 196, 102, 28, ['#ffffff', C.core[1]], { r: 6, sw: 1.5 }) + text(912, 215, '▶ RETRY', { anchor: 'middle', size: 12.5, weight: 700 });
+  b += box(861, 232, 102, 28, ['#ffffff', C.core[1]], { r: 6, sw: 1.5 }) + text(912, 251, 'MAIN MENU', { anchor: 'middle', size: 12.5, weight: 700 });
+
+  b += arrow('M 182 166 L 220 166', 'ink');
+  b += arrow('M 392 166 L 430 166', 'ink');
+  b += arrow('M 604 195 C 630 195, 640 166, 660 166', 'pres');
+  b += text(632, 142, 'MatchSetup', { anchor: 'middle', size: 11.5, mono: true, fill: C.pres[1] });
+  b += arrow('M 802 166 L 840 166', 'ink');
+  b += text(821, 154, 'KO', { anchor: 'middle', size: 11.5, weight: 700, fill: C.sub });
+  // retry loop
+  b += arrow('M 861 210 L 804 210', 'core');
+  b += text(831, 200, 'retry', { anchor: 'middle', size: 11.5, weight: 700, fill: C.sub });
+  // main menu back home
+  b += arrow('M 861 246 C 780 330, 640 330, 560 284', 'core');
+  b += text(712, 330, 'main menu', { anchor: 'middle', size: 12, weight: 700, fill: C.sub });
+  b += text(32, 366, 'Retry starts a new match with the same MatchSetup (session.rematch(); online, both players must agree).', { size: 12.5, fill: C.sub });
+
+  // later screens
+  b += text(32, 392, 'Later screens hang off Home the same way:', { weight: 700, size: 14 });
+  const later = [
+    ['Online lobby', ['create room / join', 'with a room code']],
+    ['Settings', ['music and effects volume', 'mute, controls']],
+    ['Pause', ['in a fight: resume', 'or quit to menu']],
+    ['How to play', ['the rules triangle', 'and the damage']],
+  ];
+  later.forEach(([t, l], i) => { b += n(32 + i * 240, 410, 216, 92, 'plat', t, l, { dash: true }); });
+  b += text(32, 532, 'Input in menus: joystick or arrow keys move the cursor, any of the three buttons (or Enter / Space / a tap) confirms, Esc or Android back goes back.', { size: 12.5, fill: C.sub });
+  svg('7-screen-flow.svg', W, H, 'Screen flow', b);
+}

@@ -52,6 +52,8 @@ canvas.px{position:absolute;left:0;image-rendering:pixelated}
 </style></head><body>
 <div id="root"></div>
 <script src="art.js"></script>
+<script src="pixfont.js"></script>
+<script src="screens.js"></script>
 <script>
 // ---------- tiny pixel helpers on a 2d context ----------
 const rgb=c=>Array.isArray(c)?`rgb(${c[0]},${c[1]},${c[2]})`:c;
@@ -115,6 +117,9 @@ function cabinet(ctx,x0,y0,st,opts){
 
 // ---------- monitor content (216x288 game screen) ----------
 function monitor(st){
+ if(st.menu){const cv=document.createElement('canvas');cv.width=216;cv.height=288;const ctx=cv.getContext('2d');
+  if(st.menu==='logo')SCREENS.logo(ctx,st.level??4);else if(st.menu==='home')SCREENS.home(ctx,st.sel??0);else SCREENS.result(ctx,st);
+  SCREENS.crt(ctx);return {cv};}
  const B=window.BIG,W=B?144:216,H=B?192:288,hz=B?100:150,gy=B?155:232,k=B?1:64/48;
  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
  backdrop(ctx,W,H,hz);
@@ -137,12 +142,12 @@ function monitor(st){
 function overlays(s,lay,mon,st,opts){
  const h=st.hud,mx=lay.mx,my=lay.my,P=(x,y)=>`left:${x*s}px;top:${y*s}px`;
  const side=(cls,nm,hp,lost,won)=>`<div class="side ${cls}"><div class="nm">${nm}</div><div class="bar"><i class="lost" style="width:${lost??hp}%"></i><i class="hp" style="width:${hp}%"></i></div><div class="pips"><span class="pip ${won>0?'won':''}"></span><span class="pip ${won>1?'won':''}"></span></div></div>`;
- let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${13*s}px">RPS FIGHTER<small>ATTACK · THROW · BLOCK</small></div>
- <div class="abs hud" style="${P(mx+6,my+7)};width:${204*s}px">${side('l','YOU',h.hp1,h.lost1,h.won1)}
+let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${13*s}px">RPS FIGHTER<small>ATTACK · THROW · BLOCK</small></div>`;
+ if(!st.menu){o+=`<div class="abs hud" style="${P(mx+6,my+7)};width:${204*s}px">${side('l','YOU',h.hp1,h.lost1,h.won1)}
   <div class="timer ${h.timer==null?'vs':h.timer<=2?'hurry':''}"><span>${h.timer??'VS'}</span><span class="lbl">${h.label}</span></div>${side('r','CPU',h.hp2,h.lost2,h.won2)}</div>`;
  if(h.mine)o+=`<div class="abs mine" style="${P(mx+mon.x1+2,my+mon.by-20)}">ONLY YOU SEE THIS</div>`;
  if(h.status)o+=`<div class="abs status" style="left:${(mx+108)*s}px;top:${(my+252)*s}px">${h.status}</div>`;
- for(const p of h.pops||[])o+=`<div class="abs dmg" style="${P(mx+p.x,my+p.y)}">${p.text}</div>`;
+ for(const p of h.pops||[])o+=`<div class="abs dmg" style="${P(mx+p.x,my+p.y)}">${p.text}</div>`;}
  for(const b of lay.info){o+=`<div class="abs blabel" style="--c:${MOVES[b.m].css};${P(b.cx,b.ly)}">${MOVES[b.m].label}${opts.keys?`<span class="key">${{attack:1,throw:2,block:3}[b.m]}</span>`:''}</div>`;}
  if(opts.keys)o+=`<div class="abs hint" style="${P(lay.jx,lay.jy+22)}">arrow keys or drag</div>`;
  if(opts.door)o+=`<div class="abs coin" style="${P(lay.x0+CAB.W/2,lay.dY+36)}">${opts.coinText||''}</div>`;
@@ -203,6 +208,9 @@ function build(kind,st){
 const SC={
  pick:{p1:{pose:'idle',badge:'throw'},p2:{pose:'idle',badge:'?'},tilt:[0,0],
    hud:{hp1:70,hp2:55,won1:1,won2:0,timer:3,label:'ROUND 2',sel:'throw',status:'You picked <b>Throw</b>. You can still change it.'}},
+ logo:{menu:'logo',level:4,hud:{}},
+ home:{menu:'home',sel:0,tilt:[0,-1],hud:{}},
+ result:{menu:'result',win:true,score:[2,1],sel:0,hud:{}},
  reveal:{p1:{pose:'block',badge:'block',dx:3},p2:{pose:'attack',badge:'attack',dx:2},front:'p1',spark:[2,-34],tilt:[1,-1],
    hud:{hp1:70,hp2:45,lost2:55,won1:1,won2:0,timer:null,label:'ROUND 2',sel:'block',locked:true,status:'<b>Block</b> counters Attack',pops:[{x:172,y:126,text:'-10'}]}},
 };

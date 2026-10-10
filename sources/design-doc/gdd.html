@@ -1,0 +1,437 @@
+<title>Rock Paper Scissors Fighter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: the playable arcade cabinet is the hero, then the design document as chapters.
+   One dark neon look on purpose: it is the game's own world (arcade room at night). */
+:root {
+  --room: #0d0819;      /* page ground: the arcade room */
+  --panel: #1a1131;     /* raised surfaces */
+  --line: #33255a;      /* rules and borders */
+  --ink: #f4effc;       /* text */
+  --muted: #b3a7d3;     /* secondary text */
+  --pink: #ff2fbf;      /* neon accent */
+  --cyan: #3ff0ff;
+  --gold: #ffb321;
+  --attack: #ff3b6b; --throw: #ffb321; --block: #3ff0ff;
+  --display: 'Pixelify Sans', 'Courier New', monospace;
+  --body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--room); color: var(--ink); }
+body { font-family: var(--body); font-size: 17px; line-height: 1.6; padding-inline: 16px; padding-block: 0 64px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+p { margin: 0; max-width: 66ch; }
+a { color: var(--cyan); }
+a:focus-visible, button:focus-visible, input:focus-visible, canvas:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+
+/* Hero */
+header.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center; padding-block: 36px 12px; }
+@media (max-width: 860px) { header.hero { grid-template-columns: 1fr; } }
+.hero-text { display: grid; gap: 18px; align-content: center; min-width: 0; }
+.eyebrow { font-family: var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-size: 14px; }
+h1 { font-size: clamp(40px, 6.4vw, 72px); color: var(--ink); text-shadow: 3px 3px 0 #5a0b4a; }
+h1 em { font-style: normal; color: var(--pink); }
+.lede { font-size: 19px; color: var(--muted); }
+.controls { display: grid; gap: 6px; font-size: 15px; color: var(--muted); margin: 0; padding: 0; list-style: none; }
+.controls b { color: var(--ink); font-weight: 700; }
+.kbd { font-family: var(--display); border: 2px solid var(--line); padding: 0 6px; color: var(--ink); white-space: nowrap; }
+.screens { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.screens span { font-family: var(--display); font-size: 14px; letter-spacing: .06em; padding: 3px 10px; border: 2px solid var(--line); color: var(--muted); }
+.screens span.on { border-color: var(--pink); color: var(--ink); background: #3a1458; }
+.screens i { color: var(--line); font-style: normal; }
+.ghost { font: 600 15px var(--display); background: transparent; color: var(--cyan); border: 2px solid var(--line); padding: 4px 12px; cursor: pointer; justify-self: start; }
+.ghost:hover { border-color: var(--cyan); }
+.cab-host { display: grid; justify-items: center; min-width: 0; }
+#cab { line-height: 0; filter: drop-shadow(0 0 28px rgba(255, 47, 191, .25)); }
+.cab-canvas { image-rendering: pixelated; touch-action: none; cursor: pointer; display: block; }
+.note { font-size: 14px; color: var(--muted); }
+
+/* Chapters */
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 20px 8px; border-top: 2px solid var(--line); margin-top: 28px; }
+nav.toc a { font-family: var(--display); font-size: 15px; text-decoration: none; color: var(--muted); border: 2px solid var(--line); padding: 4px 10px; }
+nav.toc a:hover { color: var(--ink); border-color: var(--muted); }
+nav.toc a.new { border-color: var(--pink); color: var(--ink); }
+section.ch { display: grid; gap: 20px; padding-block: 52px 8px; scroll-margin-top: 12px; }
+.ch-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.ch-head .no { font-family: var(--display); color: var(--gold); font-size: 18px; }
+.ch-head .tag { font-family: var(--display); font-size: 13px; color: var(--room); background: var(--pink); padding: 0 8px; letter-spacing: .08em; }
+h2 { font-size: clamp(28px, 4.2vw, 40px); }
+h3 { font-size: 20px; }
+.grid { display: grid; gap: 16px; }
+.cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+.cols-2 > *, .cols-3 > * { min-width: 0; }
+.tile { background: var(--panel); border: 2px solid var(--line); padding: 18px; display: grid; gap: 8px; align-content: start; }
+.tile h3 { font-size: 19px; }
+.tile p { color: var(--muted); font-size: 16px; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 70ch; }
+ul.plain li::marker { color: var(--pink); }
+.callout { border-left: 6px solid var(--gold); background: var(--panel); padding: 14px 18px; max-width: 72ch; }
+.callout strong { font-family: var(--display); font-weight: 600; letter-spacing: .03em; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); font-weight: 600; color: var(--muted); letter-spacing: .04em; font-size: 15px; }
+td.n { font-variant-numeric: tabular-nums; }
+td b { font-family: var(--display); font-weight: 600; }
+.chip { display: inline-block; font-family: var(--display); font-size: 15px; padding: 1px 8px; color: var(--room); white-space: nowrap; }
+.chip.attack { background: var(--attack); } .chip.throw { background: var(--throw); } .chip.block { background: var(--block); }
+
+/* Figures */
+.figs { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); align-items: start; }
+.figs.wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure a { display: block; line-height: 0; border: 2px solid var(--line); background: #07040f; }
+figure a:hover { border-color: var(--cyan); }
+figure img { width: 100%; height: auto; display: block; }
+figcaption { font-size: 15px; color: var(--muted); }
+figcaption b { color: var(--ink); font-family: var(--display); font-weight: 600; }
+.diagram { overflow-x: auto; border: 2px solid var(--line); background: #fbfaff; }
+.diagram img { display: block; width: 100%; min-width: 640px; height: auto; }
+
+/* Rules triangle */
+.tri svg { width: 100%; max-width: 440px; height: auto; display: block; }
+
+/* Mind game */
+.mix-row { display: grid; grid-template-columns: 72px 1fr 54px; align-items: center; gap: 12px; }
+.mix-row .lbl { font-family: var(--display); }
+.mix-bar { height: 22px; background: var(--room); border: 2px solid var(--line); position: relative; }
+.mix-bar > i { position: absolute; inset: 0 auto 0 0; transition: width .3s steps(8); }
+.mix-row .pct { font-family: var(--display); font-variant-numeric: tabular-nums; text-align: right; }
+.slider { display: grid; grid-template-columns: 130px 1fr 34px; gap: 10px; align-items: center; font-size: 15px; }
+.slider input { width: 100%; accent-color: var(--pink); min-width: 0; }
+.slider output { font-family: var(--display); text-align: right; font-variant-numeric: tabular-nums; }
+.insight { font-size: 16px; color: var(--muted); }
+.insight b { color: var(--ink); }
+.loop { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.loop li { list-style: none; background: var(--panel); border: 2px solid var(--line); padding: 12px 14px; font-size: 16px; }
+
+/* Flow */
+ol.flow { margin: 0; padding: 0; list-style: none; display: grid; counter-reset: st; max-width: 780px; }
+ol.flow li { counter-increment: st; display: grid; grid-template-columns: 52px 1fr; gap: 14px; padding: 14px 0; border-bottom: 2px dashed var(--line); }
+ol.flow li::before { content: counter(st); font-family: var(--display); font-size: 24px; color: var(--room); background: var(--gold); width: 42px; height: 42px; display: grid; place-items: center; }
+ol.flow li b { font-family: var(--display); font-weight: 600; font-size: 18px; display: block; }
+ol.flow li span { color: var(--muted); }
+
+/* Roadmap */
+ol.road { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; counter-reset: rd; }
+ol.road li { counter-increment: rd; background: var(--panel); border: 2px solid var(--line); padding: 12px; display: grid; gap: 4px; align-content: start; font-size: 15px; color: var(--muted); }
+ol.road li::before { content: 'Step ' counter(rd); font-family: var(--display); color: var(--gold); font-size: 14px; }
+ol.road li b { color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 17px; }
+ol.road li.later { border-style: dashed; }
+ul.qs { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 72ch; }
+ul.qs li { padding-left: 30px; position: relative; }
+ul.qs li::before { content: '?'; position: absolute; left: 0; top: 2px; width: 20px; height: 20px; display: grid; place-items: center; font-family: var(--display); background: var(--line); color: var(--ink); font-size: 14px; }
+footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--line); color: var(--muted); font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="hero-text">
+    <div class="eyebrow">Game design document · browser arcade fighter</div>
+    <h1>Rock Paper Scissors <em>Fighter</em></h1>
+    <p class="lede">Two fighters, three moves, five seconds to choose. Attack beats Throw, Throw beats Block, Block beats Attack, and each win hits for a different amount. The cabinet is playable: it boots through the logo intro and the home menu into a best-of-three match against the random computer.</p>
+    <ul class="controls">
+      <li><b>Buttons:</b> click or tap Attack, Throw, Block, or press <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span>.</li>
+      <li><b>Menus:</b> joystick (drag it) or arrow keys move the cursor, any button or <span class="kbd">Enter</span> confirms, menu items can be tapped, <span class="kbd">Esc</span> goes back. Click the cabinet first to give it the keyboard.</li>
+    </ul>
+    <div class="screens" aria-label="Current screen"><span data-screen="logo">Logo intro</span><i>›</i><span data-screen="home">Home</span><i>›</i><span data-screen="fight">Fight</span><i>›</i><span data-screen="result">Result</span></div>
+    <button class="ghost" id="replay-intro" type="button">Replay intro</button>
+    <p class="note">Placeholder fighters and logo drawn in code. Native 270 × 472 cabinet, scaled by whole pixels.</p>
+  </div>
+  <div class="cab-host"><div id="cab"></div></div>
+</header>
+
+<nav class="toc" aria-label="Chapters">
+  <a href="#overview">Overview</a><a href="#rules">Rules</a><a href="#mind">Mind game</a><a href="#menus" class="new">Menus</a><a href="#flow">Exchange flow</a><a href="#cabinet">Cabinet</a><a href="#art">Art direction</a><a href="#feel">Pixels and polish</a><a href="#audio">Audio</a><a href="#tech">Technology</a><a href="#roadmap">Roadmap</a>
+</nav>
+
+<section class="ch" id="overview">
+  <div class="ch-head"><span class="no">01</span><h2>Overview</h2></div>
+  <p>A browser fighting game built on rock paper scissors, drawn as an upright arcade machine. Version 1 is single player against a random computer. Online play and an Android app come later, and they shape every technical choice now.</p>
+  <div class="grid cols-3">
+    <div class="tile"><h3>Simple to read</h3><p>Three moves, one clear winner each exchange, no hidden mechanics.</p></div>
+    <div class="tile"><h3>Satisfying reveal</h3><p>Both picks lock in, the move icons drop in, and the fighters act it out with flash, shake and sound.</p></div>
+    <div class="tile"><h3>Built for online</h3><p>The rules never trust the client, and the menus already have a slot for multiplayer.</p></div>
+  </div>
+  <p><b>Platforms:</b> desktop and mobile browsers first (the same vertical cabinet on both), then Android by wrapping the same build.</p>
+</section>
+
+<section class="ch" id="rules">
+  <div class="ch-head"><span class="no">02</span><h2>Core rules</h2></div>
+  <div class="grid cols-2">
+    <div class="tri">
+      <svg viewBox="0 0 440 360" role="img" aria-label="Attack beats Throw for 15, Throw beats Block for 20, Block beats Attack for 10">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f4effc"/></marker></defs>
+        <g stroke="#f4effc" stroke-width="3" fill="none">
+          <path d="M248 92 L350 246" marker-end="url(#ar)"/>
+          <path d="M296 284 L146 284" marker-end="url(#ar)"/>
+          <path d="M92 246 L192 92" marker-end="url(#ar)"/>
+        </g>
+        <g font-family="Pixelify Sans, monospace" text-anchor="middle">
+          <rect x="160" y="22" width="120" height="64" fill="#ff3b6b"/>
+          <text x="220" y="62" font-size="24" fill="#0d0819">Attack</text>
+          <rect x="300" y="252" width="120" height="64" fill="#ffb321"/>
+          <text x="360" y="292" font-size="24" fill="#0d0819">Throw</text>
+          <rect x="20" y="252" width="120" height="64" fill="#3ff0ff"/>
+          <text x="80" y="292" font-size="24" fill="#0d0819">Block</text>
+          <text x="338" y="160" font-size="20" fill="#f4effc">beats</text><text x="338" y="184" font-size="26" fill="#ffb321">15</text>
+          <text x="220" y="330" font-size="20" fill="#f4effc">beats · <tspan fill="#ffb321" font-size="26">20</tspan></text>
+          <text x="102" y="160" font-size="20" fill="#f4effc">beats</text><text x="102" y="184" font-size="26" fill="#ffb321">10</text>
+        </g>
+      </svg>
+    </div>
+    <div class="grid">
+      <div class="table-scroll"><table>
+        <thead><tr><th>Winning move</th><th>Beats</th><th>Damage</th></tr></thead>
+        <tbody>
+          <tr><td><span class="chip throw">Throw</span></td><td>Block</td><td class="n">20</td></tr>
+          <tr><td><span class="chip attack">Attack</span></td><td>Throw</td><td class="n">15</td></tr>
+          <tr><td><span class="chip block">Block</span> counter</td><td>Attack</td><td class="n">10</td></tr>
+        </tbody>
+      </table></div>
+      <ul class="plain">
+        <li>A tie deals no damage. Only the loser of an exchange takes damage, so there is no double knockout.</li>
+        <li>Each fighter starts a round with 100 health, a value to tune in playtests.</li>
+        <li>A round ends at 0 health. A match is best of three rounds, and health resets each round.</li>
+        <li>The computer picks one of the three moves at random, with equal odds.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="ch" id="mind">
+  <div class="ch-head"><span class="no">03</span><h2>The mind game</h2></div>
+  <p>Because the three wins hit for different amounts, this is not a coin flip. Throw is the tempting big hit, and that temptation is what players read and punish.</p>
+  <ol class="loop">
+    <li>Throw pays the most, so players lean toward it.</li>
+    <li>Expecting a Throw, the opponent picks Attack.</li>
+    <li>Expecting that Attack, you switch to Block.</li>
+    <li>Blocking too often gets punished by Throw. Repeat.</li>
+  </ol>
+  <div class="grid cols-2">
+    <div class="tile" aria-live="polite">
+      <h3>The balanced mix</h3>
+      <p>When both players play perfectly, these are the shares of picks where neither has an edge. Change the damage values to see how the mix moves.</p>
+      <div class="mix-row"><span class="lbl">Attack</span><div class="mix-bar"><i id="bar-attack" style="background:var(--attack)"></i></div><span class="pct" id="pct-attack">44%</span></div>
+      <div class="mix-row"><span class="lbl">Block</span><div class="mix-bar"><i id="bar-block" style="background:var(--block)"></i></div><span class="pct" id="pct-block">33%</span></div>
+      <div class="mix-row"><span class="lbl">Throw</span><div class="mix-bar"><i id="bar-throw" style="background:var(--throw)"></i></div><span class="pct" id="pct-throw">22%</span></div>
+      <label class="slider" for="d-attack">Attack damage<input id="d-attack" type="range" min="5" max="40" step="1" value="15"><output id="o-attack">15</output></label>
+      <label class="slider" for="d-throw">Throw damage<input id="d-throw" type="range" min="5" max="40" step="1" value="20"><output id="o-throw">20</output></label>
+      <label class="slider" for="d-block">Block damage<input id="d-block" type="range" min="5" max="40" step="1" value="10"><output id="o-block">10</output></label>
+      <button class="ghost" id="mix-reset" type="button">Reset to 15 / 20 / 10</button>
+    </div>
+    <div class="grid">
+      <p class="insight"><b>Rule of thumb:</b> each move's share is proportional to the damage of the move it beats. Attack beats the 20 damage Throw, so Attack is picked most. Throw beats the 10 damage Block, so Throw, the biggest hit, is picked least.</p>
+      <p class="insight"><b>Health changes the stakes.</b> With 15 health left, an Attack or Throw win ends the round but a 10 damage Block counter does not. Late-round picks feel different from early ones.</p>
+      <p class="insight"><b>Against the random computer,</b> Attack and Throw each gain about 1.7 net damage per exchange on average, while Block loses about 3.3. A computer that plays the balanced mix, or punishes patterns, would make a stronger opponent later.</p>
+    </div>
+  </div>
+</section>
+
+<section class="ch" id="menus">
+  <div class="ch-head"><span class="no">04</span><h2>Menus and screen flow</h2><span class="tag">NEW</span></div>
+  <p>The game starts with a logo intro, then the home screen, where Start game begins a match against the CPU. After the match, Retry plays again and Main menu goes home. This small flow is the frame the multiplayer menus plug into later.</p>
+  <div class="diagram"><img src="{{IMG}}architecture/diagrams/7-screen-flow.svg" alt="Screen flow: Boot, Logo intro, Home, Fight, Result; Retry goes back to Fight, Main menu goes back to Home; later screens hang off Home" width="1000" height="560"></div>
+  <div class="figs">
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-phone-logo.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-phone-logo.png" alt="Phone: placeholder studio logo on a black monitor" loading="lazy" width="1140" height="2400"></a><figcaption><b>Logo intro.</b> A placeholder "YOUR STUDIO" mark fades in, holds and fades out. Any button skips it.</figcaption></figure>
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-phone-home.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-phone-home.png" alt="Phone: home menu with Start game vs CPU and a greyed Online item" loading="lazy" width="1140" height="2400"></a><figcaption><b>Home.</b> Start game (vs CPU) is live; Online sits greyed out with "SOON" as the multiplayer slot.</figcaption></figure>
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-phone-result.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-phone-result.png" alt="Phone: result screen, You win 2-1, Retry and Main menu" loading="lazy" width="1140" height="2400"></a><figcaption><b>Result.</b> Winner and round score over the last fight frame, with Retry (selected first) and Main menu.</figcaption></figure>
+  </div>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Screen</th><th>Shows</th><th>Options</th></tr></thead>
+    <tbody>
+      <tr><td><b>Logo intro</b></td><td>Placeholder logo, fade in 0.5 s, hold 1.5 s, fade out 0.5 s (tunable). Swapping one image puts the company logo in.</td><td>Any button or tap skips</td></tr>
+      <tr><td><b>Home</b></td><td>Game title, both fighters idling, menu loop music</td><td>START GAME (VS CPU) · ONLINE (later)</td></tr>
+      <tr><td><b>Fight</b></td><td>The match, best of three, fight loop music</td><td>None</td></tr>
+      <tr><td><b>Result</b></td><td>YOU WIN! or CPU WINS, round score</td><td>RETRY · MAIN MENU</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="plain">
+    <li><b>Controls in menus:</b> the joystick or arrow keys move the cursor, any of the three buttons (or Enter, Space, a tap on the item) confirms, Esc or Android back goes back. In a fight the joystick stays decoration.</li>
+    <li><b>Built to grow:</b> every menu is a list of items drawn by one menu component, so online play, settings, pause or a how-to-play screen is a new item plus its screen.</li>
+    <li><b>Retry</b> starts a new match with the same setup. Online, it becomes a rematch request that both players must accept.</li>
+    <li><b>Pixel perfect:</b> fades step through four palette levels instead of a smooth blend, and menu text uses a 5 × 7 pixel font.</li>
+  </ul>
+</section>
+
+<section class="ch" id="flow">
+  <div class="ch-head"><span class="no">05</span><h2>Exchange flow</h2></div>
+  <p>Every exchange runs the same way: a 5 second countdown, a simultaneous reveal, then the animation and damage.</p>
+  <ol class="flow">
+    <li><div><b>Pick</b><span>A 5 second countdown starts (3 seconds is the alternative to playtest). Press Attack, Throw or Block on the cabinet, or 1, 2, 3. You can change your pick until the timer ends; only you see it.</span></div></li>
+    <li><div><b>Lock in</b><span>At 0, anyone without a pick gets a random move. Picks stay hidden until both are locked.</span></div></li>
+    <li><div><b>Reveal</b><span>Each fighter's move coin drops in above their head with a bounce, at the same moment for both.</span></div></li>
+    <li><div><b>Act it out</b><span>Both fighters play their move. The winner lands with a hit flash, a hit sound and a small screen shake. On a tie the moves clash and nobody takes damage.</span></div></li>
+    <li><div><b>Resolve</b><span>The loser's health bar drains by the damage amount.</span></div></li>
+    <li><div><b>Next</b><span>Next countdown, or a knockout: a "Round 2" or "Final round" banner starts the next round, or the match ends on the result screen with Retry and Main menu.</span></div></li>
+  </ol>
+  <p class="insight">In online play the timer and the random fallback pick run on the server, so both players see the same reveal at the same time.</p>
+</section>
+
+<section class="ch" id="cabinet">
+  <div class="ch-head"><span class="no">06</span><h2>The arcade cabinet</h2></div>
+  <p>The whole game is an upright arcade machine, so the layout is vertical and works the same in a desktop browser and on a phone held upright. In the browser the cabinet stands in a dark arcade room; on a phone it fills the screen with the buttons in thumb reach.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Part</th><th>Size (game pixels)</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><b>Whole frame</b></td><td class="n">270 × 472</td><td>Shows at 2× in a 1080p browser window and 4× on most phones</td></tr>
+      <tr><td><b>Marquee</b></td><td class="n">270 × 32</td><td>Backlit game name</td></tr>
+      <tr><td><b>Monitor</b></td><td class="n">216 × 288 (3:4)</td><td>The game: menus, fighters, health bars, round pips, timer, move coins</td></tr>
+      <tr><td><b>Control panel</b></td><td class="n">270 × 128</td><td>Three arcade buttons (Attack, Throw, Block) that press down, and the joystick: decoration in a fight, cursor in menus</td></tr>
+    </tbody>
+  </table></div>
+  <div class="figs wide">
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-browser-pick.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-browser-pick.png" alt="Browser: cabinet in an arcade room, player picking Throw with 3 seconds left" loading="lazy" width="1920" height="1200"></a><figcaption><b>Browser, picking.</b> Throw is pressed, the CPU's coin shows a question mark.</figcaption></figure>
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-browser-reveal.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-browser-reveal.png" alt="Browser: reveal, Block counters Attack for 10 damage" loading="lazy" width="1920" height="1200"></a><figcaption><b>Browser, reveal.</b> Block counters Attack for 10.</figcaption></figure>
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-browser-home.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-browser-home.png" alt="Browser: cabinet showing the home menu" loading="lazy" width="1920" height="1200"></a><figcaption><b>Browser, home.</b> The same menu as on the phone, at 2×.</figcaption></figure>
+  </div>
+  <div class="figs">
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-phone-pick.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-phone-pick.png" alt="Phone: picking" loading="lazy" width="1140" height="2400"></a><figcaption><b>Phone, picking.</b></figcaption></figure>
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-phone-reveal.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-phone-reveal.png" alt="Phone: reveal" loading="lazy" width="1140" height="2400"></a><figcaption><b>Phone, reveal.</b></figcaption></figure>
+    <figure><a href="{{IMG}}mockups/cabinet/cabinet-phone-reveal-bigpixels.png" target="_blank" rel="noopener"><img src="{{IMG}}mockups/cabinet/cabinet-phone-reveal-bigpixels.png" alt="Phone: reveal with bigger pixels" loading="lazy" width="1140" height="2400"></a><figcaption><b>Bigger pixels test.</b> A 144 × 192 monitor; mixes pixel sizes, so not the plan.</figcaption></figure>
+  </div>
+</section>
+
+<section class="ch" id="art">
+  <div class="ch-head"><span class="no">07</span><h2>Art direction</h2></div>
+  <p>The fighters are martial artists in gi, drawn short, wide and cute with a slight Japanese chibi feel: white gi with a red headband against blue gi with a gold band. The tone is an '80s neon arcade: synthwave sunset, neon grid floor, a neon torii. Sprites are 64 pixels tall.</p>
+  <div class="figs">
+    <figure><a href="{{IMG}}art-direction/2-medium-64px.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/2-medium-64px.png" alt="64 pixel fighters on the neon stage" loading="lazy"></a><figcaption><b>64 px, chosen.</b> The medium size.</figcaption></figure>
+    <figure><a href="{{IMG}}art-direction/1-small-48px.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/1-small-48px.png" alt="48 pixel fighters" loading="lazy"></a><figcaption><b>48 px.</b> The small option.</figcaption></figure>
+    <figure><a href="{{IMG}}art-direction/3-large-80px.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/3-large-80px.png" alt="80 pixel fighters" loading="lazy"></a><figcaption><b>80 px.</b> The large option.</figcaption></figure>
+    <figure><a href="{{IMG}}art-direction/4-sizes-and-poses.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/4-sizes-and-poses.png" alt="Sizes and poses side by side" loading="lazy"></a><figcaption><b>Sizes and poses.</b> The same fighter at 48, 64 and 80 px, in idle, attack and block.</figcaption></figure>
+    <figure><a href="{{IMG}}art-direction/5-six-character-styles.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/5-six-character-styles.png" alt="Six character style options" loading="lazy"></a><figcaption><b>Six pixel styles.</b> Neon arcade chibi, soft pastel, 8-bit tiny, big-head mascot, 16-bit hero, Game Boy.</figcaption></figure>
+    <figure><a href="{{IMG}}art-direction/6-soft-pastel-branches.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/6-soft-pastel-branches.png" alt="Soft pastel style branches" loading="lazy"></a><figcaption><b>Soft pastel, branching out.</b> Nine drawing styles, from anime cel to flat graphic.</figcaption></figure>
+    <figure><a href="{{IMG}}art-direction/7-body-shapes.png" target="_blank" rel="noopener"><img src="{{IMG}}art-direction/7-body-shapes.png" alt="Body shape options" loading="lazy"></a><figcaption><b>Nine body shapes.</b> From dumpling and bean to brawler and a cat fighter.</figcaption></figure>
+  </div>
+  <div class="callout"><strong>Still open.</strong> The overall look is parked to revisit later, and the real fighter art is not settled. The free packs checked lack block and throw frames, so the plan is better paid packs or AI-generated fighters (PixelLab is the best fit found) cleaned up into sprite sheets. Everything on this page is a placeholder drawn in code.</div>
+  <p>Animations each fighter needs: idle, attack, throw, block (with counter strike), hurt, KO and a win pose.</p>
+</section>
+
+<section class="ch" id="feel">
+  <div class="ch-head"><span class="no">08</span><h2>Pixel perfect and polished</h2></div>
+  <div class="grid cols-2">
+    <div class="tile"><h3>Pixel perfect rules</h3>
+      <ul class="plain">
+        <li>One pixel size for everything: fighters, cabinet, HUD, icons, effects.</li>
+        <li>Whole-number scaling only (2×, 3×, 4×), nearest neighbour; leftover space is arcade room.</li>
+        <li>Everything snaps to whole pixels, including camera, shake and tweens.</li>
+        <li>No free rotation or scaling of sprites; turns and squash are drawn as frames.</li>
+        <li>Pixel UI: a pixel font at native size, bars and glows drawn as pixels.</li>
+        <li>One limited palette shared by all art.</li>
+      </ul></div>
+    <div class="tile"><h3>Game feel</h3>
+      <ul class="plain">
+        <li>Screen shake that is short, punchy and scaled to damage.</li>
+        <li>Hit flash, sparks, impact frames, dust and a brief hit-pause on big hits.</li>
+        <li>Lively animation with anticipation, overshoot and follow-through; idle is never still.</li>
+        <li>A sound for every action, layered and varied.</li>
+        <li>Buttons press down, bars drain smoothly, banners slam in.</li>
+        <li>A dedicated tuning pass before release, with every value in one tuning file.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="ch" id="audio">
+  <div class="ch-head"><span class="no">09</span><h2>Audio</h2></div>
+  <div class="grid cols-2">
+    <div class="tile"><h3>Sound effects</h3>
+      <ul class="plain">
+        <li>Countdown ticks for the last 3 seconds and a lock-in sound at the reveal.</li>
+        <li>A different hit per winning move and a clash on a tie.</li>
+        <li>KO, "Round 1, fight", a win jingle, and menu cursor and confirm blips.</li>
+        <li>Source: <a href="https://opengameart.org/content/37-hitspunches" target="_blank" rel="noopener">37 hits/punches</a>, CC0.</li>
+      </ul></div>
+    <div class="tile"><h3>Music</h3>
+      <ul class="plain">
+        <li>A menu loop on Home and Result, a fight loop in the match, with mute and separate volumes.</li>
+        <li>To start: a CC0 chiptune loop.</li>
+        <li>Later: music composed by Claude as code (Tone.js) or as MIDI rendered to audio.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="ch" id="tech">
+  <div class="ch-head"><span class="no">10</span><h2>Technology</h2></div>
+  <p>Phaser 3 and TypeScript, bundled with Vite, with the rules in a separate package that the future online server reuses unchanged. The full plan is in the <a href="https://github.com/robinneefs/rock-paper-scissors/blob/main/docs/architecture/ARCHITECTURE.md" target="_blank" rel="noopener">architecture document</a>.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Part</th><th>Choice</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Game engine</td><td><a href="https://phaser.io" target="_blank" rel="noopener">Phaser 3</a></td><td>2D sprites, animations, tweens and audio for the browser</td></tr>
+      <tr><td>Language</td><td>TypeScript</td><td>One language for game, rules and server</td></tr>
+      <tr><td>Build and tests</td><td>Vite, Vitest</td><td>Fast dev server; rules tested without a browser</td></tr>
+      <tr><td>Online play (later)</td><td>Node + <a href="https://colyseus.io" target="_blank" rel="noopener">Colyseus</a></td><td>Server-authoritative rooms; only the server knows both picks</td></tr>
+      <tr><td>Android (later)</td><td><a href="https://capacitorjs.com" target="_blank" rel="noopener">Capacitor</a></td><td>Wraps the same web build</td></tr>
+    </tbody>
+  </table></div>
+  <div class="diagram"><img src="{{IMG}}architecture/diagrams/1-layers.svg" alt="Layers: platform, presentation, session and core; dependencies only point down" loading="lazy" width="1000" height="640"></div>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Scene</th><th>Runs</th><th>Draws</th></tr></thead>
+    <tbody>
+      <tr><td>Boot</td><td>Once</td><td>Loads assets, pixel loading bar</td></tr>
+      <tr><td>Cabinet</td><td>Always, underneath</td><td>Arcade room, cabinet, buttons, joystick</td></tr>
+      <tr><td>Logo</td><td>Once per launch</td><td>Placeholder logo fade in and out</td></tr>
+      <tr><td>Home</td><td>On the monitor</td><td>Title, fighters, home menu</td></tr>
+      <tr><td>Fight</td><td>On the monitor</td><td>Fighters, HUD, move coins, banners, effects</td></tr>
+      <tr><td>Result</td><td>On the monitor</td><td>Winner, score, Retry and Main menu</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="plain">
+    <li>Scenes only display what the rules return; they never decide a result.</li>
+    <li>Scenes talk to one match session: local with the random CPU now, online later, with the same events.</li>
+    <li>Menus are data drawn by one menu component, and one scene-flow helper owns every screen change, so new screens are small additions.</li>
+  </ul>
+</section>
+
+<section class="ch" id="roadmap">
+  <div class="ch-head"><span class="no">11</span><h2>Roadmap</h2></div>
+  <p>Each step ends with something playable.</p>
+  <ol class="road">
+    <li><b>Rules core</b>Shared rules and referee with tests, played in the console.</li>
+    <li><b>Prototype</b>Cabinet, rectangles as fighters, bars, timer, best of three, plus the logo intro, home and result menus.</li>
+    <li><b>Art and juice</b>Sprites, falling coins, hit flash, shake, sound and music.</li>
+    <li><b>Release</b>Settings, mobile check, the game-feel pass, published on the web.</li>
+    <li class="later"><b>Online play</b>Colyseus server, room codes, the Online menu item comes alive.</li>
+    <li class="later"><b>Android</b>Capacitor wrapper and a Play Store test build.</li>
+  </ol>
+  <h3>Open questions</h3>
+  <ul class="qs">
+    <li>Fighter art: a better pack or AI-generated fighters, including block and throw frames?</li>
+    <li>The overall look is parked: revisit the cute chibi plus neon '80s style later.</li>
+    <li>Is 100 starting health the right round length? 5 or 3 second timer?</li>
+    <li>The real company logo for the intro, and a game name beyond Rock Paper Scissors Fighter.</li>
+    <li>Architecture defaults to confirm: monorepo, Tweakpane tuning panel, import lint rules.</li>
+  </ul>
+</section>
+
+<footer>
+  <span>Updated 10 October 2026</span>
+  <a href="https://claude.ai/code/artifact/3f1b261a-b2c2-4342-b7f6-22d848beccb6" target="_blank" rel="noopener">Editable design document</a>
+  <a href="https://github.com/robinneefs/rock-paper-scissors" target="_blank" rel="noopener">Repository</a>
+</footer>
+</div>
+
+{{SCRIPTS}}
+<script>
+(function () {
+  const ids = ['attack', 'throw', 'block'];
+  function mix() {
+    const d = {}; ids.forEach((m) => { d[m] = +document.getElementById('d-' + m).value; document.getElementById('o-' + m).textContent = d[m]; });
+    // Each move's share is proportional to the damage of the move it beats.
+    const w = { attack: d.throw, throw: d.block, block: d.attack };
+    const tot = w.attack + w.throw + w.block;
+    ids.forEach((m) => {
+      const p = w[m] / tot;
+      document.getElementById('bar-' + m).style.width = (p * 100).toFixed(1) + '%';
+      document.getElementById('pct-' + m).textContent = Math.round(p * 100) + '%';
+    });
+  }
+  ids.forEach((m) => document.getElementById('d-' + m).addEventListener('input', mix));
+  document.getElementById('mix-reset').addEventListener('click', () => { document.getElementById('d-attack').value = 15; document.getElementById('d-throw').value = 20; document.getElementById('d-block').value = 10; mix(); });
+  mix();
+})();
+</script>
