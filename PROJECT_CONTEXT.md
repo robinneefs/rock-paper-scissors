@@ -16,11 +16,13 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `docs/design/` | Interactive design document (saved HTML) |
 | `docs/architecture/` | Architecture document (`ARCHITECTURE.md`) and its diagrams (`diagrams/*.svg`) |
 | `docs/brand/` | Studio logo masters: Chain Shift white (the user's original) and purple |
+| `docs/tuning/` | Tuning panel guide (`TUNING-PANEL.md`): how to use the dev panel and how it is set up |
 | `docs/screenshots/` | Screenshots of the current build, browser and phone (recapture with `node sources/screenshots/capture.mjs`) |
 | `docs/mockups/cabinet/` | Arcade cabinet mock-ups drawn before the build |
 | `docs/mockups/landscape-superseded/` | Old landscape mock-ups |
 | `docs/art-direction/` | Art direction samples (sizes, styles, body shapes) |
 | `sources/` | Code that draws the mock-ups, samples and diagrams (`landscape-mockup/`, `cabinet-mockup/`, `art-direction/`, `architecture/`) builds the interactive design document (`design-doc/`) and captures game screenshots (`screenshots/`) |
+| `config/` | Repo only: shared TypeScript settings (`tsconfig.base.json`) and the unit test setup (`vitest.config.ts`), moved out of the root in v0.4.1. Tool configs that editors and tools only look for in the root stay there: `package.json`, `package-lock.json`, `eslint.config.js`, `.gitignore`, `.prettierignore`. Prettier settings live in `package.json`. |
 | `archive/old-draft/` | Discarded first draft (not in the repo) |
 
 New art samples go in `docs/art-direction/` (their source in `sources/art-direction/`); new mock-ups in `docs/mockups/`.
@@ -32,8 +34,8 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 - Play it online: https://robinneefs.github.io/RPS-Fighter/ (GitHub Pages, from the `RPS-Fighter/` folder of `robinneefs/robinneefs.github.io`)
 - Repository: https://github.com/robinneefs/rock-paper-scissors (game code in `packages/core` + `apps/game`, plus design docs, mock-ups and art samples)
 - Original idea brief: `docs/idea/rock-paper-scissors-idea.md`
+- Tuning panel guide (how to use it, how it's set up): `docs/tuning/TUNING-PANEL.md`
 - Future plans and roadmap (Claude Doc, editable, made 2026-10-10): https://claude.ai/code/artifact/f1f3ff49-5ab1-4624-8d81-85bf111b8494 (every open decision, balancing thought and planned feature, each with a note on how to proceed, plus the suggested order of work). Tick items off there when they ship.
-- Dev tuning panel guide (how to use it, how it's set up): `docs/tuning-panel.md`
 - Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
 
 ## Where things stand
@@ -53,7 +55,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 | `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
 | `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` (two scaling modes), `SettingsStore` (`platform/settings.ts`, localStorage) |
 | `apps/game/src/config/tuning.ts` | Every feel value |
-| `apps/game/src/dev/` | Dev tuning panel (v0.5.0): Tweakpane over `tuning.ts` (live) plus the core rules and phase timings (next match), with Restart match, Copy changes, Reset all; edits kept in localStorage; backquote hides it. Only in `npm run dev`. User guide and setup: `docs/tuning-panel.md`. |
+| `apps/game/src/dev/` | Dev tuning panel (v0.5.0): Tweakpane over `tuning.ts` (live) plus the core rules and phase timings (next match), with Restart match, Copy changes, Reset all; edits kept in localStorage; backquote hides it. Only in `npm run dev`. Guide: `docs/tuning/TUNING-PANEL.md`. |
 | `apps/game/public/assets/logo.png` | Studio logo (Chain Shift as purple pixel art, 192x84 native): the master reduced to 94 blocks wide, each block 2x2 native pixels like the title's scaled font, violet #A35BFF fill with a light top edge, darker bottom edge, drop shadow in `palette.shadow` and a 1 px `palette.ink` outline. Built from the white master `docs/brand/logo-chain-shift-white.png` by `python3 tools/make-logo.py` (needs Pillow), which also writes the full-size `docs/brand/logo-chain-shift-purple.png` |
 
 Changelog: `CHANGELOG.md` at the repo root.
@@ -271,4 +273,5 @@ Architecture rules:
 - 2026-10-10: PR #7 merged (main @ cdabb84, Release workflow tagged v0.4.0) and v0.4.0 published to GitHub Pages (robinneefs.github.io @ 2aa77f2) at the user's request. The repo copy of this file lags this line until the next PR syncs it.
 - 2026-10-10: Wrote the future plans and roadmap Claude Doc (link under Links) collecting all plans so far by area, with a how-to-proceed note per item and a suggested order: game feel and sound, final art, polish and 1.0 on the web, online, Android. Re-added the move-animation open question, which had dropped out of this file.
 - 2026-10-10: Dev tuning panel built (v0.5.0, step 3 item 1) at the user's go-ahead: Tweakpane in dev builds only, editing feel values live and rules/timings for the next match, so the open 3s vs 5s timer and 100 health questions can be tried by feel. Each match now gets its own copy of the rules, and the fight HUD reads them from the session.
-- 2026-10-11: At the user's request, wrote `docs/tuning-panel.md`: how to use the tuning panel (sections, buttons, a tuning order: the hit, HUD, pacing, menus; push values too far then back off; Copy changes and paste into the chat) and how it's set up (files, dev-only loading, lint rule, why rules apply next match, adding values). Linked from the README, architecture doc, changelog and here. Part of v0.5.0 (PR #8).
+- 2026-10-10: v0.4.1: tidied the repo root at the user's request (PR #9). `tsconfig.base.json` and `vitest.config.ts` moved to `config/` (`npm test` passes `--config`), `.prettierrc.json` folded into `package.json`. Kept in the root: LICENSE, README, CHANGELOG, PROJECT_CONTEXT, `package.json`, `package-lock.json` (npm needs both there), `eslint.config.js` (ESLint and the VS Code extension only look in the root) and `.prettierignore`.
+- 2026-10-10: At the user's request, documented the tuning panel: new guide `docs/tuning/TUNING-PANEL.md` (how to use it, a tuning workflow, how changes get back into the code, and how it is built and extended), linked from the README, the architecture doc and the changelog, with a screenshot (`docs/screenshots/browser-tuning-panel.png`). Workflow agreed: the user tunes, presses Copy changes and pastes the note in the thread; Claude writes the values in as new defaults.
