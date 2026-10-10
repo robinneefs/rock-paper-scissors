@@ -215,7 +215,8 @@ The **juice kit** (`fx/`) is a set of small reusable effects (`shake`, `hitPause
 | `BootScene` | Once | Loads assets, shows a pixel loading bar |
 | `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, marquee, control panel, the three buttons and the joystick |
 | `LogoScene` | Once per launch, on the monitor | Placeholder studio logo: fades in, holds, fades out. Any button or tap skips it |
-| `HomeScene` | On the monitor | Game title, idle fighters, the home menu (Start game vs CPU; Online greyed out until step 5) |
+| `HomeScene` | On the monitor | Game title, idle fighters, the home menu (Start game vs CPU; Online greyed out until step 5; Options) |
+| `OptionsScene` | On the monitor, from Home | Settings menu; for now one setting, Scaling (Pixel perfect or Fill height), applied at once and saved |
 | `FightScene` | On the monitor | Fighters, HUD, move icons, banners, effects |
 | `ResultScene` | On the monitor, over the last fight frame | Winner banner, score, menu: Retry or Main menu |
 
@@ -235,11 +236,12 @@ The game always starts the same way: Boot, then the logo intro, then the home sc
   export const homeMenu = (flow: SceneFlow): MenuItem[] => [
     { id: 'cpu',    label: 'START GAME', tag: 'VS CPU', enabled: true,  onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }) },
     { id: 'online', label: 'ONLINE',     tag: 'SOON',   enabled: false },   // step 5: opens LobbyScene
+    { id: 'options', label: 'OPTIONS',                      enabled: true,  onSelect: () => flow.toOptions() },
   ];
   ```
 
-  Adding online play, settings or a how-to-play screen is a new item here plus its scene; no other scene changes.
-- **One place for transitions.** Scenes never start each other by key. A small `SceneFlow` (`scenes/flow.ts`) has `toHome()`, `toFight(setup)`, `toResult(outcome)` and plays the transition (a short pixel wipe, timed by `tuning.transitions`). 
+  Adding online play, settings or a how-to-play screen is a new item here plus its scene; no other scene changes. Options was added this way (2026-10-10): `menus/optionsMenu.ts` + `OptionsScene`. A setting's current value shows as the item's tag (`MenuView.setTag`); confirm, or left / right on the stick, flips it.
+- **One place for transitions.** Scenes never start each other by key. A small `SceneFlow` (`scenes/flow.ts`) has `toHome()`, `toOptions()`, `toFight(setup)`, `toResult(outcome)` and plays the transition (a short pixel wipe, timed by `tuning.transitions`). 
 - **`MatchSetup` describes a match.** `toFight(setup)` builds the session from the setup (`createSession(setup)` in `session/`): `{ mode: 'cpu', cpu: 'random' }` now, `{ mode: 'online', roomCode }` later. The setup travels to the result screen, so **Retry** is `session.requestRematch()`: the session answers with a `rematchAccepted` event (locally at once; online once both players agree), and the flow reopens the fight with the same session, which starts again on `ready()`.
 - **Menu input.** The `InputRouter` adds menu actions: `nav:up` / `nav:down` (joystick, arrow keys), `confirm` (any of the three cabinet buttons, Enter, Space) and `back` (Esc, Android back). Menu items on the monitor can also be tapped or clicked. In menus the joystick finally does something; in a fight it stays decoration.
 - **Music.** The menu loop plays on Home and Result; the fight loop in `FightScene`. `SceneFlow` asks `AudioService` to cross-fade on each transition.
@@ -259,11 +261,17 @@ The pixel-perfect rules from the project context are enforced in one place, the 
 ![Screen layout and integer scaling](diagrams/5-screen-and-scaling.svg)
 
 1. **One native canvas, one pixel size.** The cabinet, monitor, HUD, backdrop and effects all draw into one Phaser canvas at native resolution. No HTML or CSS overlays for game visuals.
-2. **Whole-number zoom.** The scaler picks the largest whole scale at which the cabinet fits the window, measured in *device* pixels (so it is crisp on high-DPI phones too), and sets Phaser's zoom to it. Re-run on resize and rotation.
+2. **Whole-number zoom.** The scaler picks the largest whole scale at which the cabinet fits the window, measured in *device* pixels (so it is crisp on high-DPI phones too), and sets Phaser's zoom to it. Re-run on resize and rotation. This is the default **Pixel perfect** scaling mode.
 3. **The canvas fills the window; the leftover is arcade room.** The canvas is sized to the window divided by the scale, the cabinet is centred, and the space around it is backdrop drawn at the same pixel size. Nothing is ever stretched.
 4. **Phaser settings:** `pixelArt: true`, `roundPixels: true`, `antialias: false`, `Scale.NONE` with the computed zoom.
 5. **Whole pixels only.** Positions go through `snap()`; tweens and shake round to whole pixels; no `setScale` or `setRotation` on sprites (turns, squash and zoom are drawn as frames).
 6. **Pixel text.** A bitmap pixel font at native size. No browser fonts on the canvas.
+
+**Fill height (player option, 2026-10-10).** Whole-number scaling can leave the cabinet small (a 1280 × 800 window only fits 1×). Options → Scaling offers **Fill height**: the scaler uses the exact fit scale instead (`computeLayout(..., 'fillHeight')`: the cabinet fills the window height on a desktop, or its width on a narrow phone, never smaller than the pixel-perfect scale). This is a deliberate, player-chosen exception to rule 2:
+
+- Sampling stays nearest-neighbour (`pixelArt`, `image-rendering: pixelated`), so nothing blurs, and everything inside the game still sits on one native grid (rules 1, 3 to 6 are unchanged).
+- But at a fractional scale some rows and columns of native pixels come out one device pixel wider than their neighbours (at 1.7×, pixels are 1 or 2 device pixels wide). Thin lines and text can look slightly uneven, and a moving sprite can shimmer by a device pixel.
+- Pixel perfect stays the default. The choice is kept in `SettingsStore` (`platform/settings.ts`), saved to localStorage and read before the game starts, so the first frame is already at the chosen scale. The pixel-perfect screenshot check (section 13) runs in the default mode only.
 
 **Cabinet size (decided 2026-10-10): 270 × 472 native** (marquee 32, bezels 12, monitor 216 × 288, control panel 128). The earlier 270 × 502 frame only fit a typical 1080p browser window (about 950 px tall inside the browser) at 1×; at 472 it shows at 2× there, and at 4× on most phones. The cabinet mock-ups are redrawn at this size.
 
@@ -306,7 +314,7 @@ There are two homes for numbers, on purpose:
 
 **Assets.** Until the real art exists, `assets/placeholders/` draws every texture in code at boot (fighters, icons, cabinet, stage) under the real asset keys. Loading a real sprite sheet under the same key in `BootScene` makes its placeholder step aside; no view changes. Art comes out of Aseprite (or PixelLab) as sprite sheets with JSON frame data. A typed manifest (`assets/keys.ts`) lists every key, so a typo is a compile error instead of a missing sprite at runtime. One shared palette (`config/palette.ts`, plus a `tools/` script that checks exported images only use palette colours).
 
-**Settings.** Volumes, mute and (later) key bindings are saved through a `Storage` adapter in `platform/` (localStorage in the browser, Capacitor Preferences on Android).
+**Settings.** A `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON through a small key-value adapter (localStorage in the browser, Capacitor Preferences on Android later). Broken or missing storage (private mode, blocked site data) falls back to the defaults and never stops the game. Today it holds the scaling mode; volumes, mute and key bindings join it later. It is part of the `GameContext`.
 
 **Wiring.** No global singletons. `main.ts` builds the services once and passes them to scenes through one small `GameContext` object. Tests can hand in fakes.
 
@@ -364,7 +372,8 @@ Step 6 wraps the built `apps/game` in Capacitor. Nothing in the game changes; de
 | Rules | Vitest | Every pairing, damage, ties, KO, rounds, match end | Exhaustive: it is the heart of the game |
 | Referee | Vitest + fake clock + seeded RNG | Phase order, timer expiry, random fallback, changing a pick, rematch | All phase transitions |
 | Session and CPUs | Vitest | `LocalSession` emits the right events; CPU mixes match their target odds | Main paths |
-| Presentation | Playwright | Game boots, a full match can be played with keys, no console errors | A few smoke tests |
+| Settings and scaler | Vitest | `computeLayout` in both scaling modes; settings saved, reloaded, broken values ignored | Main paths |
+| Presentation | Playwright | Game boots, a full match can be played with keys, Options switches scaling and remembers it after a reload, no console errors | A few smoke tests |
 | Pixel perfect | Playwright screenshots | At 3× every 3 × 3 block of the screenshot is one colour (catches blur and sub-pixel drift) | One or two checks |
 | Server (step 5) | Vitest + Colyseus test client | Picks stay hidden, timer, disconnects | Main paths |
 

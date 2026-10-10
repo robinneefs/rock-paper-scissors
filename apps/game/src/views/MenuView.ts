@@ -19,6 +19,7 @@ export class MenuView {
   private readonly gfx: Phaser.GameObjects.Graphics;
   private readonly cursor: PixelText;
   private readonly labels: PixelText[] = [];
+  private readonly tags: PixelText[] = [];
   private readonly zones: Phaser.GameObjects.Zone[] = [];
   private readonly x: number;
   private readonly itemW: number;
@@ -54,11 +55,12 @@ export class MenuView {
       const iy = this.itemY(i);
       const ix = this.x + PAD;
       this.labels.push(new PixelText(scene, ix + 13, iy + 5, item.label, { color: palette.text }));
-      if (item.tag)
-        new PixelText(scene, ix + this.itemW - 4, iy + 5, item.tag, {
+      this.tags.push(
+        new PixelText(scene, ix + this.itemW - 4, iy + 5, item.tag ?? '', {
           color: item.enabled ? palette.cyan : 0x8c6a2a,
           align: 'right',
-        });
+        }),
+      );
       const zone = scene.add
         .zone(ix, iy, this.itemW, ITEM_H)
         .setOrigin(0)
@@ -87,6 +89,17 @@ export class MenuView {
       blink.remove();
     });
     this.draw();
+  }
+
+  /** Change an item's small right-hand text (e.g. a setting's current value). */
+  setTag(id: string, tag: string): void {
+    const i = this.items.findIndex((item) => item.id === id);
+    this.tags[i]?.setText(tag);
+  }
+
+  /** The id of the item under the cursor. */
+  get selectedId(): string | undefined {
+    return this.items[this.selected]?.id;
   }
 
   /** Stop reacting (e.g. while a selection is being acted on). */

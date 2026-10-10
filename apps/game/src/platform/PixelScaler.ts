@@ -1,7 +1,8 @@
 import { CABINET } from '../config/layout';
+import type { ScalingMode } from './settings';
 
 export interface ScreenLayout {
-  /** Whole-number scale in device pixels (1 native pixel = `scale` device pixels). */
+  /** Scale in device pixels (1 native pixel = `scale` device pixels). Whole in pixel-perfect mode. */
   scale: number;
   /** Size of the native canvas: the window divided by the scale. */
   width: number;
@@ -12,13 +13,21 @@ export interface ScreenLayout {
 }
 
 /**
- * Picks the largest whole scale at which the cabinet fits the window, measured in device pixels
- * so it is crisp on high-DPI phones too. The canvas fills the window; the leftover is arcade room.
+ * Picks the scale for the cabinet, measured in device pixels so it is crisp on high-DPI phones too.
+ * Pixel perfect: the largest whole scale at which the cabinet fits. Fill height: the exact scale at
+ * which it fills the window (its height on a desktop, its width on a narrow phone), never smaller
+ * than the pixel-perfect one. The canvas fills the window; the leftover is arcade room.
  */
-export function computeLayout(cssWidth: number, cssHeight: number, dpr: number): ScreenLayout {
+export function computeLayout(
+  cssWidth: number,
+  cssHeight: number,
+  dpr: number,
+  mode: ScalingMode = 'pixelPerfect',
+): ScreenLayout {
   const devW = Math.floor(cssWidth * dpr);
   const devH = Math.floor(cssHeight * dpr);
-  const scale = Math.max(1, Math.floor(Math.min(devW / CABINET.width, devH / CABINET.height)));
+  const fit = Math.min(devW / CABINET.width, devH / CABINET.height);
+  const scale = mode === 'fillHeight' ? Math.max(1, fit) : Math.max(1, Math.floor(fit));
   const width = Math.max(CABINET.width, Math.ceil(devW / scale));
   const height = Math.max(CABINET.height, Math.ceil(devH / scale));
   return {
@@ -32,19 +41,33 @@ export function computeLayout(cssWidth: number, cssHeight: number, dpr: number):
 
 type Listener = (layout: ScreenLayout) => void;
 
-/** Watches the window and keeps the game at a whole-number scale. */
+/** Watches the window and keeps the game at the scale the scaling mode asks for. */
 export class PixelScaler {
   private listeners = new Set<Listener>();
   layout: ScreenLayout;
 
-  constructor(private readonly win: Window = window) {
+  constructor(
+    private mode: ScalingMode = 'pixelPerfect',
+    private readonly win: Window = window,
+  ) {
     this.layout = this.measure();
     win.addEventListener('resize', this.update);
     win.addEventListener('orientationchange', this.update);
   }
 
   measure(): ScreenLayout {
-    return computeLayout(this.win.innerWidth, this.win.innerHeight, this.win.devicePixelRatio || 1);
+    return computeLayout(
+      this.win.innerWidth,
+      this.win.innerHeight,
+      this.win.devicePixelRatio || 1,
+      this.mode,
+    );
+  }
+
+  setMode(mode: ScalingMode): void {
+    if (mode === this.mode) return;
+    this.mode = mode;
+    this.update();
   }
 
   /** CSS zoom for Phaser: native pixels to CSS pixels. */
@@ -64,7 +87,8 @@ export class PixelScaler {
       next.scale === prev.scale &&
       next.width === prev.width &&
       next.height === prev.height &&
-      next.cabinetX === prev.cabinetX
+      next.cabinetX === prev.cabinetX &&
+      next.cabinetY === prev.cabinetY
     )
       return;
     this.layout = next;

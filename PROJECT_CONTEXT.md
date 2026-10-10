@@ -27,6 +27,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 
 - Game design document (Claude Doc, editable): https://claude.ai/code/artifact/3f1b261a-b2c2-4342-b7f6-22d848beccb6
 - Interactive design document (HTML artifact, playable sketch): https://claude.ai/artifact/MvaJcvzYeLjAwK49YtdybZ
+- Play it online: https://robinneefs.github.io/RPS-Fighter/ (GitHub Pages, from the `RPS-Fighter/` folder of `robinneefs/robinneefs.github.io`)
 - Repository: https://github.com/robinneefs/rock-paper-scissors (game code in `packages/core` + `apps/game`, plus design docs, mock-ups and art samples)
 - Original idea brief: `docs/idea/rock-paper-scissors-idea.md`
 - Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
@@ -34,7 +35,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 ## Where things stand
 
 - Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), merged into `main` as PR #3 on 2026-10-10. The user also runs it locally from `D:\Vibe Coding Projects\rock-paper-scissors` (`npm run dev`).
-- What works: placeholder logo intro (skippable), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone (whole-number scaling).
+- What works: placeholder logo intro (skippable), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone. OPTIONS on the home menu opens an Options screen with one setting, Scaling: Pixel perfect (default, whole-number) or Fill height (fills the screen, remembered between visits).
 - Art is **placeholder**, drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so final sprites swap in without touching views. No sound or music yet.
 - Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Open feel questions: 5s vs 3s timer, 100 health (rounds take about 6 to 8 exchanges).
 - `archive/old-draft/` in this folder is an **earlier draft the user discarded**. Do not build on it. It is not in the repository.
@@ -45,12 +46,14 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 |---|---|
 | `packages/core` | `@rps/core`: rules (`resolveExchange`, `applyExchange`, rounds) and the `Referee` phase machine with injected clock + seeded RNG. Rules config and phase timings in `src/config.ts` (pick 5000, reveal 1800, round intro 1600, round over 2200 ms). |
 | `apps/game/src/session` | `MatchSession`, `LocalSession`, `RandomCpu` (think delay 0.4 to 1.6s), `createSession(setup)` |
-| `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
-| `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` |
+| `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
+| `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` (two scaling modes), `SettingsStore` (`platform/settings.ts`, localStorage) |
 | `apps/game/src/config/tuning.ts` | Every feel value |
 | `apps/game/public/assets/logo.png` | Placeholder logo (swap this file for the company logo; regenerate the placeholder with `node tools/make-placeholder-logo.mjs`) |
 
-Commands: `npm install`, `npm run dev`, `npm test` (42 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
+Commands: `npm install`, `npm run dev`, `npm test` (51 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
+
+Publishing (2026-10-10): `npm run build`, then replace the contents of `RPS-Fighter/` in `robinneefs/robinneefs.github.io` with `apps/game/dist/*` and push to its `main`; GitHub Pages redeploys on its own. Vite `base: './'` keeps paths relative, so no base-path change is needed. Nothing updates the online copy automatically: republish after changes the user wants online.
 
 ## The game in one paragraph
 
@@ -122,7 +125,8 @@ The user asked for menu infrastructure now, so multiplayer menus can be added la
 | Screen | What it shows / does |
 |---|---|
 | Logo intro | A **placeholder logo** ("YOUR STUDIO" + a simple pixel emblem) fades in, holds, fades out (about 0.5s / 1.5s / 0.5s, tunable). Any button or tap skips it. To be replaced by the company logo: swapping one image (`assets/logo.png`) is the whole change. Fades step through a few palette levels (pixel perfect, no smooth alpha). |
-| Home (main menu) | Game title, both fighters idling, and a menu: **START GAME (VS CPU)**; **ONLINE** shown greyed out with "SOON" as the slot for multiplayer. More buttons (online lobby, settings, how to play) are added as new menu items. |
+| Home (main menu) | Game title, both fighters idling, and a menu: **START GAME (VS CPU)**; **ONLINE** shown greyed out with "SOON" as the slot for multiplayer; **OPTIONS**. More buttons (online lobby, how to play) are added as new menu items. |
+| Options (added 2026-10-10) | **SCALING**: PIXEL PERFECT (default) or FILL HEIGHT; confirm or stick left/right flips it and it applies at once; **BACK** (or Esc) returns home. Two lines under the menu explain the current mode. Saved in localStorage. |
 | Fight | The match vs the CPU, as before. |
 | Result | Shown over the last fight frame: "YOU WIN!" or "CPU WINS", the round score (e.g. 2-1), and a menu: **RETRY** (default, new match with the same setup) and **MAIN MENU**. |
 
@@ -131,7 +135,7 @@ The user asked for menu infrastructure now, so multiplayer menus can be added la
 - Music: menu loop on Home and Result, fight loop in the fight.
 - Menu text uses a 5x7 bitmap pixel font (pixel-perfect rule 5).
 - Mock-ups: `docs/mockups/cabinet/cabinet-phone-logo.png`, `cabinet-phone-home.png`, `cabinet-phone-result.png`, `cabinet-browser-home.png` (source: `sources/cabinet-mockup/screens.js` + `pixfont.js`, render with `node shotcab.mjs phone-home ...`).
-- Later menus (not now): online lobby (create/join room code), settings (volumes, mute), pause, how to play.
+- Later menus (not now): online lobby (create/join room code), more options (volumes, mute), pause, how to play.
 
 ## Pixel perfect (requirement, 2026-10-10)
 
@@ -143,6 +147,8 @@ The user wants the game to be, or at least look, pixel perfect. Rules:
 4. **No free rotation or scaling of sprites.** Turning, squash or zoom is drawn as frames, not done by the engine.
 5. **Pixel UI.** Text uses a pixel font at its native size (or a whole multiple); bars, buttons and glows are drawn as pixels, not as smooth CSS/vector effects.
 6. **Limited palette** shared across all art, so everything looks like one piece.
+
+**Exception, chosen by the player (2026-10-10):** Options → Scaling → **Fill height** scales the cabinet to fill the window (height on desktop, width on a narrow phone) at a fractional scale. Still nearest-neighbour and one native grid, so no blur, but some pixel rows/columns come out one device pixel wider than others (slightly uneven lines and text). Pixel perfect stays the default; details in section 7 of the architecture doc.
 
 Engine: Phaser with `pixelArt: true` / `roundPixels: true` and integer zoom. The current mock-ups break rules 1 and 5 (smooth HTML text and glows over the pixel art; the big-pixel version uses a different pixel size for the monitor and the cabinet). Real art must follow the rules.
 
@@ -244,3 +250,5 @@ Architecture rules:
 - 2026-10-10: First playable built (logo, home, best-of-three vs random CPU, result with Retry / Main menu) with placeholder art drawn in code; rules/referee/session tests, layer lint rules, Playwright smoke test and CI. PR from `claude/first-playable-8tihq6`.
 - 2026-10-10: User merged-approved; PR #3 (first playable) merged into main. Next steps agreed: tuning panel, juice, sound, then final art.
 - 2026-10-10: Cleared the npm install warnings: Vitest 3 → 5 (3 advisories in dev-only test tooling: `@vitest/mocker`, `tinypool`) and approved esbuild's install script in `allowScripts` (newer npm asks for it). The placeholder-logo tool now runs with plain `node`.
+- 2026-10-10: Published the playable build (main @ a1a96aa) to GitHub Pages at https://robinneefs.github.io/RPS-Fighter/. Static hosting is enough until online multiplayer, which will need a separate realtime server.
+- 2026-10-10: Added OPTIONS to the home menu with a Scaling setting: Pixel perfect (default) or Fill height (fractional nearest-neighbour scale that fills the screen; a player-chosen exception to pixel-perfect rule 2), remembered in localStorage. Also fixed the e2e smoke test, which was red on main because one big fake-clock jump let game time fall behind (now steps the clock in 50 ms chunks).
