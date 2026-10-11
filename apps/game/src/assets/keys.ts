@@ -6,8 +6,9 @@ export const Tex = {
   marquee: 'marquee',
   room: 'room',
   cabinet: 'cabinet',
-  /** The sunset backdrop behind the menus (fight stages are in config/stages.ts). */
-  stage: 'stage',
+  /** The menus' backdrop and its drifting stripes (fight stages are in config/stages.ts). */
+  menuBackdrop: 'menu-backdrop',
+  menuStripes: 'menu-stripes',
   fighterP1: 'fighter-p1',
   fighterP2: 'fighter-p2',
   badges: 'move-badges',

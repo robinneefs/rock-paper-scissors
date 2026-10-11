@@ -18,6 +18,8 @@ Every build that goes online gets a new version number (in `apps/game/package.js
   - **Sunny Field:** blue sky with a sun and puffy clouds, rolling hills, a big tree on each side, a wooden fence, and grass with flowers around a worn dirt patch.
   - **Castle Roof** (a nod to the '90s arcade fighters): a sunset sky with a big moon, mountains and pines, a tiered castle, red banners, and a plank floor.
   - The menus keep the sunset backdrop. Stages are listed in `apps/game/src/config/stages.ts`, so adding or removing one is one line plus its painter. Add `?stage=field` (or `street`, `castle`) to the address to try a stage.
+- **A new menu backdrop.** The home, options and online screens drop the '80s sunset for a '90s arcade select-screen look: deep purple with a soft glow behind the menu, a pink diagonal slash, halftone dots in two corners, big faint move symbols, and thin stripes drifting slowly across.
+- **Evened-out sound levels.** The menu blips, the ROUND sting and the win and lose jingles were much louder than the fight sounds (most noticeable after a match, when choosing Retry or Main menu). They now play at about the same level as the rest.
 - **Falling damage numbers.** When a hit lands, the damage (like "-15") hops up next to the hurt fighter's head in the winning move's colour, then falls away.
 
 ## 0.8.0 (2026-10-11)

@@ -14,6 +14,7 @@ import {
 import { nextScalingMode, stepVolume } from '../platform/settings';
 import { MenuView } from '../views/MenuView';
 import { PixelText } from '../views/PixelText';
+import { addMenuBackdrop } from '../views/MenuBackdrop';
 import { getContext } from './context';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
@@ -30,7 +31,7 @@ export class OptionsScene extends Phaser.Scene {
     const { flow, input, settings, audio } = getContext(this);
     useMonitorCamera(this);
     const cx = MONITOR.width / 2;
-    this.add.image(0, 0, Tex.stage).setOrigin(0);
+    addMenuBackdrop(this);
     this.add.tileSprite(0, 0, MONITOR.width, MONITOR.height, Tex.dither).setOrigin(0);
     new PixelText(this, cx, 20, 'OPTIONS', {
       size: 3,

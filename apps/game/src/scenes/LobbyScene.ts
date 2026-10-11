@@ -11,6 +11,7 @@ import type { OnlineSession } from '../session/OnlineSession';
 import { frameRect } from '../util/gfx';
 import { MenuView } from '../views/MenuView';
 import { PixelText } from '../views/PixelText';
+import { addMenuBackdrop } from '../views/MenuBackdrop';
 import { getContext } from './context';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
@@ -56,7 +57,7 @@ export class LobbyScene extends Phaser.Scene {
 
   create(): void {
     useMonitorCamera(this);
-    this.add.image(0, 0, Tex.stage).setOrigin(0);
+    addMenuBackdrop(this);
     this.add.tileSprite(0, 0, MONITOR.width, MONITOR.height, Tex.dither).setOrigin(0);
     this.events.once('shutdown', () => {
       if (!this.handedOff) this.session?.dispose();

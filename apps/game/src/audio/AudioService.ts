@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import { VOLUME_MAX, type Settings, type SettingsStore } from '../platform/settings';
-import { musicFileKey, sfxFileKeys, type MusicKey, type SfxKey, type SfxPlayer } from './sounds';
+import { musicFileKey, SFX_GAIN, sfxFileKeys, type MusicKey, type SfxKey, type SfxPlayer } from './sounds';
 
 /** Loudness of each bus at full volume, so effects sit on top of the music. */
 const BUS = { music: 0.5, sfx: 0.85 } as const;
@@ -51,7 +51,7 @@ export class AudioService implements SfxPlayer {
   }
 
   play(key: SfxKey, opts: { detune?: number; volume?: number } = {}): void {
-    const gain = busGain(this.settings.value, 'sfx') * (opts.volume ?? 1);
+    const gain = busGain(this.settings.value, 'sfx') * (SFX_GAIN[key] ?? 1) * (opts.volume ?? 1);
     if (gain <= 0 || this.game.sound.locked) return;
     const files = sfxFileKeys(key);
     const file = files[Math.floor(Math.random() * files.length)];

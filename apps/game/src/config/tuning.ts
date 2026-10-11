@@ -71,7 +71,8 @@ export const tuning = {
   idle: { breatheEveryMs: 420 },
   intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },
   transitions: { wipeMs: 240, bandPx: 8 },
-  menu: { cursorBlinkMs: 400, repeatDelayMs: 300 },
+  /** Menus; the backdrop's diagonal stripes move one pixel every stripeStepMs. */
+  menu: { cursorBlinkMs: 400, repeatDelayMs: 300, stripeStepMs: 90 },
   banner: { slamMs: 180, holdMs: 900 },
   result: { delayAfterMatchMs: 400 },
   /** Online: how long "RIVAL LEFT" and other ending messages stay up before going home; lobby text blink. */

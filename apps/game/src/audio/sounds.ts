@@ -26,6 +26,20 @@ export const SFX = {
 
 export type SfxKey = keyof typeof SFX;
 
+/**
+ * Per-sound level trims, so every effect plays about as loud as the fight sounds (around -15 dB
+ * average). Measured with ffmpeg volumedetect on the files; anything not listed plays at 1.
+ * The menu blips, the ROUND sting and the result jingles came out of the generator much louder.
+ */
+export const SFX_GAIN: Partial<Record<SfxKey, number>> = {
+  menuMove: 0.65,
+  menuSelect: 0.55,
+  menuBack: 0.5,
+  roundStart: 0.5,
+  winJingle: 0.8,
+  loseJingle: 0.55,
+};
+
 export const MUSIC = ['menu', 'fight'] as const;
 export type MusicKey = (typeof MUSIC)[number];
 
