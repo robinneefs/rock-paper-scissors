@@ -18,6 +18,16 @@ const phase = (page: Page) => page.evaluate(() => window.__rps.phase());
 const scale = (page: Page) => page.evaluate(() => window.__rps.scale());
 
 /**
+ * A fake clock that only moves when the test runs it. A plain install() also lets real time flow,
+ * so on a slow machine (CI's software renderer drawing the screen shader) whole phases slip by
+ * while the test is talking to the page, and the phase checks below land in the wrong phase.
+ */
+async function pausedClock(page: Page): Promise<void> {
+  await page.clock.install({ time: 0 });
+  await page.clock.pauseAt(1000);
+}
+
+/**
  * Advances the fake clock in small steps. One big runFor() lets the browser run the game's frames
  * with large gaps, and Phaser clamps big frame deltas, so game time falls behind the clock.
  */
@@ -37,7 +47,7 @@ test('boots to the logo, the home menu, and plays an exchange against the CPU', 
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await run(page, 300);
   expect(await scenes(page)).toContain('Logo');
@@ -66,7 +76,7 @@ test('the build shows the version from package.json', async ({ page }) => {
 });
 
 test('the logo can be skipped with any button', async ({ page }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await run(page, 300);
   await page.keyboard.press('Digit1');
@@ -75,7 +85,7 @@ test('the logo can be skipped with any button', async ({ page }) => {
 });
 
 test('scaling fills the height by default; options switches it and remembers', async ({ page }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1'); // skip the logo
@@ -110,7 +120,7 @@ test('scaling fills the height by default; options switches it and remembers', a
 test('music: the menu loop on home and the fight loop in a match', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1'); // skip the logo (also lets the browser play sound)
@@ -126,7 +136,7 @@ test('music: the menu loop on home and the fight loop in a match', async ({ page
 });
 
 test('ONLINE opens the lobby, and BACK returns home', async ({ page }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1'); // skip the logo
@@ -141,7 +151,7 @@ test('ONLINE opens the lobby, and BACK returns home', async ({ page }) => {
 test('JOIN ROOM takes letters by keyboard layout, and its code box is a real text field', async ({
   page,
 }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1');
@@ -176,7 +186,7 @@ test('JOIN ROOM takes letters by keyboard layout, and its code box is a real tex
 });
 
 test('NEW ROOM is cancelled by any cabinet button, back to the lobby menu', async ({ page }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1');
