@@ -52,7 +52,7 @@
     const mq = [[120, 20, 120], [170, 30, 140], [220, 50, 160]];
     for (let i = 0; i < 26; i++) R(cc, 8, 3 + i, W - 16, 1, mq[Math.min(2, Math.floor(i / 26 * 3))]);
     R(cc, 8, 3, W - 16, 1, [255, 170, 230]); R(cc, 8, 28, W - 16, 1, [60, 10, 70]);
-    F.draw(cc, 'RPS FIGHTER', W / 2, 7, '#ffffff', { align: 'center', scale: 2, shadow: '#5a0b4a' });
+    F.draw(cc, 'RPS RIVALS', W / 2, 7, '#ffffff', { align: 'center', scale: 2, shadow: '#5a0b4a' });
     R(cc, 15, 32, MW + 2 * 12, MH + 24, [11, 7, 22]); R(cc, MX - 3, MY - 3, MW + 6, MH + 6, [24, 16, 40]);
     R(cc, 0, PY, W, 128, [58, 32, 112]); R(cc, 0, PY, W, 2, [90, 56, 160]);
     for (let i = 0; i < 3; i++) R(cc, 8, PY + 98 + i * 5, W - 16, 2, [[255, 47, 191], [255, 179, 33], [63, 240, 255]][i]);
