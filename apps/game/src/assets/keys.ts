@@ -16,7 +16,7 @@ export const Tex = {
 } as const;
 
 /** Frames every fighter sheet provides (64 px tall fighters, facing right). */
-export const FighterFrames = ['idle0', 'idle1', 'attack', 'throw', 'block', 'hurt', 'ko', 'win'] as const;
+export const FighterFrames = ['idle0', 'idle1', 'rock', 'paper', 'scissors', 'hurt', 'ko', 'win'] as const;
 export type FighterFrame = (typeof FighterFrames)[number];
 
 /** Pixel font sizes: 5x7 glyphs drawn at whole multiples (pixel-perfect rule 5). */

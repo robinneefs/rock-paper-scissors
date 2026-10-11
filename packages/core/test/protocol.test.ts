@@ -3,7 +3,7 @@ import { isRoomCode, parseClientMessage, randomRoomCode, ROOM_CODE_LETTERS, seed
 
 describe('online protocol', () => {
   it('accepts exactly the known client messages', () => {
-    expect(parseClientMessage('{"type":"pick","move":"block"}')).toEqual({ type: 'pick', move: 'block' });
+    expect(parseClientMessage('{"type":"pick","move":"paper"}')).toEqual({ type: 'pick', move: 'paper' });
     expect(parseClientMessage('{"type":"hello","protocol":1,"version":"0.6.0","intent":"join"}')).toEqual({
       type: 'hello',
       protocol: 1,

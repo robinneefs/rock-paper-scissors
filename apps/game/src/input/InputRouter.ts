@@ -25,12 +25,12 @@ interface InputEvents extends Record<string, unknown> {
 }
 
 const KEY_MOVES: Record<string, Move> = {
-  Digit1: 'attack',
-  Digit2: 'throw',
-  Digit3: 'block',
-  Numpad1: 'attack',
-  Numpad2: 'throw',
-  Numpad3: 'block',
+  Digit1: 'rock',
+  Digit2: 'paper',
+  Digit3: 'scissors',
+  Numpad1: 'rock',
+  Numpad2: 'paper',
+  Numpad3: 'scissors',
 };
 const ARROWS: Record<string, NavDir> = {
   ArrowUp: 'up',
@@ -132,7 +132,7 @@ export class InputRouter {
     this.stopRepeat();
     this.stick = { x: 0, y: 0 };
     this.events.emit('stick', this.stick);
-    for (const move of ['attack', 'throw', 'block'] as const) this.releaseButton(move);
+    for (const move of ['rock', 'paper', 'scissors'] as const) this.releaseButton(move);
   }
 
   private stopRepeat(): void {

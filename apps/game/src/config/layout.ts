@@ -15,7 +15,7 @@ export const PANEL = { y: 344, height: 128 } as const;
 /** Cabinet buttons (centre x) and joystick on the control panel, in cabinet pixels. */
 export const BUTTONS = {
   y: PANEL.y + 50,
-  x: { attack: 112, throw: 170, block: 228 },
+  x: { rock: 112, paper: 170, scissors: 228 },
   radius: { x: 22, y: 15 },
 } as const;
 

@@ -5,7 +5,7 @@ import { BUTTON_FRAME } from '../assets/placeholders/cabinet';
 import { BUTTONS } from '../config/layout';
 import { tuning } from '../config/tuning';
 
-const MOVES: readonly Move[] = ['attack', 'throw', 'block'];
+const MOVES: readonly Move[] = ['rock', 'paper', 'scissors'];
 
 /** The three physical cabinet buttons. They press down when used and stay lit for the chosen move. */
 export class ButtonsView {
@@ -38,7 +38,7 @@ export class ButtonsView {
       parent.add(img);
       return img;
     };
-    this.sprites = { attack: make('attack'), throw: make('throw'), block: make('block') };
+    this.sprites = { rock: make('rock'), paper: make('paper'), scissors: make('scissors') };
   }
 
   setDown(move: Move, down: boolean): void {

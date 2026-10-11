@@ -15,15 +15,15 @@ import {
 describe('resolveExchange', () => {
   // Every one of the 9 pairings, from p1's point of view.
   const table: [Move, Move, 'p1' | 'p2' | 'tie', number][] = [
-    ['attack', 'attack', 'tie', 0],
-    ['attack', 'throw', 'p1', 15],
-    ['attack', 'block', 'p2', 10],
-    ['throw', 'attack', 'p2', 15],
-    ['throw', 'throw', 'tie', 0],
-    ['throw', 'block', 'p1', 20],
-    ['block', 'attack', 'p1', 10],
-    ['block', 'throw', 'p2', 20],
-    ['block', 'block', 'tie', 0],
+    ['rock', 'rock', 'tie', 0],
+    ['rock', 'scissors', 'p1', 15],
+    ['rock', 'paper', 'p2', 10],
+    ['scissors', 'rock', 'p2', 15],
+    ['scissors', 'scissors', 'tie', 0],
+    ['scissors', 'paper', 'p1', 20],
+    ['paper', 'rock', 'p1', 10],
+    ['paper', 'scissors', 'p2', 20],
+    ['paper', 'paper', 'tie', 0],
   ];
 
   it.each(table)('%s vs %s: %s wins for %i', (p1, p2, winner, damage) => {
@@ -46,8 +46,11 @@ describe('resolveExchange', () => {
   });
 
   it('reads damage and beats from the config, not hard-coded', () => {
-    const custom = { ...cfg, damage: { attack: 1, throw: 2, block: 3 } };
-    expect(resolveExchange({ p1: 'throw', p2: 'block' }, custom)).toMatchObject({ winner: 'p1', damage: 2 });
+    const custom = { ...cfg, damage: { rock: 1, scissors: 2, paper: 3 } };
+    expect(resolveExchange({ p1: 'scissors', p2: 'paper' }, custom)).toMatchObject({
+      winner: 'p1',
+      damage: 2,
+    });
   });
 });
 
@@ -64,14 +67,14 @@ describe('applyExchange', () => {
   });
 
   it('only the loser takes damage', () => {
-    const { state, events } = applyExchange(fresh(), { p1: 'throw', p2: 'block' }, cfg);
+    const { state, events } = applyExchange(fresh(), { p1: 'scissors', p2: 'paper' }, cfg);
     expect(state.health).toEqual({ p1: 100, p2: 80 });
     expect(events).toEqual([{ type: 'damage', side: 'p2', amount: 20, health: 80 }]);
   });
 
   it('a tie deals no damage and returns the same state', () => {
     const before = fresh();
-    const { state, events, outcome } = applyExchange(before, { p1: 'block', p2: 'block' }, cfg);
+    const { state, events, outcome } = applyExchange(before, { p1: 'paper', p2: 'paper' }, cfg);
     expect(outcome.kind).toBe('tie');
     expect(events).toEqual([]);
     expect(state).toBe(before);
@@ -80,13 +83,13 @@ describe('applyExchange', () => {
   it('never changes the state passed in', () => {
     const before = fresh();
     const copy = JSON.parse(JSON.stringify(before)) as typeof before;
-    applyExchange(before, { p1: 'attack', p2: 'throw' }, cfg);
+    applyExchange(before, { p1: 'rock', p2: 'scissors' }, cfg);
     expect(before).toEqual(copy);
   });
 
   it('health stops at 0 and a KO wins the round', () => {
     const low: MatchState = { ...fresh(), health: { p1: 100, p2: 5 } };
-    const { state, events } = applyExchange(low, { p1: 'block', p2: 'attack' }, cfg);
+    const { state, events } = applyExchange(low, { p1: 'paper', p2: 'rock' }, cfg);
     expect(state.health.p2).toBe(0);
     expect(state.roundsWon).toEqual({ p1: 1, p2: 0 });
     expect(state.winner).toBeNull();
@@ -96,14 +99,14 @@ describe('applyExchange', () => {
 
   it('exact lethal damage is a KO', () => {
     const low: MatchState = { ...fresh(), health: { p1: 15, p2: 100 } };
-    const { state } = applyExchange(low, { p1: 'throw', p2: 'attack' }, cfg);
+    const { state } = applyExchange(low, { p1: 'scissors', p2: 'rock' }, cfg);
     expect(state.health.p1).toBe(0);
     expect(state.roundsWon.p2).toBe(1);
   });
 
   it('a 10 damage counter does not finish a fighter at 15', () => {
     const low: MatchState = { ...fresh(), health: { p1: 100, p2: 15 } };
-    const { state } = applyExchange(low, { p1: 'block', p2: 'attack' }, cfg);
+    const { state } = applyExchange(low, { p1: 'paper', p2: 'rock' }, cfg);
     expect(state.health.p2).toBe(5);
     expect(isRoundOver(state)).toBe(false);
   });
@@ -115,7 +118,7 @@ describe('applyExchange', () => {
       health: { p1: 10, p2: 100 },
       roundsWon: { p1: 0, p2: 1 },
     };
-    const { state, events } = applyExchange(matchPoint, { p1: 'attack', p2: 'block' }, cfg);
+    const { state, events } = applyExchange(matchPoint, { p1: 'rock', p2: 'paper' }, cfg);
     expect(state.winner).toBe('p2');
     expect(state.roundsWon.p2).toBe(2);
     expect(events.at(-1)).toEqual({ type: 'matchWon', side: 'p2' });
@@ -123,9 +126,9 @@ describe('applyExchange', () => {
 
   it('refuses to play on after a KO or after the match is won', () => {
     const ko: MatchState = { ...fresh(), health: { p1: 0, p2: 50 } };
-    expect(() => applyExchange(ko, { p1: 'attack', p2: 'attack' }, cfg)).toThrow();
+    expect(() => applyExchange(ko, { p1: 'rock', p2: 'rock' }, cfg)).toThrow();
     const won: MatchState = { ...ko, winner: 'p2' };
-    expect(() => applyExchange(won, { p1: 'attack', p2: 'attack' }, cfg)).toThrow();
+    expect(() => applyExchange(won, { p1: 'rock', p2: 'rock' }, cfg)).toThrow();
   });
 });
 
@@ -163,14 +166,14 @@ describe('rounds', () => {
     const playUntilKo = (picks: { p1: Move; p2: Move }) => {
       while (!isRoundOver(state)) state = applyExchange(state, picks, cfg).state;
     };
-    playUntilKo({ p1: 'throw', p2: 'block' }); // p1 wins round 1 (5 throws)
+    playUntilKo({ p1: 'scissors', p2: 'paper' }); // p1 wins round 1 (5 throws)
     expect(state.roundsWon).toEqual({ p1: 1, p2: 0 });
     state = startNextRound(state, cfg);
-    playUntilKo({ p1: 'attack', p2: 'block' }); // p2 wins round 2 (10 counters)
+    playUntilKo({ p1: 'rock', p2: 'paper' }); // p2 wins round 2 (10 counters)
     expect(state.roundsWon).toEqual({ p1: 1, p2: 1 });
     expect(isFinalRound(state, cfg)).toBe(true);
     state = startNextRound(state, cfg);
-    playUntilKo({ p1: 'attack', p2: 'throw' }); // p1 wins round 3 (7 attacks)
+    playUntilKo({ p1: 'rock', p2: 'scissors' }); // p1 wins round 3 (7 attacks)
     expect(state).toEqual({
       round: 3,
       health: { p1: 100, p2: 0 },

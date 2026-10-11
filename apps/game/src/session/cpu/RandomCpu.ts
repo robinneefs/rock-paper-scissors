@@ -14,7 +14,7 @@ export class RandomCpu implements MoveSource {
       this.thinkMs.min + Math.floor(ctx.rng.next() * span),
       ctx.deadline - ctx.clock.now() - 1,
     );
-    const move = MOVES[Math.floor(ctx.rng.next() * MOVES.length)] ?? 'attack';
+    const move = MOVES[Math.floor(ctx.rng.next() * MOVES.length)] ?? 'rock';
     this.pending = ctx.clock.schedule(Math.max(0, delay), () => {
       this.pending = null;
       submit(move);

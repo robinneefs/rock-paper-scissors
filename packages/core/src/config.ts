@@ -5,8 +5,8 @@ import type { RulesConfig } from './rules/types';
  * Look-and-feel numbers live in apps/game/src/config/tuning.ts instead.
  */
 export const defaultRules: RulesConfig = {
-  beats: { attack: 'throw', throw: 'block', block: 'attack' },
-  damage: { throw: 20, attack: 15, block: 10 },
+  beats: { rock: 'scissors', scissors: 'paper', paper: 'rock' },
+  damage: { rock: 15, paper: 10, scissors: 20 },
   startHealth: 100,
   roundsToWin: 2,
 };

@@ -65,7 +65,7 @@ export function paintCabinet(): PixelBuffer {
   b.ell(JOYSTICK.x, JOYSTICK.y + 2, 6, 3, 0x0c0618);
 
   // button wells, labels and key hints
-  (['attack', 'throw', 'block'] as const).forEach((m, i) => {
+  (['rock', 'paper', 'scissors'] as const).forEach((m, i) => {
     const x = BUTTONS.x[m];
     b.ell(x, BUTTONS.y + 9, 25, 16, 0x120822);
     b.text(m, x, BUTTONS.y + 26, moveColors[m].main, { center: true, shadow: palette.ink });
@@ -87,7 +87,7 @@ export type ButtonState = (typeof BUTTON_FRAME.states)[number];
 /** One frame per move and state: up, pressed down, and dimmed (another move is selected). */
 export function paintButtons(): PixelBuffer {
   const { width: fw, height: fh, states } = BUTTON_FRAME;
-  const moves = ['attack', 'throw', 'block'] as const;
+  const moves = ['rock', 'paper', 'scissors'] as const;
   const b = new PixelBuffer(fw * states.length, fh * moves.length);
   moves.forEach((m, row) => {
     const col = moveColors[m].main;

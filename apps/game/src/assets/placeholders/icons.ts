@@ -1,42 +1,42 @@
 import { moveColors, palette } from '../../config/palette';
 import { PixelBuffer } from './PixelBuffer';
 
-export const ICON = { size: 20, frames: ['attack', 'throw', 'block', 'unknown'] as const };
+export const ICON = { size: 20, frames: ['rock', 'paper', 'scissors', 'unknown'] as const };
 
-/** White 9x9 symbols drawn on each move's coin. */
+/** White 9x9 symbols drawn on each move's coin and cabinet button: a rock, a sheet of paper, open scissors. */
 export const SYMBOLS: Record<(typeof ICON.frames)[number], string[]> = {
-  attack: [
-    '....#....',
-    '.#..#..#.',
-    '..#####..',
-    '..#####..',
+  rock: [
+    '.........',
+    '...###...',
+    '.######..',
+    '########.',
     '#########',
-    '..#####..',
-    '..#####..',
-    '.#..#..#.',
-    '....#....',
-  ],
-  throw: [
-    '..####...',
-    '.#....#..',
-    '#......#.',
-    '#.....###',
-    '#......#.',
-    '#........',
-    '.#....#..',
-    '..####...',
+    '#########',
+    '#########',
+    '.#######.',
     '.........',
   ],
-  block: [
-    '#########',
-    '#########',
-    '#########',
-    '#########',
+  paper: [
+    '.#####...',
+    '.#...##..',
+    '.#...###.',
+    '.#.....#.',
+    '.#.###.#.',
+    '.#.....#.',
+    '.#.###.#.',
+    '.#.....#.',
     '.#######.',
-    '.#######.',
-    '..#####..',
-    '...###...',
+  ],
+  scissors: [
+    '#.......#',
+    '.#.....#.',
+    '..#...#..',
+    '...#.#...',
     '....#....',
+    '...#.#...',
+    '.##...##.',
+    '#..#.#..#',
+    '.##...##.',
   ],
   unknown: [
     '..####...',

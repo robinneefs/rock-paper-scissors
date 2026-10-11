@@ -102,15 +102,15 @@ describe('MatchRoom', () => {
   it('keeps picks secret until the reveal and ignores bad moves', () => {
     startMatch();
     clock.advance(defaultTimings.roundIntroMs);
-    send(room, a, { type: 'pick', move: 'throw' });
+    send(room, a, { type: 'pick', move: 'scissors' });
     send(room, b, { type: 'pick', move: 'laser' });
     expect(b.of('locked')).toEqual([{ type: 'locked', side: 'p1' }]);
-    expect(JSON.stringify(b.inbox.filter((m) => m.type !== 'welcome'))).not.toContain('throw');
+    expect(JSON.stringify(b.inbox.filter((m) => m.type !== 'welcome'))).not.toContain('scissors');
 
-    send(room, b, { type: 'pick', move: 'block' });
+    send(room, b, { type: 'pick', move: 'paper' });
     clock.advance(defaultTimings.pickMs);
     const [reveal] = b.of('reveal');
-    expect(reveal?.picks).toEqual({ p1: 'throw', p2: 'block' });
+    expect(reveal?.picks).toEqual({ p1: 'scissors', p2: 'paper' });
     expect(reveal?.outcome).toMatchObject({ kind: 'win', winner: 'p1', damage: 20 });
     expect(reveal?.autoPicked).toEqual({ p1: false, p2: false });
   });
