@@ -45,6 +45,8 @@ export class OnlineSession implements MatchSession {
   private state: MatchState | null = null;
   private myPick: Move | null = null;
   private ended = false;
+  /** Matches started in this room before the current one (rematches both players count alike). */
+  private rematches = 0;
 
   constructor(private readonly opts: OnlineOptions) {
     this.socket = opts.openSocket(`${opts.serverUrl}/room/${opts.roomCode}`, {
@@ -71,6 +73,13 @@ export class OnlineSession implements MatchSession {
 
   requestRematch(): void {
     this.send({ type: 'rematch' });
+  }
+
+  /** The room code's hash plus the rematch count: the same on both machines, never random. */
+  stageSeed(): number {
+    let h = 0;
+    for (const ch of this.opts.roomCode) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return h + this.rematches;
   }
 
   snapshot(): MatchView {
@@ -156,6 +165,7 @@ export class OnlineSession implements MatchSession {
         if (m) this.events.emit('rematchRequested', { side: m.side(msg.side) });
         break;
       case 'rematchAccepted':
+        this.rematches++;
         this.events.emit('rematchAccepted', {});
         break;
     }

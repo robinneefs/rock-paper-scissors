@@ -52,6 +52,11 @@ export interface MatchSession {
   ready(): void;
   submitPick(move: Move): void;
   requestRematch(): void;
+  /**
+   * A number for picking this match's stage. It changes with every rematch, and online both
+   * players get the same one (it comes from the room code), so they see the same stage.
+   */
+  stageSeed(): number;
   snapshot(): MatchView;
   on<E extends keyof SessionEvents>(event: E, fn: (payload: SessionEvents[E]) => void): Unsubscribe;
   dispose(): void;

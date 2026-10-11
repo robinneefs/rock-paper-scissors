@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { Tex } from '../assets/keys';
 import { STAGE } from '../config/layout';
 import { palette } from '../config/palette';
+import { stageFor, stageTexture } from '../config/stages';
 import { tuning } from '../config/tuning';
 import { FightDirector } from '../fight/FightDirector';
 import { BannerView } from '../views/BannerView';
@@ -32,7 +32,9 @@ export class FightScene extends Phaser.Scene {
     const { input, flow, lights, audio } = getContext(this);
     const { session, setup } = this.fight;
     useMonitorCamera(this);
-    this.add.image(0, 0, Tex.street).setOrigin(0);
+    // ?stage=<id> in the address forces a stage, for trying one out
+    const stage = stageFor(session.stageSeed(), new URLSearchParams(window.location.search).get('stage'));
+    this.add.image(0, 0, stageTexture(stage.id)).setOrigin(0);
 
     const fighters = {
       p1: new FighterView(this, 'p1', STAGE.fighterX.p1, STAGE.floorY),

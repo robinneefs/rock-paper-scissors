@@ -156,4 +156,13 @@ describe('OnlineSession', () => {
     expect(heard).toEqual([]);
     expect(socket.closed).toBe(true);
   });
+
+  it('gives both players the same stage seed, and a new one after each rematch', () => {
+    const a = setup();
+    const b = setup();
+    expect(a.session.stageSeed()).toBe(b.session.stageSeed());
+    const first = a.session.stageSeed();
+    a.room({ type: 'rematchAccepted' });
+    expect(a.session.stageSeed()).toBe(first + 1);
+  });
 });

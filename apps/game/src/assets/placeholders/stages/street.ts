@@ -1,16 +1,10 @@
-import { MONITOR, STAGE } from '../../config/layout';
-import { palette } from '../../config/palette';
-import { PixelBuffer, type RGB } from './PixelBuffer';
+import { STAGE } from '../../../config/layout';
+import { palette } from '../../../config/palette';
+import type { PixelBuffer, RGB } from '../PixelBuffer';
+import { glow as glowAt, gradient, H, seeded, stageBuffer, W } from './paint';
 
 /** Where the street's layers sit, top to bottom (the fighters stand on the road at STAGE.floorY). */
 const STREET = { skyEnd: 150, walkTop: 146, curbTop: 162, roadTop: 166, laneY: 198 } as const;
-
-const bayer = [
-  [0, 8, 2, 10],
-  [12, 4, 14, 6],
-  [3, 11, 1, 9],
-  [15, 7, 13, 5],
-];
 
 /**
  * Placeholder fight backdrop: a city street at night. A dithered sky with a moon, a far skyline
@@ -18,31 +12,12 @@ const bayer = [
  * wet road that reflects the neon. The middle is kept dark and calm, where the reveal plays.
  */
 export function paintStreet(): PixelBuffer {
-  const W: number = MONITOR.width;
-  const H: number = MONITOR.height;
-  const b = new PixelBuffer(W, H);
-  let seed = 11;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const get = (x: number, y: number): RGB => {
-    const i = (y * W + x) * 4;
-    return (b.data[i]! << 16) | (b.data[i + 1]! << 8) | b.data[i + 2]!;
-  };
-  /** Mixes a colour into what is already there, on a dither pattern (so it stays in whole colours). */
-  const glow = (x: number, y: number, c: RGB, f: number) => {
-    if (x < 0 || y < 0 || x >= W || y >= H) return;
-    if (f * 16 > bayer[y & 3]![x & 3]!) b.px(x, y, mix(get(x, y), c, 0.5));
-  };
+  const b = stageBuffer();
+  const rnd = seeded(11);
+  const glow = (x: number, y: number, c: RGB, f: number) => glowAt(b, x, y, c, f);
 
   // sky: near-black at the top, a purple city glow towards the street
-  const bands = [0x07040f, 0x0b0620, 0x110830, 0x180a3a, 0x220c46, 0x2e0e52, 0x3c1258];
-  for (let y = 0; y < STREET.skyEnd; y++) {
-    const t = (y / STREET.skyEnd) ** 1.4 * (bands.length - 1);
-    const i = Math.floor(t);
-    for (let x = 0; x < W; x++) {
-      const up = (t - i) * 16 > bayer[y & 3]![x & 3]! ? 1 : 0;
-      b.px(x, y, bands[Math.min(bands.length - 1, i + up)]!);
-    }
-  }
+  gradient(b, 0, STREET.skyEnd, [0x07040f, 0x0b0620, 0x110830, 0x180a3a, 0x220c46, 0x2e0e52, 0x3c1258], 1.4);
   for (let i = 0; i < 40; i++) {
     const x = Math.floor(rnd() * W);
     const y = Math.floor(rnd() * 70);
@@ -192,9 +167,4 @@ export function paintStreet(): PixelBuffer {
   for (const fx of [STAGE.fighterX.p1, STAGE.fighterX.p2])
     for (let x = fx - 16; x <= fx + 16; x++) b.px(x, STAGE.floorY, 0x0b0620);
   return b;
-}
-
-function mix(a: RGB, c: RGB, f: number): RGB {
-  const ch = (s: number) => Math.round(((a >> s) & 255) + (((c >> s) & 255) - ((a >> s) & 255)) * f);
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
 }
