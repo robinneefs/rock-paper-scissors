@@ -52,6 +52,8 @@ export interface MatchSession {
   ready(): void;
   submitPick(move: Move): void;
   requestRematch(): void;
+  /** The tab was hidden or shown again. A CPU match waits; an online one can't (the rival plays on). */
+  setPaused(paused: boolean): void;
   /**
    * A number for picking this match's stage. It changes with every rematch, and online both
    * players get the same one (it comes from the room code), so they see the same stage.
