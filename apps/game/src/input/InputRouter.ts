@@ -8,7 +8,8 @@ export type Action =
   | { type: 'pick'; move: Move } // a cabinet button (keys 1/2/3 or a tap); menus treat it as confirm
   | { type: 'confirm' } // Enter, Space
   | { type: 'back' } // Esc (Android back later)
-  | { type: 'nav'; dir: NavDir }; // joystick or arrow keys
+  | { type: 'nav'; dir: NavDir } // joystick or arrow keys
+  | { type: 'char'; char: string }; // a letter key A to Z (typing a room code)
 
 export interface StickTilt {
   x: -1 | 0 | 1;
@@ -98,6 +99,8 @@ export class InputRouter {
       if (!e.repeat) this.events.emit('action', { type: 'confirm' });
     } else if (e.code === 'Escape' || e.code === 'Backspace') {
       if (!e.repeat) this.events.emit('action', { type: 'back' });
+    } else if (/^Key[A-Z]$/.test(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (!e.repeat) this.events.emit('action', { type: 'char', char: e.code.slice(3) });
     } else return;
     e.preventDefault();
   };

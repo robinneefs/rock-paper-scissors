@@ -4,6 +4,7 @@ export const SceneKey = {
   logo: 'Logo',
   home: 'Home',
   options: 'Options',
+  lobby: 'Lobby',
   fight: 'Fight',
   result: 'Result',
   transition: 'Transition',
@@ -14,6 +15,7 @@ export const MONITOR_SCENES = [
   SceneKey.logo,
   SceneKey.home,
   SceneKey.options,
+  SceneKey.lobby,
   SceneKey.fight,
   SceneKey.result,
 ] as const;

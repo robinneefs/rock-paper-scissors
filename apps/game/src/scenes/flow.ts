@@ -17,7 +17,7 @@ export interface ResultData extends FightData {
 
 /**
  * The one place that changes screens: Logo -> Home -> Fight -> Result -> (Retry -> Fight | Home),
- * and Home <-> Options.
+ * Home <-> Options, and Home -> Lobby -> Fight for online matches.
  * Scenes never start each other by key. Owns the current match session's lifetime.
  */
 export class SceneFlow {
@@ -44,6 +44,11 @@ export class SceneFlow {
 
   toOptions(): void {
     this.wipe(() => this.show(SceneKey.options));
+  }
+
+  /** Online: create or join a room. The lobby hands its connected session to toFight. */
+  toLobby(): void {
+    this.wipe(() => this.show(SceneKey.lobby));
   }
 
   /** Starts a match; pass the existing session for a rematch (Retry). */

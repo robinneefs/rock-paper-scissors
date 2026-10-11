@@ -1,0 +1,51 @@
+name: Deploy server
+
+# Deploys the online match server (apps/server) to Cloudflare Workers when it, or the rules it
+# runs (packages/core), change on main. Needs two repository secrets: CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID (see apps/server/README.md). Without them the deploy is skipped.
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/server/**
+      - packages/core/**
+      - .github/workflows/deploy-server.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Cloudflare secrets
+        id: secrets
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set; skipping the deploy"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.secrets.outputs.ok == 'true'
+      - run: npm test
+        if: steps.secrets.outputs.ok == 'true'
+      - uses: cloudflare/wrangler-action@v3
+        if: steps.secrets.outputs.ok == 'true'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/server
+          wranglerVersion: 4.137.0

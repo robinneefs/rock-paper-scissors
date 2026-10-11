@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { Tex } from '../assets/keys';
 import { STAGE } from '../config/layout';
+import { palette } from '../config/palette';
+import { tuning } from '../config/tuning';
 import { FightDirector } from '../fight/FightDirector';
 import { BannerView } from '../views/BannerView';
 import { FighterView } from '../views/FighterView';
@@ -39,7 +41,7 @@ export class FightScene extends Phaser.Scene {
       p1: new MoveIconView(this, STAGE.fighterX.p1, iconY),
       p2: new MoveIconView(this, STAGE.fighterX.p2, iconY),
     };
-    const hud = new HudView(this, { p1: 'YOU', p2: 'CPU' }, session.rules.startHealth);
+    const hud = new HudView(this, { p1: 'YOU', p2: session.opponentName }, session.rules.startHealth);
     const banner = new BannerView(this, 96);
 
     new FightDirector(this, session, { fighters, icons, hud, banner }, session.rules.roundsToWin, {
@@ -47,14 +49,23 @@ export class FightScene extends Phaser.Scene {
       matchOver: (winner, state) => flow.toResult({ setup, session, winner, state }),
     });
 
-    const off = input.on('action', (a) => {
-      if (!this.scene.isActive() || a.type !== 'pick') return;
-      session.submitPick(a.move);
-      const picked = session.snapshot().myPick;
-      if (picked) lights.select(picked);
-    });
+    // online only: the match ends early if the other player leaves or the connection drops
+    const endEarly = (text: string) => {
+      banner.show(text, { color: palette.pink, holdMs: Infinity });
+      this.time.delayedCall(tuning.online.endedHoldMs, () => flow.toHome());
+    };
+    const offs = [
+      input.on('action', (a) => {
+        if (!this.scene.isActive() || a.type !== 'pick') return;
+        session.submitPick(a.move);
+        const picked = session.snapshot().myPick;
+        if (picked) lights.select(picked);
+      }),
+      session.on('opponentLeft', () => endEarly('RIVAL LEFT')),
+      session.on('disconnected', () => endEarly('OFFLINE')),
+    ];
     this.events.once('shutdown', () => {
-      off();
+      offs.forEach((off) => off());
       lights.select(null);
     });
     this.hud = hud;

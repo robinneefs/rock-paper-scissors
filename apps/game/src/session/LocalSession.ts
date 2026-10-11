@@ -16,6 +16,7 @@ import type { MoveSource } from './MoveSource';
 /** A match on this device: owns the referee; the opponent's picks come from a move source. */
 export class LocalSession implements MatchSession {
   readonly me: Side = 'p1';
+  readonly opponentName = 'CPU';
   private readonly events = new Emitter<SessionEvents>();
   private readonly referee: Referee;
   private readonly unsubs: Unsubscribe[] = [];
