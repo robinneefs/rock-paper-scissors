@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyExchange,
   createMatchState,
-  defaultRules as cfg,
+  defaultRules,
   isFinalRound,
   isRoundOver,
   MOVES,
@@ -11,6 +11,9 @@ import {
   type MatchState,
   type Move,
 } from '../src';
+
+// These tests count damage from a fixed 100 health, whatever the game's default is.
+const cfg = { ...defaultRules, startHealth: 100 };
 
 describe('resolveExchange', () => {
   // Every one of the 9 pairings, from p1's point of view.

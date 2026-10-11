@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { defaultRules, Referee, seededRng, type PhaseTimings, type RefereeEvents } from '../src';
+import { defaultRules as gameRules, Referee, seededRng, type PhaseTimings, type RefereeEvents } from '../src';
 import { FakeClock } from './fakeClock';
 
 const timings: PhaseTimings = { roundIntroMs: 1000, pickMs: 5000, revealMs: 2000, roundOverMs: 3000 };
+
+// These tests count damage from a fixed 100 health, whatever the game's default is.
+const defaultRules = { ...gameRules, startHealth: 100 };
 
 function setup(rules = defaultRules, seed = 1) {
   const clock = new FakeClock();

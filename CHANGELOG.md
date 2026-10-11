@@ -7,6 +7,8 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - **Flat white move icons.** The cabinet buttons and the move coins on the reveal now show big, clear white icons (a boulder, a sheet of paper, open scissors) with a dark outline, in the style picked from the round 3 mock-ups. The coins are a little bigger to fit them.
 - **Punchier buttons.** The buttons have a dark rim and go deeper when pressed. Locking in a move flashes its button white twice while a ring pops out round it; it then stays down and lit, and the other two dim.
 - New tuning values for the lock-in flash and ring (`buttons` in the dev tuning panel).
+- **The control panel has depth.** Its top now looks slanted: lit at the back and darker towards you, with bevelled sides, corner bolts, button wells with a lit rim, and a raised front lip with a pink trim strip over a shadowed front face.
+- **Faster, shorter fights.** You now have 3 seconds to pick instead of 5, and each fighter starts a round with 50 health instead of 100, so a round takes about 3 or 4 exchanges. Online, both players need this version.
 
 ## 0.8.0 (2026-10-11)
 
