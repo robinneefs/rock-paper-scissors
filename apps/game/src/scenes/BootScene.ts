@@ -27,6 +27,7 @@ export class BootScene extends Phaser.Scene {
     });
     // Real art: load sprite sheets here under the keys in assets/keys.ts; their placeholders are then skipped.
     this.load.image(Tex.logo, 'assets/logo.png');
+    this.load.image(Tex.marquee, 'assets/marquee.png');
   }
 
   create(): void {

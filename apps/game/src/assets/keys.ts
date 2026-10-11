@@ -3,6 +3,7 @@
 // loaded under the same keys replace it without touching any view.
 export const Tex = {
   logo: 'logo',
+  marquee: 'marquee',
   room: 'room',
   cabinet: 'cabinet',
   stage: 'stage',

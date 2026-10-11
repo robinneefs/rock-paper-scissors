@@ -30,13 +30,9 @@ export function paintCabinet(): PixelBuffer {
   b.rect(2, 0, 1, CABINET.height, palette.pink);
   b.rect(W - 3, 0, 1, CABINET.height, palette.pink);
 
-  // marquee
-  const mq = [0x781478, 0xaa1e8c, 0xdc32a0];
-  for (let i = 0; i < 26; i++)
-    b.rect(8, MARQUEE.y + 3 + i, W - 16, 1, mq[Math.min(2, Math.floor((i / 26) * 3))]!);
-  b.rect(8, 3, W - 16, 1, 0xffaae6);
-  b.rect(8, 28, W - 16, 1, 0x3c0a46);
-  b.text('RPS FIGHTER', W / 2, 9, palette.white, { scale: 2, center: true, shadow: palette.shadow });
+  // marquee: a dark frame; CabinetScene puts the marquee art (assets/marquee.png) inside it
+  const art = MARQUEE.art;
+  b.rect(art.x - 1, MARQUEE.y + art.y - 1, art.width + 2, art.height + 2, palette.black);
 
   // monitor bezel (the monitor scenes draw inside it)
   b.rect(15, MARQUEE.height, MONITOR.width + 24, MONITOR.height + 24, 0x0b0716);
