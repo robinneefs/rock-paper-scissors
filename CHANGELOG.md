@@ -9,7 +9,7 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - **New K.O. letters.** The K.O. banner is now big, chunky letters leaning forward, filled pale yellow to gold to orange to red, with a white shine on top, a dark red and black outline and a drop shadow, like a '90s arcade fighter.
 - **Joystick juice.** Letting go of the joystick clicks, and the stick wobbles past the centre and back before it settles. Tune it under `joystick` in the dev tuning panel.
 - **CRT screen transitions.** Changing screens now switches the monitor off and on like an old tube: the picture closes to a bright line, shrinks to a dot and goes black, then opens back up on the new screen. Tune it under `transitions`.
-- **How to Play.** A new HOW TO PLAY item on the home menu opens a short card: rock beats scissors, scissors beats paper, paper beats rock, and the few rules (pick with buttons 1 2 3 before the timer runs out, a pick is made for you if you don't, the same move is a clash, win 2 rounds). Any button goes back.
+- **How to Play.** A new HOW TO PLAY item on the home menu opens a short card: rock beats scissors, scissors beats paper, paper beats rock, how much damage a winning hit does with each (rock 15, scissors 20, paper 10), and the few rules (pick with buttons 1 2 3 before the timer runs out, a pick is made for you if you don't, the same move is a clash, win 2 rounds). Any button goes back.
 - **A wood-grain cabinet.** The cabinet body has a subtle wood grain (down the sides, along the front face), and a bit of wear: light scratches on the front of the control panel and the sides, and the pink trim on the front lip rubbed paler where hands rest.
 
 ## 0.10.0 (2026-10-11)

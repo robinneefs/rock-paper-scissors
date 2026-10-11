@@ -12,7 +12,7 @@ import { useMonitorCamera } from './monitor';
 /** The chain of who beats whom, left to right, wrapping round. */
 const CHAIN: readonly Move[] = ['rock', 'scissors', 'paper'];
 
-/** A one-card How to play: which move beats which, then the few rules. Any button goes back. */
+/** A one-card How to play: which move beats which and how hard each hits, then the few rules. Any button goes back. */
 export class HowToScene extends Phaser.Scene {
   constructor() {
     super(SceneKey.howTo);
@@ -41,6 +41,11 @@ export class HowToScene extends Phaser.Scene {
         align: 'center',
         shadow: palette.ink,
       });
+      new PixelText(this, xs[i]!, 85, `${defaultRules.damage[m]} DAMAGE`, {
+        color: palette.gold,
+        align: 'center',
+        shadow: palette.ink,
+      });
       if (i < CHAIN.length - 1)
         new PixelText(this, (xs[i]! + xs[i + 1]!) / 2, 48, '>', {
           size: 2,
@@ -50,7 +55,7 @@ export class HowToScene extends Phaser.Scene {
         });
     });
     const beats = (a: Move, b: Move) => `${a.toUpperCase()} BEATS ${b.toUpperCase()}`;
-    new PixelText(this, cx, 88, `${beats('paper', 'rock')} TOO`, {
+    new PixelText(this, cx, 98, `${beats('paper', 'rock')} TOO`, {
       color: palette.text,
       align: 'center',
       shadow: palette.ink,
@@ -63,16 +68,16 @@ export class HowToScene extends Phaser.Scene {
       'SAME MOVE: CLASH - NO DAMAGE',
       `WIN ${defaultRules.roundsToWin} ROUNDS TO WIN THE MATCH`,
     ];
-    this.add.rectangle(0, 102, MONITOR.width, lines.length * 12 + 8, palette.panel, 0.85).setOrigin(0);
+    this.add.rectangle(0, 110, MONITOR.width, lines.length * 12 + 8, palette.panel, 0.85).setOrigin(0);
     lines.forEach(
       (line, i) =>
-        new PixelText(this, cx, 107 + i * 12, line, {
+        new PixelText(this, cx, 115 + i * 12, line, {
           color: i === lines.length - 1 ? palette.gold : palette.lilac,
           align: 'center',
           shadow: palette.ink,
         }),
     );
-    const prompt = new PixelText(this, cx, 196, 'PRESS ANY BUTTON', {
+    const prompt = new PixelText(this, cx, 200, 'PRESS ANY BUTTON', {
       color: palette.text,
       align: 'center',
       shadow: palette.ink,
