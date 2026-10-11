@@ -194,7 +194,7 @@ export class LobbyScene extends Phaser.Scene {
     });
     const status = this.statusLines(132);
     this.hint(['TELL YOUR RIVAL THE CODE']);
-    this.tapButton(178, 'CANCEL', () => this.toMode('menu'));
+    this.tapButton(160, 'CANCEL', () => this.toMode('menu'));
 
     let tries = 0;
     const open = () => {
@@ -238,7 +238,7 @@ export class LobbyScene extends Phaser.Scene {
     });
     const status = this.statusLines(132);
     this.hint(['TAP THE BOXES TO TYPE', 'OR PICK LETTERS WITH THE STICK']);
-    this.tapButton(178, 'BACK', () => this.toMode('menu'));
+    this.tapButton(160, 'BACK', () => this.toMode('menu'));
 
     // four letter boxes; -1 = empty
     const slots: number[] = Array.from({ length: ROOM_CODE_LENGTH }, () => -1);

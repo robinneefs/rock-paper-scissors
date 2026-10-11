@@ -78,7 +78,7 @@ rps-rivals/
 │   │       ├── version.ts       VERSION, injected by Vite from package.json
 │   │       ├── config/          tuning.ts (feel), layout.ts (cabinet geometry), palette.ts, stages.ts, online.ts (server address)
 │   │       ├── platform/        PixelScaler (+ computeLayout), settings.ts (SettingsStore)
-│   │       ├── session/         MatchSession, LocalSession, OnlineSession + socket, MoveSource, cpu/RandomCpu, createSession, browserClock
+│   │       ├── session/         MatchSession, LocalSession, OnlineSession + socket, MoveSource, cpu/RandomCpu, createSession, browserClock, PausableClock
 │   │       ├── input/           InputRouter: keys, taps, joystick → actions
 │   │       ├── scenes/          Boot, Cabinet, Logo, Home, HowTo, Options, Lobby, Fight, Result, Transition + flow.ts, context.ts
 │   │       ├── menus/           MenuItem + homeMenu, optionsMenu, lobbyMenu, resultMenu (menus as data)
@@ -223,7 +223,7 @@ export type MatchSetup = { mode: 'cpu'; cpu: CpuKind };   // step 5 adds { mode:
 
 | Implementation | Status | How it works |
 |---|---|---|
-| `LocalSession` | Built | Owns a `Referee` on `browserClock` (`performance.now` + `setTimeout`) and `Math.random`. You are always `p1`; your picks go straight in. The opponent's picks come from a **move source**. `requestRematch()` is accepted at once. |
+| `LocalSession` | Built | Owns a `Referee` on `browserClock` (`performance.now` + `setTimeout`) and `Math.random`, through a `PausableClock`: while the tab is hidden the whole match (timer, phases, CPU) waits, since the screen stops drawing then. Online matches can't pause. You are always `p1`; your picks go straight in. The opponent's picks come from a **move source**. `requestRematch()` is accepted at once. |
 | `OnlineSession` | Planned (step 5) | A WebSocket client. Sends your pick to the match room and turns room messages into the same `SessionEvents`. |
 
 `createSession(setup)` builds the session for a match. It gives each match its own copy of the rules and timings, so the dev panel's edits apply from the next match instead of halfway through one.
@@ -490,7 +490,7 @@ Views may use types from `@rps/core` (like `Move` and `Side`) and the `InputRout
 | Online room | Vitest | `apps/server/test/MatchRoom.test.ts`, `packages/core/test/protocol.test.ts` | Room codes, joining, hidden picks, the server clock, rematch, leaving |
 | Game in a browser | Playwright | `apps/game/e2e/smoke.spec.ts` | Boots to the logo and home, plays an exchange, shows the right version, skips the logo, Options switches scaling and remembers it, the music per screen, the online lobby menus and code entry |
 
-That is 86 unit tests and 8 browser tests today. **Planned:** a pixel-perfect screenshot check (at 3× every 3 × 3 block is one colour).
+That is 91 unit tests and 9 browser tests today. **Planned:** a pixel-perfect screenshot check (at 3× every 3 × 3 block is one colour).
 
 **CI** (`.github/workflows/ci.yml`, on every push to main and every PR): `npm ci`, lint, format check, typecheck, unit tests, build, then the Playwright tests in Chromium. **Release** (`release.yml`): on a push to main, tags a new version from `apps/game/package.json` and makes a GitHub release from its changelog entry. **Pages** (`pages.yml`): main publishes the staging copy at `/rps-rivals/staging/` and the `production` branch the live game at `/rps-rivals/`, each pointing at its own match server. **Deploy server** (`deploy-server.yml`) deploys the matching Cloudflare Worker.
 
