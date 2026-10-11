@@ -1,13 +1,15 @@
 import type Phaser from 'phaser';
+import { Tex } from '../assets/keys';
 import { MONITOR } from '../config/layout';
 import { palette } from '../config/palette';
 import { tuning } from '../config/tuning';
 import { PixelText } from './PixelText';
 
-/** Big centre text that slams in: "ROUND 1", "FIGHT!", "K.O.". */
+/** Big centre text that slams in: "ROUND 1", "FIGHT!", and the K.O. letters. */
 export class BannerView {
   private readonly text: PixelText;
   private readonly sub: PixelText;
+  private readonly ko: Phaser.GameObjects.Image;
   private tween: Phaser.Tweens.Tween | null = null;
   private hideTimer: Phaser.Time.TimerEvent | null = null;
 
@@ -27,11 +29,16 @@ export class BannerView {
       align: 'center',
       shadow: palette.ink,
     }).setVisible(false);
+    this.ko = scene.add
+      .image(MONITOR.width / 2, y, Tex.koLetters)
+      .setOrigin(0.5, 0)
+      .setVisible(false);
   }
 
   show(text: string, opts: { color?: number; sub?: string; holdMs?: number } = {}): void {
     this.tween?.stop();
     this.hideTimer?.remove();
+    this.ko.setVisible(false);
     this.text
       .setText(text)
       .setColor(opts.color ?? palette.gold)
@@ -52,7 +59,23 @@ export class BannerView {
       );
   }
 
+  /** "K.O." in its own big fighting-game letters; it slams in like the other banners and stays up. */
+  showKo(): void {
+    this.tween?.stop();
+    this.hideTimer?.remove();
+    this.hide();
+    this.ko.setVisible(true).setY(this.y - 40);
+    this.tween = this.scene.tweens.add({
+      targets: this.ko,
+      y: this.y - 6,
+      duration: tuning.banner.slamMs,
+      ease: 'Back.easeOut',
+      onUpdate: () => this.ko.setY(Math.round(this.ko.y)),
+    });
+  }
+
   hide(): void {
+    this.ko.setVisible(false);
     this.text.setVisible(false);
     this.sub.setVisible(false);
   }

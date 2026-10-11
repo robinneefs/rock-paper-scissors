@@ -93,6 +93,7 @@ test('scaling fills the height by default; options switches it and remembers', a
   expect(await scale(page)).toBeCloseTo(1000 / 472, 3); // 600 x 1000 window: fills the height
 
   await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('ArrowDown'); // HOW TO PLAY
   await page.keyboard.press('ArrowDown'); // OPTIONS
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');

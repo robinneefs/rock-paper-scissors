@@ -11,7 +11,7 @@ import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
 import { VERSION } from '../version';
 
-/** Main menu (the title is on the marquee): both fighters idling, START GAME (VS CPU), a greyed-out ONLINE slot and OPTIONS. */
+/** Main menu (the title is on the marquee): both fighters idling, START GAME (VS CPU), ONLINE, HOW TO PLAY and OPTIONS. */
 export class HomeScene extends Phaser.Scene {
   constructor() {
     super(SceneKey.home);

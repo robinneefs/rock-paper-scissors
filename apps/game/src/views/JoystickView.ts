@@ -4,16 +4,21 @@ import { JOYSTICK } from '../config/layout';
 import { tuning } from '../config/tuning';
 import type { StickTilt } from '../input/InputRouter';
 
-/** The joystick: tilts in 8 directions, springs back. Drag it, or use the arrow keys. */
+/**
+ * The joystick: tilts in 8 directions, springs back. Drag it, or use the arrow keys. Letting go
+ * clicks, and the stick wobbles past the centre and back before it settles.
+ */
 export class JoystickView {
   private readonly shaft: Phaser.GameObjects.Graphics;
   private readonly ball: Phaser.GameObjects.Image;
   private tilt = { x: 0, y: 0 };
+  private wobbling: Phaser.Tweens.TweenChain | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
     parent: Phaser.GameObjects.Container,
     onDrag: (tilt: StickTilt) => void,
+    private readonly onSpringBack: () => void = () => {},
   ) {
     this.shaft = scene.add.graphics();
     this.ball = scene.add
@@ -38,14 +43,25 @@ export class JoystickView {
   }
 
   setTilt(t: StickTilt): void {
+    this.wobbling?.stop();
+    this.wobbling = null;
     this.scene.tweens.killTweensOf(this.tilt);
     if (t.x === 0 && t.y === 0) {
-      this.scene.tweens.add({
+      if (this.tilt.x === 0 && this.tilt.y === 0) return;
+      this.onSpringBack();
+      // back through the centre, a little past it the other way, a smaller step back, then still
+      const { springBackMs, wobble, wobbleMs } = tuning.joystick;
+      const from = { ...this.tilt };
+      const stops = [0, -wobble, wobble * 0.4, 0];
+      this.wobbling = this.scene.tweens.chain({
         targets: this.tilt,
-        x: 0,
-        y: 0,
-        duration: tuning.joystick.springBackMs,
-        onUpdate: () => this.draw(),
+        tweens: stops.map((k, i) => ({
+          x: from.x * k,
+          y: from.y * k,
+          duration: i === 0 ? springBackMs : wobbleMs,
+          ease: 'Sine.easeOut',
+          onUpdate: () => this.draw(),
+        })),
       });
     } else {
       this.tilt = { x: t.x, y: t.y };

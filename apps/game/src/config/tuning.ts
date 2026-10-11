@@ -92,10 +92,12 @@ export const tuning = {
     shineFrameMs: 50,
     shineStaggerMs: 110,
   },
-  joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6 },
+  /** Joystick: on release it springs back, overshoots by `wobble` of a full tilt, and settles (wobbleMs a step). */
+  joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6, wobble: 0.35, wobbleMs: 60 },
   idle: { breatheEveryMs: 420 },
   intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },
-  transitions: { wipeMs: 240, bandPx: 8 },
+  /** Screen changes: the CRT closes to a line (closeMs), the line shrinks to a dot (lineMs), it stays off (offMs), then back on; a frame every stepMs. */
+  transitions: { closeMs: 120, lineMs: 80, offMs: 60, stepMs: 20 },
   /** Menus; the backdrop's diagonal stripes move one pixel every stripeStepMs. */
   menu: { cursorBlinkMs: 400, repeatDelayMs: 300, stripeStepMs: 90 },
   banner: { slamMs: 180, holdMs: 900 },
@@ -138,9 +140,9 @@ export const tuning = {
   marquee: {
     minGapMs: 1500,
     maxGapMs: 4500,
-    dimAlpha: 0.7,
-    blackoutAlpha: 0.92,
-    surgeAlpha: 0.18,
+    dimAlpha: 0.45,
+    blackoutAlpha: 0.7,
+    surgeAlpha: 0.1,
     surgeMs: 50,
   },
   result: { delayAfterMatchMs: 400 },

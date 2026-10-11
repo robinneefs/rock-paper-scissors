@@ -59,6 +59,14 @@ const sfx = {
       voice(b, 0, { wave: 'noise', f0: 15000, dur: 0.01, decay: 0.004, vol: 0.2 });
     },
   },
+  stickClick: {
+    len: 0.05,
+    make: (b) => {
+      // a joystick microswitch letting go: a dry plastic tick with a little body under it
+      voice(b, 0, { wave: 'noise', f0: 9000, dur: 0.012, decay: 0.004, vol: 0.5 });
+      voice(b, 0, { f0: 2400, f1: 1200, dur: 0.018, duty: 0.5, decay: 0.006, vol: 0.3 });
+    },
+  },
   timeUp: {
     len: 0.5,
     make: (b) => {

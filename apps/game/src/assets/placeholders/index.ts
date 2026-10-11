@@ -13,6 +13,7 @@ import {
 } from './cabinet';
 import { FIGHTER_FRAME, paintFighter } from './fighters';
 import { BADGE, paintBadges } from './icons';
+import { paintKoLetters } from './koLetters';
 import type { PixelBuffer } from './PixelBuffer';
 import { paintMenuBackdrop, paintMenuStripes } from './menu';
 
@@ -38,6 +39,7 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
   add(Tex.menuStripes, paintMenuStripes());
   for (const stage of STAGES) add(stageTexture(stage.id), stage.paint());
   add(Tex.joystickBall, paintJoystickBall());
+  add(Tex.koLetters, paintKoLetters());
   add(Tex.buttons, paintButtons(), (tex) => {
     (['rock', 'paper', 'scissors'] as const).forEach((m, row) =>
       BUTTON_FRAME.states.forEach((state, i) =>

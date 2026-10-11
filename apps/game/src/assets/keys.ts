@@ -16,6 +16,8 @@ export const Tex = {
   buttonRings: 'cabinet-button-rings',
   joystickBall: 'joystick-ball',
   dither: 'dither',
+  /** The K.O. banner's letters. */
+  koLetters: 'ko-letters',
 } as const;
 
 /** Frames every fighter sheet provides (64 px tall fighters, facing right). */

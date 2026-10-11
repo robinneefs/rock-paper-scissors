@@ -17,6 +17,7 @@ import { SceneFlow } from './scenes/flow';
 import { HomeScene } from './scenes/HomeScene';
 import { LobbyScene } from './scenes/LobbyScene';
 import { LogoScene } from './scenes/LogoScene';
+import { HowToScene } from './scenes/HowToScene';
 import { OptionsScene } from './scenes/OptionsScene';
 import { ResultScene } from './scenes/ResultScene';
 import { TransitionScene } from './scenes/TransitionScene';
@@ -41,6 +42,7 @@ const game = new Phaser.Game({
     LogoScene,
     HomeScene,
     OptionsScene,
+    HowToScene,
     LobbyScene,
     FightScene,
     ResultScene,

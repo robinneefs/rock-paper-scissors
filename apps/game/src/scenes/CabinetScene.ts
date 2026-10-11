@@ -33,7 +33,7 @@ export class CabinetScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { input, scaler, lights, cabinetShake } = getContext(this);
+    const { input, scaler, lights, cabinetShake, audio } = getContext(this);
     this.shake = cabinetShake;
     const room = this.add.tileSprite(0, 0, scaler.layout.width, scaler.layout.height, Tex.room).setOrigin(0);
     const cabinet = this.add.container(0, 0);
@@ -45,7 +45,12 @@ export class CabinetScene extends Phaser.Scene {
       press: (m) => input.pressButton(m),
       release: (m) => input.releaseButton(m),
     });
-    const stick = new JoystickView(this, cabinet, (t) => input.setStick(t.x, t.y));
+    const stick = new JoystickView(
+      this,
+      cabinet,
+      (t) => input.setStick(t.x, t.y),
+      () => audio.play('stickClick'),
+    );
 
     const offs = [
       input.on('button', (e) => buttons.setDown(e.move, e.down)),
