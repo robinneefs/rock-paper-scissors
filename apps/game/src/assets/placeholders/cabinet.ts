@@ -45,13 +45,6 @@ export function paintCabinet(): PixelBuffer {
   const n = { x: mx + 4, y: my + 4, w: mw - 8, h: mh - 8 }; // neon loop, halfway into the bezel
   b.frame(n.x, n.y, n.w, n.h, palette.pink);
   b.frame(n.x + 1, n.y + 1, n.w - 2, n.h - 2, 0x5a1450);
-  for (const [x, y] of [
-    [mx + 2, my + 2],
-    [mx + mw - 3, my + 2],
-    [mx + 2, my + mh - 3],
-    [mx + mw - 3, my + mh - 3],
-  ] as const)
-    b.px(x, y, 0x8a7ab0); // screw heads in the corners
   b.rect(art.x - 1, MARQUEE.y + art.y - 1, art.width + 2, art.height + 2, palette.black);
 
   // monitor bezel (the monitor scenes draw inside it)
