@@ -26,9 +26,9 @@ export const palette = {
 
 /** Colour per move: cabinet buttons, move icons and labels. */
 export const moveColors = {
-  attack: { main: 0xff3b6b, shade: 0xb01846 },
-  throw: { main: 0xffb321, shade: 0xc46c14 },
-  block: { main: 0x3ff0ff, shade: 0x1496be },
+  rock: { main: 0xff3b6b, shade: 0xb01846 },
+  paper: { main: 0xffb321, shade: 0xc46c14 },
+  scissors: { main: 0x3ff0ff, shade: 0x1496be },
 } as const;
 
 /** Fighter placeholder colours (p1 white gi + red band, p2 blue gi + gold band). */

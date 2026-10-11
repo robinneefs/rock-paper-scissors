@@ -26,9 +26,9 @@ interface Pose {
 const POSES: Record<Exclude<FighterFrame, 'ko'>, Pose> = {
   idle0: { lean: 0, drop: 0, stance: 0, arms: 'guard', eyes: 'open' },
   idle1: { lean: 0, drop: 1, stance: 0, arms: 'guard', eyes: 'open' },
-  attack: { lean: 3, drop: 1, stance: 3, arms: 'punch', eyes: 'shut' },
-  throw: { lean: 4, drop: 2, stance: 4, arms: 'grab', eyes: 'open' },
-  block: { lean: -1, drop: 2, stance: 1, arms: 'block', eyes: 'shut' },
+  rock: { lean: 3, drop: 1, stance: 3, arms: 'punch', eyes: 'shut' },
+  scissors: { lean: 4, drop: 2, stance: 4, arms: 'grab', eyes: 'open' },
+  paper: { lean: -1, drop: 2, stance: 1, arms: 'block', eyes: 'shut' },
   hurt: { lean: -4, drop: 1, stance: 1, arms: 'flail', eyes: 'x' },
   win: { lean: 0, drop: 0, stance: 1, arms: 'raise', eyes: 'shut' },
 };

@@ -30,13 +30,22 @@ export function paintCabinet(): PixelBuffer {
   b.rect(2, 0, 1, CABINET.height, palette.pink);
   b.rect(W - 3, 0, 1, CABINET.height, palette.pink);
 
-  // marquee
-  const mq = [0x781478, 0xaa1e8c, 0xdc32a0];
-  for (let i = 0; i < 26; i++)
-    b.rect(8, MARQUEE.y + 3 + i, W - 16, 1, mq[Math.min(2, Math.floor((i / 26) * 3))]!);
-  b.rect(8, 3, W - 16, 1, 0xffaae6);
-  b.rect(8, 28, W - 16, 1, 0x3c0a46);
-  b.text('RPS FIGHTER', W / 2, 9, palette.white, { scale: 2, center: true, shadow: palette.shadow });
+  // marquee: a bezel all around the art window, with a neon strip running round it;
+  // CabinetScene puts assets/marquee.png in the window
+  const art = MARQUEE.art;
+  const mx = 8;
+  const my = MARQUEE.y + 3;
+  const mw = W - 16;
+  const mh = 98;
+  b.rect(mx, my, mw, mh, 0x181028);
+  b.rect(mx, my, mw, 1, 0x3a2a5c); // highlight top and left
+  b.rect(mx, my, 1, mh, 0x3a2a5c);
+  b.rect(mx, my + mh - 1, mw, 1, 0x0b0716); // shade bottom and right
+  b.rect(mx + mw - 1, my, 1, mh, 0x0b0716);
+  const n = { x: mx + 4, y: my + 4, w: mw - 8, h: mh - 8 }; // neon loop, halfway into the bezel
+  b.frame(n.x, n.y, n.w, n.h, palette.pink);
+  b.frame(n.x + 1, n.y + 1, n.w - 2, n.h - 2, 0x5a1450);
+  b.rect(art.x - 1, MARQUEE.y + art.y - 1, art.width + 2, art.height + 2, palette.black);
 
   // monitor bezel (the monitor scenes draw inside it)
   b.rect(15, MARQUEE.height, MONITOR.width + 24, MONITOR.height + 24, 0x0b0716);
@@ -56,7 +65,7 @@ export function paintCabinet(): PixelBuffer {
   b.ell(JOYSTICK.x, JOYSTICK.y + 2, 6, 3, 0x0c0618);
 
   // button wells, labels and key hints
-  (['attack', 'throw', 'block'] as const).forEach((m, i) => {
+  (['rock', 'paper', 'scissors'] as const).forEach((m, i) => {
     const x = BUTTONS.x[m];
     b.ell(x, BUTTONS.y + 9, 25, 16, 0x120822);
     b.text(m, x, BUTTONS.y + 26, moveColors[m].main, { center: true, shadow: palette.ink });
@@ -78,7 +87,7 @@ export type ButtonState = (typeof BUTTON_FRAME.states)[number];
 /** One frame per move and state: up, pressed down, and dimmed (another move is selected). */
 export function paintButtons(): PixelBuffer {
   const { width: fw, height: fh, states } = BUTTON_FRAME;
-  const moves = ['attack', 'throw', 'block'] as const;
+  const moves = ['rock', 'paper', 'scissors'] as const;
   const b = new PixelBuffer(fw * states.length, fh * moves.length);
   moves.forEach((m, row) => {
     const col = moveColors[m].main;

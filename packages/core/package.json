@@ -2,7 +2,7 @@
   "name": "@rps/core",
   "version": "0.1.0",
   "private": true,
-  "description": "Rules and referee for Rock Paper Scissors Fighter. Zero dependencies: no Phaser, no browser, no network.",
+  "description": "Rules and referee for RPS Rivals. Zero dependencies: no Phaser, no browser, no network.",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

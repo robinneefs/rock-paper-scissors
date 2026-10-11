@@ -45,7 +45,7 @@ test('boots to the logo, the home menu, and plays an exchange against the CPU', 
 
   await run(page, 1800);
   expect(await phase(page)).toBe('picking');
-  await page.keyboard.press('Digit2'); // Throw
+  await page.keyboard.press('Digit2'); // Scissors
   await run(page, 5000);
   expect(await phase(page)).toBe('reveal');
 

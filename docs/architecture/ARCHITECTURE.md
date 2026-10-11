@@ -110,13 +110,13 @@ Data in, data out. No time, no randomness, no side effects. This is where the da
 
 ```ts
 // packages/core/src/rules/types.ts
-export type Move = 'attack' | 'throw' | 'block';
+export type Move = 'rock' | 'paper' | 'scissors';
 export type Side = 'p1' | 'p2';
 export type Picks = Record<Side, Move>;
 
 export interface RulesConfig {
-  beats: Record<Move, Move>;          // attack→throw, throw→block, block→attack
-  damage: Record<Move, number>;       // dealt when this move wins: throw 20, attack 15, block 10
+  beats: Record<Move, Move>;          // rock→scissors, scissors→paper, paper→rock
+  damage: Record<Move, number>;       // dealt when this move wins: scissors 20, rock 15, paper 10
   startHealth: number;                // 100
   roundsToWin: number;                // 2 (best of three)
 }
@@ -148,7 +148,7 @@ createMatchState(cfg) · isRoundOver(state) · startNextRound(state, cfg) · isF
 
 The state is never changed in place; a new state comes back. That makes every result easy to test, log and replay, and it is exactly what a server needs. `applyExchange` refuses to play on after a K.O. or after the match is won, so a bug can't silently keep a finished round going.
 
-Moves are data (`beats` and `damage` tables), not `if` chains, so a balance change or a renamed move is a config and type edit, not a logic rewrite. (The planned Rock / Paper / Scissors naming from the rebrand maps one to one onto Attack / Block / Throw.)
+Moves are data (`beats` and `damage` tables), not `if` chains, so a balance change or a renamed move is a config and type edit, not a logic rewrite. (The moves were renamed from Attack / Block / Throw to Rock / Paper / Scissors in v0.7.0 exactly that way.)
 
 ### 4b. Referee: the match phases
 
@@ -247,7 +247,7 @@ Phaser code is split into three kinds of pieces, each with one job:
 |---|---|---|
 | **Scene** | Wiring only: creates views, connects the session and input, starts and stops. Short (the longest is 83 lines). | `FightScene` |
 | **Director** | Listens to session events and turns them into choreography over time, using tuning values. | `FightDirector` plays the reveal timeline below |
-| **View** | A dumb visual piece with a small API. Knows nothing about rules or sessions. | `FighterView.pose('throw')`, `HudView.setHealth('p2', 70)` |
+| **View** | A dumb visual piece with a small API. Knows nothing about rules or sessions. | `FighterView.pose('scissors')`, `HudView.setHealth('p2', 70)` |
 
 The **juice kit** (`fx/`) so far has two effects: `shake` (camera jumps between whole-pixel offsets that shrink to nothing) and `flash` (the sprite turns solid white for a few frames). Sparks, dust and impact frames join it in step 3, reading their numbers from `tuning.ts` the same way.
 
@@ -260,13 +260,13 @@ Scenes are listed in `main.ts` in draw order: the cabinet at the bottom, monitor
 | `BootScene` | Once | Loads `logo.png` with a pixel loading bar, registers the pixel font at sizes 1 to 4, generates placeholder art, launches the cabinet and transition scenes, then the logo |
 | `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, the three buttons and the joystick |
 | `LogoScene` | Once per launch, on the monitor | The Chain Shift studio logo: fades in, holds, fades out. Any button or tap skips it |
-| `HomeScene` | On the monitor | Title (still "RPS FIGHTER" until the asset rebrand), idle fighters, the home menu, the version in the corner |
+| `HomeScene` | On the monitor | Idle fighters (the RPS Rivals title is the marquee art above the monitor), the home menu, the version in the corner |
 | `OptionsScene` | On the monitor, from Home | One setting, Scaling (Fill height or Pixel perfect), applied at once and saved |
 | `FightScene` | On the monitor | Stage, fighters, HUD, move icons, banners, effects |
 | `ResultScene` | On the monitor, over the paused last fight frame | "YOU WIN!" or "CPU WINS", the round score, Retry or Main menu |
 | `TransitionScene` | Always, on top | The pixel wipe between screens (black bands close, the screen swaps, they open) |
 
-Monitor scenes call `useMonitorCamera(scene)`, which places their camera over the cabinet's screen, so they always draw in their own 216 × 288 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put.
+Monitor scenes call `useMonitorCamera(scene)`, which places their camera over the cabinet's screen, so they always draw in their own 216 × 216 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put.
 
 **Shared services.** `main.ts` builds one `GameContext` (`scenes/context.ts`) and stores it in Phaser's registry; scenes read it with `getContext(this)`:
 
@@ -337,7 +337,7 @@ So every image must be made at its final native size, in palette colours, before
 - At a fractional scale some rows and columns of native pixels come out one device pixel wider than their neighbours (at 1.7×, pixels are 1 or 2 device pixels wide). Thin lines and text can look slightly uneven.
 - The choice is kept in `SettingsStore` and read before the game starts, so the first frame is already at the chosen scale. Changing it in Options re-runs the scaler, and `main.ts` resizes and re-zooms the game.
 
-**Geometry** lives in `config/layout.ts`: cabinet 270 × 472, marquee 32, monitor 216 × 288 at (27, 44), control panel 128 from y 344, button and joystick positions, and the stage (floor at y 232, fighters at x 84 and 132). The square-screen layout from the rebrand mock-ups (216 × 216 monitor, taller marquee) would be a change to this file plus redrawn art.
+**Geometry** lives in `config/layout.ts`: cabinet 270 × 472, marquee 104 (its 234 × 78 art at (18, 13)), a square monitor 216 × 216 at (27, 116), control panel 128 from y 344, button and joystick positions, and the stage (floor at y 180, fighters at x 84 and 132).
 
 ## 8. Tuning: every feel value in one place
 
@@ -377,7 +377,7 @@ There are two homes for numbers, on purpose:
 
 **Audio (planned, step 3).** An `AudioService` in `audio/` wrapping Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds referred to by typed keys, with random variations so hits don't repeat. It will join the `GameContext`. Nothing plays sound yet.
 
-**Assets.** Until the real art exists, `assets/placeholders/` paints every texture in code at boot (room tile, cabinet, buttons, joystick ball, stage, fighters, move icons) under the real keys from `assets/keys.ts`. `generatePlaceholders` skips any key that is already loaded, so loading a real sprite sheet under the same key in `BootScene` replaces its placeholder without touching a view. The only real image so far is `logo.png`. Each fighter sheet provides the frames `idle0, idle1, attack, throw, block, hurt, ko, win` (64 px tall). The palette is in `config/palette.ts`.
+**Assets.** Until the real art exists, `assets/placeholders/` paints every texture in code at boot (room tile, cabinet, buttons, joystick ball, stage, fighters, move icons) under the real keys from `assets/keys.ts`. `generatePlaceholders` skips any key that is already loaded, so loading a real sprite sheet under the same key in `BootScene` replaces its placeholder without touching a view. The only real images so far are `logo.png` and `marquee.png` (the marquee art, cut from a mock-up by `tools/make-marquee.py`). Each fighter sheet provides the frames `idle0, idle1, rock, paper, scissors, hurt, ko, win` (64 px tall). The palette is in `config/palette.ts`.
 
 **Settings.** `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON under the localStorage key `rps-fighter.settings` (kept on purpose so saved settings survive the rename). Broken or missing storage falls back to the defaults and never stops the game. Today it holds only the scaling mode; volumes and mute join it later. Behind it is a small key-value type (`getItem`/`setItem`), so Capacitor Preferences can replace localStorage on Android.
 
@@ -529,7 +529,7 @@ Built as decided:
 | Repo shape | npm workspaces monorepo: `packages/core`, `apps/game`, later `apps/server` |
 | Dev tuning panel | Tweakpane, dev builds only (`apps/game/src/dev/`) |
 | Lint for import rules | `eslint-plugin-import` `no-restricted-paths` plus `no-restricted-imports` for Phaser and the `Referee` |
-| Cabinet size | 270 × 472 native, monitor 216 × 288 |
+| Cabinet size | 270 × 472 native, monitor 216 × 216 |
 | Default scaling | Fill height (Pixel perfect in Options) |
 
 Open:

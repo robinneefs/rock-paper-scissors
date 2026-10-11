@@ -42,7 +42,7 @@ export class FightScene extends Phaser.Scene {
       p2: new MoveIconView(this, STAGE.fighterX.p2, iconY),
     };
     const hud = new HudView(this, { p1: 'YOU', p2: session.opponentName }, session.rules.startHealth);
-    const banner = new BannerView(this, 96);
+    const banner = new BannerView(this, 64);
 
     new FightDirector(this, session, { fighters, icons, hud, banner }, session.rules.roundsToWin, {
       clearPick: () => lights.select(null),

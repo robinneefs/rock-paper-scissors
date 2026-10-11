@@ -60,17 +60,17 @@ describe('OnlineSession', () => {
     room({ type: 'locked', side: 'p1' });
     room({
       type: 'reveal',
-      picks: { p1: 'attack', p2: 'block' },
+      picks: { p1: 'rock', p2: 'paper' },
       autoPicked: { p1: false, p2: true },
-      outcome: { kind: 'win', picks: { p1: 'attack', p2: 'block' }, winner: 'p2', loser: 'p1', damage: 10 },
+      outcome: { kind: 'win', picks: { p1: 'rock', p2: 'paper' }, winner: 'p2', loser: 'p1', damage: 10 },
       events: [{ type: 'damage', side: 'p1', amount: 10, health: 90 }],
       state: state(90, 80),
     });
     expect(seen[0]).toEqual({ side: 'p2' }); // the opponent locked in, on the right
     expect(seen[1]).toMatchObject({
-      picks: { p1: 'block', p2: 'attack' },
+      picks: { p1: 'paper', p2: 'rock' },
       autoPicked: { p1: true, p2: false },
-      outcome: { winner: 'p1', loser: 'p2', picks: { p1: 'block', p2: 'attack' } },
+      outcome: { winner: 'p1', loser: 'p2', picks: { p1: 'paper', p2: 'rock' } },
       events: [{ side: 'p2', health: 90 }],
       state: { health: { p1: 80, p2: 90 } },
     });
@@ -96,7 +96,7 @@ describe('OnlineSession', () => {
   it('sends picks only while picking, and remembers my pick for the buttons', () => {
     const { session, room, sent } = setup();
     room({ type: 'welcome', side: 'p1', rules: defaultRules, timings: defaultTimings });
-    session.submitPick('throw');
+    session.submitPick('scissors');
     expect(sent).toEqual([]);
     room({
       type: 'phase',
@@ -106,9 +106,9 @@ describe('OnlineSession', () => {
       finalRound: false,
       state: state(100, 100),
     });
-    session.submitPick('throw');
-    expect(sent).toEqual([{ type: 'pick', move: 'throw' }]);
-    expect(session.snapshot().myPick).toBe('throw');
+    session.submitPick('scissors');
+    expect(sent).toEqual([{ type: 'pick', move: 'scissors' }]);
+    expect(session.snapshot().myPick).toBe('scissors');
   });
 
   it('uses the rules the room sends', () => {

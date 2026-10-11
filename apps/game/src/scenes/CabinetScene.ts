@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Tex } from '../assets/keys';
+import { MARQUEE } from '../config/layout';
 import type { ScreenLayout } from '../platform/PixelScaler';
 import { ButtonsView } from '../views/ButtonsView';
 import { JoystickView } from '../views/JoystickView';
@@ -17,6 +18,7 @@ export class CabinetScene extends Phaser.Scene {
     const room = this.add.tileSprite(0, 0, scaler.layout.width, scaler.layout.height, Tex.room).setOrigin(0);
     const cabinet = this.add.container(0, 0);
     cabinet.add(this.add.image(0, 0, Tex.cabinet).setOrigin(0));
+    cabinet.add(this.add.image(MARQUEE.art.x, MARQUEE.y + MARQUEE.art.y, Tex.marquee).setOrigin(0));
 
     const buttons = new ButtonsView(this, cabinet, {
       press: (m) => input.pressButton(m),

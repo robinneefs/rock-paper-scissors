@@ -139,7 +139,7 @@ export class Referee {
   }
 
   private randomMove(): Move {
-    return MOVES[Math.floor(this.rng.next() * MOVES.length)] ?? 'attack';
+    return MOVES[Math.floor(this.rng.next() * MOVES.length)] ?? 'rock';
   }
 
   private cancelPending(): void {
