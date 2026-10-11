@@ -113,3 +113,40 @@ test('ONLINE opens the lobby, and BACK returns home', async ({ page }) => {
   await page.keyboard.press('Escape');
   await untilScene(page, 'Home');
 });
+
+test('JOIN ROOM takes letters by keyboard layout, and its code box is a real text field', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1');
+  await untilScene(page, 'Home');
+  await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('Enter');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('ArrowDown'); // JOIN ROOM
+  await page.keyboard.press('Enter');
+  await run(page, 600);
+  const field = page.getByRole('textbox', { name: 'Room code' });
+  await expect(field).toBeVisible();
+  await expect(field).toBeFocused();
+
+  // typing into the field (what a phone keyboard does); vowels and digits are not code letters
+  await page.keyboard.type('bc');
+  await expect(field).toHaveValue('BC');
+
+  // AZERTY: the key that types "m" sits where QWERTY has ";". The letter counts, not the position.
+  await field.evaluate((el) => el.blur());
+  await page.evaluate(() =>
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', code: 'Semicolon' })),
+  );
+  await expect(field).toHaveValue('BCM');
+
+  // leaving the screen removes the field
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Escape');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('Escape');
+  await untilScene(page, 'Home');
+  await expect(field).toHaveCount(0);
+});
