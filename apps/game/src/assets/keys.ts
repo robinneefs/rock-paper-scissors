@@ -9,7 +9,7 @@ export const Tex = {
   stage: 'stage',
   fighterP1: 'fighter-p1',
   fighterP2: 'fighter-p2',
-  icons: 'move-icons',
+  badges: 'move-badges',
   buttons: 'cabinet-buttons',
   buttonRings: 'cabinet-button-rings',
   joystickBall: 'joystick-ball',

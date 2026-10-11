@@ -11,7 +11,7 @@ import {
   paintRoomTile,
 } from './cabinet';
 import { FIGHTER_FRAME, paintFighter } from './fighters';
-import { ICON, paintIcons } from './icons';
+import { BADGE, paintBadges } from './icons';
 import type { PixelBuffer } from './PixelBuffer';
 import { paintStage } from './stage';
 
@@ -62,8 +62,12 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
         );
     });
   });
-  add(Tex.icons, paintIcons(), (tex) =>
-    ICON.frames.forEach((name, i) => tex.add(name, 0, i * ICON.size, 0, ICON.size, ICON.size)),
+  add(Tex.badges, paintBadges(), (tex) =>
+    BADGE.moves.forEach((m, row) =>
+      BADGE.states.forEach((state, i) =>
+        tex.add(`${m}-${state}`, 0, i * BADGE.size, row * BADGE.size, BADGE.size, BADGE.size),
+      ),
+    ),
   );
   for (const [key, colors] of [
     [Tex.fighterP1, fighterColors.p1],

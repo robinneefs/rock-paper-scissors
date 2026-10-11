@@ -2,16 +2,36 @@
 // (rules and phase timings live in packages/core/src/config.ts). A magic number in a view is a bug.
 export const tuning = {
   reveal: {
-    /** Icons drop in above the fighters' heads. */
-    iconDropMs: 320,
-    iconDropFromPx: 28,
-    iconBouncePx: 4,
+    /**
+     * Move badges pop in beside the fighters (badgeOutPx out from them, at badgeY), wait, then fly
+     * from flyAtMs to the middle and collide at impactAtMs. The winner slides to the centre; the
+     * loser is knocked off screen in loserFlyMs, turning a quarter every loserSpinMs. A tie bounces
+     * both back by tieBouncePx. The verdict ("ROCK WINS") slams in at verdictY.
+     */
+    badgePopMs: 200,
+    badgePopFromPx: 10,
+    badgeOutPx: 48,
+    badgeY: 104,
+    clashY: 76,
+    flyAtMs: 300,
+    loserFlyMs: 480,
+    loserSpinMs: 70,
+    tieBouncePx: 14,
+    tieBounceMs: 240,
+    flashMs: 60,
+    verdictY: 38,
+    /** The damage number hops up damageHopPx, then falls damageFallPx over damageFallMs. */
+    damageHopPx: 4,
+    damageFallPx: 22,
+    damageFallMs: 620,
     /** Fighters swing into their move at this point of the reveal... */
     strikeAtMs: 420,
-    /** ...and the hit lands here. */
+    /** ...and the hit lands here (the badges collide here too). */
     impactAtMs: 620,
     /** Back to idle (the reveal phase itself is timed by the referee). */
     recoverAtMs: 1400,
+    /** Badges, verdict and damage number are cleared away. */
+    clearAtMs: 1550,
     lungePx: 4,
   },
   hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } as Record<number, number> },

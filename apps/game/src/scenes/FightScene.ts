@@ -5,9 +5,9 @@ import { palette } from '../config/palette';
 import { tuning } from '../config/tuning';
 import { FightDirector } from '../fight/FightDirector';
 import { BannerView } from '../views/BannerView';
+import { ClashView } from '../views/ClashView';
 import { FighterView } from '../views/FighterView';
 import { HudView } from '../views/HudView';
-import { MoveIconView } from '../views/MoveIconView';
 import { getContext } from './context';
 import type { FightData } from './flow';
 import { SceneKey } from './keys';
@@ -38,15 +38,11 @@ export class FightScene extends Phaser.Scene {
       p1: new FighterView(this, 'p1', STAGE.fighterX.p1, STAGE.floorY),
       p2: new FighterView(this, 'p2', STAGE.fighterX.p2, STAGE.floorY),
     };
-    const iconY = STAGE.floorY - 78;
-    const icons = {
-      p1: new MoveIconView(this, STAGE.fighterX.p1, iconY),
-      p2: new MoveIconView(this, STAGE.fighterX.p2, iconY),
-    };
     const hud = new HudView(this, { p1: 'YOU', p2: session.opponentName }, session.rules.startHealth);
+    const clash = new ClashView(this);
     const banner = new BannerView(this, 64);
 
-    new FightDirector(this, session, { fighters, icons, hud, banner }, audio, session.rules.roundsToWin, {
+    new FightDirector(this, session, { fighters, clash, hud, banner }, audio, session.rules.roundsToWin, {
       clearPick: () => lights.select(null),
       matchOver: (winner, state) => flow.toResult({ setup, session, winner, state }),
     });

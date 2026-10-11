@@ -7,13 +7,13 @@ import { flash } from '../fx/flash';
 import { shake } from '../fx/shake';
 import type { MatchSession, SessionEvents } from '../session/MatchSession';
 import type { BannerView } from '../views/BannerView';
+import type { ClashView } from '../views/ClashView';
 import type { FighterView } from '../views/FighterView';
 import type { HudView } from '../views/HudView';
-import type { MoveIconView } from '../views/MoveIconView';
 
 export interface FightViews {
   fighters: Record<Side, FighterView>;
-  icons: Record<Side, MoveIconView>;
+  clash: ClashView;
   hud: HudView;
   banner: BannerView;
 }
@@ -47,7 +47,7 @@ export class FightDirector {
   }
 
   private onPhase = (e: SessionEvents['phase']): void => {
-    const { fighters, icons, hud, banner } = this.views;
+    const { fighters, clash, hud, banner } = this.views;
     const state = this.session.snapshot().state;
     switch (e.phase) {
       case 'roundIntro': {
@@ -56,9 +56,9 @@ export class FightDirector {
         this.hooks.clearPick();
         for (const side of ['p1', 'p2'] as const) {
           fighters[side].toIdle();
-          icons[side].hide();
           hud.setReady(side, false);
         }
+        clash.hide();
         hud.resetHealth(state.health);
         hud.setRounds(state.roundsWon, this.roundsToWin);
         hud.showPrompt(false);
@@ -73,9 +73,9 @@ export class FightDirector {
         this.hooks.clearPick();
         for (const side of ['p1', 'p2'] as const) {
           fighters[side].toIdle();
-          icons[side].hide();
           hud.setReady(side, false);
         }
+        clash.hide();
         hud.showPrompt(true);
         if (this.firstPickOfRound) {
           this.sfx.play('fight');
@@ -98,8 +98,7 @@ export class FightDirector {
           fighters[loser].setOffset(-tuning.reveal.lungePx);
           fighters[winner].pose('win');
           fighters[winner].setOffset(0);
-          icons.p1.hide();
-          icons.p2.hide();
+          clash.hide();
           shake(this.scene, this.scene.cameras.main, tuning.shake.koPx, tuning.shake.durationMs * 1.5);
           this.sfx.play('ko');
           banner.show('K.O.', { color: palette.red, holdMs: Infinity });
@@ -116,16 +115,19 @@ export class FightDirector {
   };
 
   private onReveal = (e: SessionEvents['reveal']): void => {
-    const { fighters, icons, hud } = this.views;
+    const { fighters, clash, hud } = this.views;
     const r = tuning.reveal;
     const at = (ms: number, fn: () => void) => this.scene.time.delayedCall(ms, fn);
-    for (const side of ['p1', 'p2'] as const) icons[side].drop(e.picks[side], e.autoPicked[side]);
-    // the slam when the timer ran out on someone, then the icons whoosh in
+    // the badges pop in (with the slam when the timer ran out on someone), then whoosh to the middle
+    clash.present(e.picks, e.autoPicked);
     if (e.autoPicked.p1 || e.autoPicked.p2) {
       this.sfx.play('timeUp');
       hud.slamTimer();
     }
-    this.sfx.play('whoosh', { volume: 0.7 });
+    at(r.flyAtMs, () => {
+      clash.fly(r.impactAtMs - r.flyAtMs);
+      this.sfx.play('whoosh', { volume: 0.7 });
+    });
 
     const outcome = e.outcome;
     at(r.strikeAtMs, () => {
@@ -137,10 +139,10 @@ export class FightDirector {
     });
 
     at(r.impactAtMs, () => {
+      clash.collide(outcome);
       if (outcome.kind === 'tie') {
         shake(this.scene, this.scene.cameras.main, 1, tuning.shake.durationMs / 2);
         this.sfx.play('clash');
-        this.views.banner.show('CLASH!', { color: palette.lilac, holdMs: 300 });
         return;
       }
       const loser = fighters[outcome.loser];
@@ -157,6 +159,9 @@ export class FightDirector {
           tuning.shake.durationMs,
         );
         hud.setHealth(outcome.loser, e.state.health[outcome.loser]);
+        const hit = e.events.find((ev) => ev.type === 'damage' && ev.side === outcome.loser);
+        const amount = hit?.type === 'damage' ? hit.amount : outcome.damage;
+        clash.showDamage(outcome.loser, amount, e.picks[outcome.winner]);
       });
       if (e.events.some((ev) => ev.type === 'ko')) this.koSide = outcome.loser;
     });
@@ -164,5 +169,6 @@ export class FightDirector {
     at(r.recoverAtMs, () => {
       for (const side of ['p1', 'p2'] as const) if (side !== this.koSide) fighters[side].toIdle();
     });
+    at(r.clearAtMs, () => clash.hide());
   };
 }

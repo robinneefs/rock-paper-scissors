@@ -1,11 +1,11 @@
 import { moveColors, palette } from '../../config/palette';
 import { PixelBuffer, shade, type RGB } from './PixelBuffer';
 
-export const ICON = { size: 28, frames: ['rock', 'paper', 'scissors', 'unknown'] as const };
+export const ICON = { frames: ['rock', 'paper', 'scissors', 'unknown'] as const };
 export type IconName = (typeof ICON.frames)[number];
 
 /**
- * Flat white move symbols, 22x17, drawn on the cabinet buttons and the reveal coins (the "white
+ * Flat white move symbols, 22x17, drawn on the cabinet buttons and the reveal badges (the "white
  * icons" style the user picked from docs/rebrand/mockups-round3/4-buttons.png).
  * '#' white, 'o' outline, 't' tint and 's' detail lines, both in tones of the button's colour.
  */
@@ -128,18 +128,50 @@ export function lighten(c: RGB, f: number): RGB {
   return (ch((c >> 16) & 255) << 16) | (ch((c >> 8) & 255) << 8) | ch(c & 255);
 }
 
-/** Move icon coins, one 28x28 frame per move plus a "?" coin. */
-export function paintIcons(): PixelBuffer {
-  const s = ICON.size;
-  const b = new PixelBuffer(s * ICON.frames.length, s);
-  ICON.frames.forEach((name, i) => {
-    const colors = name === 'unknown' ? { main: palette.dim, shade: palette.panelEdge } : moveColors[name];
-    const cx = i * s + 13;
-    b.ell(cx, 14, 13, 12, colors.shade);
-    b.ell(cx, 13, 13, 12, colors.main);
-    b.ell(cx - 5, 7, 4, 2, lighten(colors.main, 0.45));
-    drawSymbol(b, name, cx - 11, 5, symbolTones(name));
-    b.outline(palette.ink, i * s, 0, s, s);
+/** Reveal badges: a move's symbol on a disk with a starburst behind it, plus an all-white flash frame. */
+export const BADGE = {
+  size: 40,
+  moves: ['rock', 'paper', 'scissors'] as const,
+  states: ['normal', 'flash'] as const,
+};
+
+/** One row per move, one column per state (normal, flash). */
+export function paintBadges(): PixelBuffer {
+  const s = BADGE.size;
+  const b = new PixelBuffer(s * BADGE.states.length, s * BADGE.moves.length);
+  const c0 = s / 2;
+  BADGE.moves.forEach((name, row) => {
+    const colors = moveColors[name];
+    const y0 = row * s;
+    for (let y = 0; y < s; y++)
+      for (let x = 0; x < s; x++) {
+        const dx = x + 0.5 - c0;
+        const dy = y + 0.5 - c0;
+        const d = Math.hypot(dx, dy);
+        const a = Math.atan2(dy, dx);
+        // eight-point burst: rays peak at 18 px, valleys sit just outside the disk
+        const ray = 14 + 4 * Math.abs(Math.cos(4 * a + Math.PI / 8)) ** 3;
+        let c: number | null = null;
+        if (d <= 12) {
+          // bevel: light on the upper left rim, dark on the lower right
+          const rim = d > 10;
+          const lit = dx + dy < -4;
+          c = rim
+            ? lit
+              ? lighten(colors.main, 0.45)
+              : dx + dy > 4
+                ? colors.shade
+                : colors.main
+            : colors.main;
+        } else if (d <= 13) c = palette.ink;
+        else if (d <= ray) c = d > ray - 1.5 ? colors.shade : palette.gold;
+        if (c !== null) b.px(x, y0 + y, c);
+      }
+    drawSymbol(b, name, c0 - 11, y0 + c0 - 9, symbolTones(name));
+    b.outline(palette.ink, 0, y0, s, s);
+    // the flash frame is the same silhouette in white
+    for (let y = 0; y < s; y++)
+      for (let x = 0; x < s; x++) if (b.isSet(x, y0 + y)) b.px(s + x, y0 + y, palette.white);
   });
   return b;
 }

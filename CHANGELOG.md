@@ -4,7 +4,7 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 
 ## 0.9.0 (2026-10-11)
 
-- **Flat white move icons.** The cabinet buttons and the move coins on the reveal now show big, clear white icons (a boulder, a sheet of paper, open scissors) with a dark outline, in the style picked from the round 3 mock-ups. The coins are a little bigger to fit them.
+- **Flat white move icons.** The cabinet buttons and the move badges on the reveal now show big, clear white icons (a boulder, a sheet of paper, open scissors) with a dark outline, in the style picked from the round 3 mock-ups.
 - **Punchier buttons.** The buttons have a dark rim and go deeper when pressed. Locking in a move flashes its button white twice while a ring pops out round it; it then stays down and lit, and the other two dim.
 - New tuning values for the lock-in flash and ring (`buttons` in the dev tuning panel).
 - **The control panel has depth.** Its top now looks slanted: lit at the back and darker towards you, with bevelled sides, corner bolts, button wells with a lit rim, and a raised front lip with a pink trim strip over a shadowed front face.
@@ -12,6 +12,8 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - **Thicker health bars.** The bars are 12 pixels tall (was 8) and look like lit tubes: a shine along the top, darker bands underneath, a bright leading edge, notches every tenth, and a gold frame.
 - **Fixed: a short loud burst of music on every screen change**, even with sound off. A new music track started at full volume for a moment before fading to its real level; it now starts silent and fades in.
 - **Faster, shorter fights.** You now have 3 seconds to pick instead of 5, and each fighter starts a round with 50 health instead of 100, so a round takes about 3 or 4 exchanges. The health bars turn red below 15 health (was 30). Online, both players need this version.
+- **A new reveal: the moves collide.** The falling move coins are gone. When both picks are in, a bigger move badge with a gold starburst pops in beside each fighter (with AUTO over it if the timer picked for that player). Both badges fly to the middle and collide with a white flash. The winning badge stays in the middle and the losing one is knocked away off the screen, turning as it goes. "ROCK WINS", "PAPER WINS" or "SCISSORS WINS" slams in above in the winning move's colour; a tie bounces both badges back and says "CLASH!". It works the same in online matches. Tune it under `reveal` in the dev tuning panel.
+- **Falling damage numbers.** When a hit lands, the damage (like "-15") hops up next to the hurt fighter's head in the winning move's colour, then falls away.
 
 ## 0.8.0 (2026-10-11)
 
