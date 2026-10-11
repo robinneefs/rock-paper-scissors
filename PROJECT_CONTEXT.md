@@ -17,6 +17,7 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `docs/architecture/` | Architecture document (`ARCHITECTURE.md`) and its diagrams (`diagrams/*.svg`) |
 | `docs/brand/` | Studio logo masters: Chain Shift white (the user's original) and purple |
 | `docs/screenshots/` | Screenshots of the current build, browser and phone (recapture with `node sources/screenshots/capture.mjs`) |
+| `docs/mockups/redesign/` | Redesign mock-ups from the user (added v0.4.2, 2026-10-11), for the upcoming redesign: `mockups-game-1.png` (six cabinet screens: home, fighter select, fight, strike wins, K.O., online match), `mockups-game-2.png`, `mockups-characters-1.png` (one fighter in nine pixel-art styles), `mockups-characters-2.png` |
 | `docs/mockups/cabinet/` | Arcade cabinet mock-ups drawn before the build |
 | `docs/mockups/landscape-superseded/` | Old landscape mock-ups |
 | `docs/art-direction/` | Art direction samples (sizes, styles, body shapes) |
