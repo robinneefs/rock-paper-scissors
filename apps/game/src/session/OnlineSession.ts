@@ -13,7 +13,6 @@ import {
   type Unsubscribe,
 } from '@rps/core';
 import type { MatchSession, MatchView, SessionEvents } from './MatchSession';
-import { SideMirror } from './mirror';
 import type { OpenSocket, Socket } from './socket';
 
 export interface OnlineOptions {
@@ -30,16 +29,17 @@ export interface OnlineOptions {
 
 /**
  * A match against a person, through an online room (apps/server). The room runs the referee; this
- * sends picks and turns room messages into the same session events the CPU match uses. You always
- * appear as p1 on the left (see SideMirror). Also reports the lobby steps: joined, refused, left.
+ * sends picks and turns room messages into the same session events the CPU match uses. Sides are
+ * the room's real ones, so both screens look the same: the host (who created the room) is p1 on
+ * the left, the guest is p2 on the right. Also reports the lobby steps: joined, refused, left.
  */
 export class OnlineSession implements MatchSession {
-  readonly me: Side = 'p1';
   readonly opponentName = 'RIVAL';
   rules: RulesConfig = structuredClone(defaultRules);
   private readonly events = new Emitter<SessionEvents>();
   private readonly socket: Socket;
-  private mirror: SideMirror | null = null;
+  /** Our seat in the room, from its welcome; null until then. */
+  private side: Side | null = null;
   private phase: Phase = 'idle';
   private endsAt: number | null = null;
   private state: MatchState | null = null;
@@ -55,6 +55,11 @@ export class OnlineSession implements MatchSession {
       message: (data) => this.onMessage(data),
       close: () => this.end('disconnected', {}),
     });
+  }
+
+  /** p1 (left) for the host, p2 (right) for the guest. */
+  get me(): Side {
+    return this.side ?? (this.opts.intent === 'create' ? 'p1' : 'p2');
   }
 
   get roomCode(): string {
@@ -117,10 +122,10 @@ export class OnlineSession implements MatchSession {
     } catch {
       return;
     }
-    const m = this.mirror;
+    const seated = this.side !== null;
     switch (msg.type) {
       case 'welcome':
-        this.mirror = new SideMirror(msg.side);
+        this.side = msg.side;
         this.rules = msg.rules;
         break;
       case 'error':
@@ -133,10 +138,10 @@ export class OnlineSession implements MatchSession {
         this.end('opponentLeft', {});
         break;
       case 'phase': {
-        if (!m) return;
+        if (!seated) return;
         this.phase = msg.phase;
         this.endsAt = msg.msLeft === null ? null : this.opts.now() + msg.msLeft;
-        this.state = m.state(msg.state);
+        this.state = msg.state;
         if (msg.phase === 'picking') this.myPick = null;
         this.events.emit('phase', {
           phase: msg.phase,
@@ -147,22 +152,22 @@ export class OnlineSession implements MatchSession {
         break;
       }
       case 'locked':
-        if (m) this.events.emit('locked', { side: m.side(msg.side) });
+        if (seated) this.events.emit('locked', { side: msg.side });
         break;
       case 'reveal': {
-        if (!m) return;
-        const reveal = m.reveal(msg);
-        this.state = reveal.state;
-        this.events.emit('reveal', reveal);
+        if (!seated) return;
+        const { picks, autoPicked, outcome, events, state } = msg;
+        this.state = state;
+        this.events.emit('reveal', { picks, autoPicked, outcome, events, state });
         break;
       }
       case 'matchOver':
-        if (!m) return;
-        this.state = m.state(msg.state);
-        this.events.emit('matchOver', { winner: m.side(msg.winner), state: this.state });
+        if (!seated) return;
+        this.state = msg.state;
+        this.events.emit('matchOver', { winner: msg.winner, state: this.state });
         break;
       case 'rematchRequested':
-        if (m) this.events.emit('rematchRequested', { side: m.side(msg.side) });
+        if (seated) this.events.emit('rematchRequested', { side: msg.side });
         break;
       case 'rematchAccepted':
         this.rematches++;

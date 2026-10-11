@@ -30,7 +30,6 @@ export class ResultScene extends Phaser.Scene {
     const cx = MONITOR.width / 2;
     const won = winner === session.me;
     audio.play(won ? 'winJingle' : 'loseJingle');
-    const them = session.me === 'p1' ? 'p2' : 'p1';
 
     // dithered darkening (a checkerboard of ink pixels), not a smooth alpha overlay
     this.add.tileSprite(0, 0, MONITOR.width, 156, Tex.dither).setOrigin(0);
@@ -41,7 +40,8 @@ export class ResultScene extends Phaser.Scene {
       outline: palette.ink,
       shadow: won ? 0xb3165f : palette.shadow,
     });
-    new PixelText(this, cx, 58, `${state.roundsWon[session.me]} - ${state.roundsWon[them]}`, {
+    // left player's rounds first, so online both players see the same score
+    new PixelText(this, cx, 58, `${state.roundsWon.p1} - ${state.roundsWon.p2}`, {
       size: 2,
       color: palette.text,
       align: 'center',

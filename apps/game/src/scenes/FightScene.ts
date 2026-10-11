@@ -1,3 +1,4 @@
+import { opponentOf, type Side } from '@rps/core';
 import Phaser from 'phaser';
 import { STAGE } from '../config/layout';
 import { palette } from '../config/palette';
@@ -12,6 +13,7 @@ import { getContext } from './context';
 import type { FightData } from './flow';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
+import type { MatchSession, MatchSetup } from '../session/MatchSession';
 
 /** Wiring only: builds the views, connects the session, input and director, then says ready. */
 export class FightScene extends Phaser.Scene {
@@ -40,7 +42,7 @@ export class FightScene extends Phaser.Scene {
       p1: new FighterView(this, 'p1', STAGE.fighterX.p1, STAGE.floorY),
       p2: new FighterView(this, 'p2', STAGE.fighterX.p2, STAGE.floorY),
     };
-    const hud = new HudView(this, { p1: 'YOU', p2: session.opponentName }, session.rules.startHealth);
+    const hud = new HudView(this, hudNames(session, setup), session.rules.startHealth);
     const clash = new ClashView(this);
     const banner = new BannerView(this, 64);
 
@@ -84,4 +86,17 @@ export class FightScene extends Phaser.Scene {
       getContext(this).audio.play('tick', { detune: (tuning.hud.timerWarnMs / 1000 - secs) * 200 });
     this.lastSecs = secs;
   }
+}
+
+/**
+ * The HUD's name tags. Online, P1 (the host) is always on the left and P2 on the right on both
+ * screens, so each tag says which player it is and which one is you.
+ */
+function hudNames(session: MatchSession, setup: MatchSetup): Record<Side, string> {
+  const names = { [session.me]: 'YOU', [opponentOf(session.me)]: session.opponentName } as Record<
+    Side,
+    string
+  >;
+  if (setup.mode !== 'online') return names;
+  return { p1: `P1 ${names.p1}`, p2: `P2 ${names.p2}` };
 }
