@@ -150,3 +150,21 @@ test('JOIN ROOM takes letters by keyboard layout, and its code box is a real tex
   await untilScene(page, 'Home');
   await expect(field).toHaveCount(0);
 });
+
+test('NEW ROOM is cancelled by any cabinet button, back to the lobby menu', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1');
+  await untilScene(page, 'Home');
+  await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('Enter');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('Enter'); // CREATE ROOM
+  await run(page, 600);
+  await page.keyboard.press('Digit2'); // cancel
+  await run(page, 600);
+  // from the lobby menu, Esc goes home (from NEW ROOM it would only go back to the menu)
+  await page.keyboard.press('Escape');
+  await untilScene(page, 'Home');
+});

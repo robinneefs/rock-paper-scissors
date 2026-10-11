@@ -2,6 +2,11 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.6.2 (2026-10-11)
+
+- NEW ROOM can now be cancelled without a keyboard: a CANCEL button on the screen (tap or click it), and any cabinet button or Enter cancels too. Before, only Esc worked, so on a phone there was no way back.
+- JOIN ROOM has a BACK button on the screen as well, for the same reason.
+
 ## 0.6.1 (2026-10-11)
 
 - JOIN ROOM: typed letters now follow your keyboard layout. On an AZERTY (or any non-QWERTY) keyboard, the M key types M; before, the game read the key's position, so you had to press where M sits on a QWERTY keyboard.
