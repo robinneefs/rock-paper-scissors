@@ -142,11 +142,14 @@ export function normalize(buf, peak = 0.89) {
   return buf;
 }
 
-/** Cut trailing silence (keeps sound effects short). */
+/** Cut trailing silence (keeps sound effects short), with a short fade at the end. */
 export function trim(buf, threshold = 0.002) {
   let end = buf.data.length;
   while (end > 1 && Math.abs(buf.data[end - 1]) < threshold) end--;
   buf.data = buf.data.slice(0, Math.min(buf.data.length, end + Math.round(buf.sr * 0.01)));
+  // fade the last 10 ms out, so a sound cut off mid-note ends without a click
+  const fade = Math.min(buf.data.length, Math.round(buf.sr * 0.01));
+  for (let i = 0; i < fade; i++) buf.data[buf.data.length - 1 - i] *= i / fade;
   return buf;
 }
 
