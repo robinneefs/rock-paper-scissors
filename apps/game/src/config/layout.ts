@@ -7,8 +7,8 @@ export const CABINET = { width: 270, height: 472 } as const;
  */
 export const MONITOR = { x: 27, y: 116, width: 216, height: 216 } as const;
 
-/** The marquee band at the top of the cabinet; its art (assets/marquee.png) fills `art`. */
-export const MARQUEE = { y: 0, height: 104, art: { x: 8, y: 3, width: 254, height: 98 } } as const;
+/** The marquee band at the top of the cabinet: its art (assets/marquee.png) sits in `art`, with a bezel above and below. */
+export const MARQUEE = { y: 0, height: 104, art: { x: 8, y: 13, width: 254, height: 78 } } as const;
 
 export const PANEL = { y: 344, height: 128 } as const;
 

@@ -30,8 +30,23 @@ export function paintCabinet(): PixelBuffer {
   b.rect(2, 0, 1, CABINET.height, palette.pink);
   b.rect(W - 3, 0, 1, CABINET.height, palette.pink);
 
-  // marquee: a dark frame; CabinetScene puts the marquee art (assets/marquee.png) inside it
+  // marquee: a bezel above and below the art window; CabinetScene puts assets/marquee.png in it
   const art = MARQUEE.art;
+  const top = MARQUEE.y + 3;
+  const bottom = MARQUEE.y + art.y + art.height + 1;
+  const bezel = (y: number, h: number, lightY: number) => {
+    b.rect(8, y, W - 16, h, 0x181028);
+    b.rect(8, y, W - 16, 1, 0x3a2a5c); // top highlight
+    b.rect(8, y + h - 1, W - 16, 1, 0x0b0716); // bottom shade
+    b.rect(14, lightY, W - 28, 1, palette.pink); // neon strip
+    b.rect(14, lightY + 1, W - 28, 1, 0x5a1450);
+    for (const x of [11, W - 12]) {
+      b.px(x, y + Math.floor(h / 2) - 1, 0x8a7ab0); // screw heads
+      b.px(x, y + Math.floor(h / 2), 0x4a3a70);
+    }
+  };
+  bezel(top, art.y - 4, top + Math.floor((art.y - 4) / 2) - 1);
+  bezel(bottom, MARQUEE.y + 101 - bottom, bottom + Math.floor((101 - bottom) / 2) - 1);
   b.rect(art.x - 1, MARQUEE.y + art.y - 1, art.width + 2, art.height + 2, palette.black);
 
   // monitor bezel (the monitor scenes draw inside it)
