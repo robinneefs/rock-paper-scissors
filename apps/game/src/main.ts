@@ -9,7 +9,7 @@ import { browserStore, SettingsStore } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
 import { CabinetScene } from './scenes/CabinetScene';
 import { CabinetShake } from './fx/cabinetShake';
-import { registerCrt } from './fx/crt';
+import { registerCrt, screenFx } from './fx/crt';
 import { CrtOverlay } from './fx/crtOverlay';
 import { CabinetLights, setContext } from './scenes/context';
 import { FightScene } from './scenes/FightScene';
@@ -65,8 +65,12 @@ setContext(game, {
 const crtOverlay = new CrtOverlay(game.canvas, scaler, cabinetShake);
 game.events.once(Phaser.Core.Events.READY, () => {
   const webgl = registerCrt(game);
-  crtOverlay.setVisible(webgl && settings.value.crt);
-  settings.onChange((s) => crtOverlay.setVisible(webgl && s.crt));
+  const apply = (on: boolean) => {
+    screenFx.crt = on;
+    crtOverlay.setVisible(webgl && on);
+  };
+  apply(settings.value.crt);
+  settings.onChange((s) => apply(s.crt));
 });
 
 settings.onChange((s) => scaler.setMode(s.scaling));

@@ -115,6 +115,11 @@ export const tuning = {
     roll: 0.035,
     scanlineThickness: 0.35,
     scanlineAlpha: 0.28,
+    /** Impact effects (on even with the CRT look off): colour split on a K.O., row warp on big hits. */
+    koSplitPx: 3,
+    koSplitMs: 900,
+    bigHitWarpPx: 2,
+    bigHitWarpMs: 260,
   },
   /** The marquee light flickers (dims to dimAlpha) every minGapMs to maxGapMs, on its own. */
   marquee: { minGapMs: 4000, maxGapMs: 11000, dimAlpha: 0.45 },

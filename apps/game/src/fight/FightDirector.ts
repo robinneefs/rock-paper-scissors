@@ -4,6 +4,7 @@ import { HIT_SFX, type SfxPlayer } from '../audio/sounds';
 import { STAGE } from '../config/layout';
 import { moveColors, palette } from '../config/palette';
 import { tuning } from '../config/tuning';
+import { screenPulse } from '../fx/crt';
 import { flash } from '../fx/flash';
 import { koImpact } from '../fx/koImpact';
 import { burst } from '../fx/particles';
@@ -163,9 +164,13 @@ export class FightDirector {
       this.sfx.play(HIT_SFX[e.picks[outcome.winner]], { detune: (Math.random() - 0.5) * 80 });
       this.sparks(outcome.loser, e.picks[outcome.winner], outcome.damage);
       const ko = e.events.some((ev) => ev.type === 'ko');
-      if (ko) koImpact(this.scene, tuning.ko);
-      else if (outcome.damage >= tuning.cabinet.bigHitDamage)
+      if (ko) {
+        koImpact(this.scene, tuning.ko);
+        screenPulse(this.scene, 'split', tuning.crt.koSplitPx, tuning.crt.koSplitMs);
+      } else if (outcome.damage >= tuning.cabinet.bigHitDamage) {
         this.hooks.shakeCabinet(tuning.cabinet.bigHitPx, tuning.cabinet.bigHitMs);
+        screenPulse(this.scene, 'warp', tuning.crt.bigHitWarpPx, tuning.crt.bigHitWarpMs);
+      }
       const pause = tuning.hitPause.byDamage[outcome.damage] ?? 60;
       at(pause, () => {
         shake(

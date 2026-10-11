@@ -27,6 +27,7 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - **A flickering marquee.** Every few seconds the marquee's backlight flickers like an old tube, on its own, whatever is happening in the game.
 - All of these are tunable in the dev panel (`cabinet`, `ko`, `sparks`, `dust`, `marquee`, and `lowPulseMs` under `hud`).
 - **CRT screen.** The game screen now looks like an arcade tube: fine scanlines, a soft glow around bright colours, darker edges, rounded corners and a faint band rolling down. It is a WebGL shader on the monitor plus a scanline layer in the page; the cabinet around it stays crisp. Turn it off with the new CRT SCREEN option (on by default). Tune it under `crt` in the dev panel.
+- **Impact shader effects.** On a K.O. the screen's colours split apart (red and blue pulled sideways) and settle back, and a 20-damage hit makes the screen's rows wobble for a moment. They play even with the CRT look turned off (WebGL only). Tune them under `crt` in the dev panel.
 - **Falling damage numbers.** When a hit lands, the damage (like "-15") hops up next to the hurt fighter's head in the winning move's colour, then falls away.
 
 ## 0.8.0 (2026-10-11)

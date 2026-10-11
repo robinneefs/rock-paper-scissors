@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import { MONITOR } from '../config/layout';
-import { setCrt } from '../fx/crt';
+import { useScreenShader } from '../fx/crt';
 import { getContext } from './context';
 
 /**
@@ -9,7 +9,7 @@ import { getContext } from './context';
  * cabinet shake.
  */
 export function useMonitorCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera {
-  const { scaler, cabinetShake, settings } = getContext(scene);
+  const { scaler, cabinetShake } = getContext(scene);
   const cam = scene.cameras.main;
   const place = () => {
     const l = scaler.layout;
@@ -22,12 +22,8 @@ export function useMonitorCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Ca
     );
   };
   place();
-  setCrt(cam, settings.value.crt);
-  const offs = [
-    scaler.onChange(place),
-    cabinetShake.onMove(place),
-    settings.onChange((s) => setCrt(cam, s.crt)),
-  ];
+  useScreenShader(cam);
+  const offs = [scaler.onChange(place), cabinetShake.onMove(place)];
   scene.events.once('shutdown', () => offs.forEach((off) => off()));
   return cam;
 }
