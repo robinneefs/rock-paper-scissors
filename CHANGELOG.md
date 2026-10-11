@@ -2,6 +2,10 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.5.3 (2026-10-11)
+
+- The architecture doc now spells out what the pixel-perfect setup does and doesn't do for imported images: everything is forced onto the native pixel grid and never blurs, but a smooth image is not turned into pixel art, so art has to be made at native size in palette colours first. Nothing changes in the game itself.
+
 ## 0.5.2 (2026-10-11)
 
 - The README now says up front, in a centered banner with badges, that RPS Rivals is an AI-developed project run by Claude. Nothing changes in the game itself.
