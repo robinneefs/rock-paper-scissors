@@ -22,7 +22,7 @@ Two fighters face off inside an arcade cabinet. Each exchange, both players secr
 
 ![The game in a desktop browser: picking a move with 3 seconds left](docs/screenshots/browser-pick.png)
 
-> **Status: first playable (v0.5.3).** Logo intro, home menu with Options, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
+> **Status: first playable (v0.5.4).** Logo intro, home menu with Options, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
 
 | Logo intro | Home | Fight | Result |
 |---|---|---|---|
@@ -112,7 +112,8 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions, open questions and the decision log |
 | [`docs/idea/`](docs/idea/) | The original idea brief |
 | [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
-| [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured: layers, packages, online play, pixel-perfect rendering, tuning |
+| [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured, matched to the real code: layers, code map, match phases, sessions, pixel-perfect rendering, tuning, what online play still needs |
+| [`docs/architecture/ONLINE-OPTIONS.md`](docs/architecture/ONLINE-OPTIONS.md) | Free ways to host online matches (the game stays on GitHub Pages), compared, with a recommendation |
 | [`docs/tuning/TUNING-PANEL.md`](docs/tuning/TUNING-PANEL.md) | The dev tuning panel: how to use it for the game-feel pass and how it's set up |
 | [`docs/screenshots/`](docs/screenshots/) | Screenshots of the current build (browser and phone) |
 | [`docs/brand/`](docs/brand/) | Studio logo masters (Chain Shift, white and purple) |

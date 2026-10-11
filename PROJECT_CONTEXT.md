@@ -14,7 +14,7 @@ Same layout here and in the repository (the archive stays out of the repo):
 | `README.md` | Repository front page |
 | `docs/idea/` | Original idea brief |
 | `docs/design/` | Interactive design document (saved HTML) |
-| `docs/architecture/` | Architecture document (`ARCHITECTURE.md`) and its diagrams (`diagrams/*.svg`) |
+| `docs/architecture/` | Architecture document (`ARCHITECTURE.md`, matched to the real code in v0.5.4), online hosting options (`ONLINE-OPTIONS.md`) and the diagrams (`diagrams/*.svg`) |
 | `docs/brand/` | Studio logo masters: Chain Shift white (the user's original) and purple |
 | `docs/tuning/` | Tuning panel guide (`TUNING-PANEL.md`): how to use the dev panel and how it is set up |
 | `docs/screenshots/` | Screenshots of the current build, browser and phone (recapture with `node sources/screenshots/capture.mjs`) |
@@ -38,6 +38,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 - Tuning panel guide (how to use it, how it's set up): `docs/tuning/TUNING-PANEL.md`
 - Future plans and roadmap (Claude Doc, editable, made 2026-10-10): https://claude.ai/code/artifact/f1f3ff49-5ab1-4624-8d81-85bf111b8494 (every open decision, balancing thought and planned feature, each with a note on how to proceed, plus the suggested order of work). Tick items off there when they ship.
 - Architecture document: `docs/architecture/ARCHITECTURE.md` (diagrams redrawn with `node sources/architecture/diagrams.mjs`)
+- Online hosting options for step 5: `docs/architecture/ONLINE-OPTIONS.md` (free options compared; recommends a Cloudflare Durable Object)
 
 ## Where things stand
 
@@ -61,7 +62,7 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 
 Changelog: `CHANGELOG.md` at the repo root.
 
-Commands: `npm install`, `npm run dev`, `npm test` (51 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
+Commands: `npm install`, `npm run dev`, `npm test` (57 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
 
 **Versions and changelog (rule, user's request 2026-10-10):** every build that goes online gets a version bump and a `CHANGELOG.md` entry, no exceptions. Semver under 1.0: new features bump the middle number (0.2.0 → 0.3.0), fix-only builds the last (0.2.1). The version is set in one place, `apps/game/package.json`; Vite injects it (`src/version.ts`) and the home screen shows it small in the bottom-right corner. Each version is tagged `vX.Y.Z` with a GitHub release by the Release workflow (`.github/workflows/release.yml`): on every push to main it tags a package.json version that has no tag yet, using its changelog entry as the notes (cloud sessions can't push tags themselves). Current in main: **v0.5.3** (docs only). Live online: **v0.4.0** (Chain Shift pixel-art logo intro) at https://robinneefs.github.io/RPS-Fighter/ (main @ cdabb84, PR #7; site repo @ 2aa77f2). v0.3.0 = Fill height by default (main @ c49023e). v0.2.0 = Options + scaling. v0.1.0 = the first playable (main @ a1a96aa).
 
@@ -191,7 +192,7 @@ When: a dedicated tuning pass near the end, before release, at the latest before
 | Language | TypeScript |
 | Build | Vite |
 | Tests | Vitest |
-| Online (later) | Node + Colyseus, server-authoritative |
+| Online (later) | Server-authoritative match room running `@rps/core`'s Referee. Host not decided: Cloudflare Durable Object recommended (free, 2026-10-11, see `docs/architecture/ONLINE-OPTIONS.md`); originally Node + Colyseus |
 | Android (later) | Capacitor wrapping the web build |
 
 Architecture rules:
@@ -216,7 +217,7 @@ Architecture rules:
 2. Playable prototype: placeholder fighters, buttons, bars, timer, best of three, plus the menu flow (logo intro, home with Start game, result with Retry / Main menu). **Done 2026-10-10.**
 3. Art and juice: sprites, falling icons, hit flash, shake, SFX, music.
 4. Polish and release on the web (e.g. GitHub Pages), including a dedicated game-feel pass (see "Polish and game feel").
-5. Online play (Colyseus, room codes).
+5. Online play (server match room, room codes; host to pick, see `docs/architecture/ONLINE-OPTIONS.md`).
 6. Android build (Capacitor).
 
 ## Open questions
@@ -225,7 +226,8 @@ Architecture rules:
 - Overall aesthetic: the user is "not crazy about it yet" (cute chibi + neon '80s); parked, revisit later.
 - Art tools (researched 2026-10-10): best fit is **PixelLab** (pixel-art AI with character directions + animations, hosted MCP at https://api.pixellab.ai/mcp, Bearer API key, plans from ~$12/mo). Alternatives: Retro Diffusion (great look, Aseprite extension, $20-65 one-time, has API), Ludo, Scenario; Aseprite for hand cleanup. Claude's cloud sessions currently cannot reach api.pixellab.ai (built-in environment blocks it): needs a cloud environment that allows the domain plus the key as a secret, or run Claude Code locally with the MCP. User wants a more attractive pixel style with slightly bigger pixels.
 - Cabinet look: monitor aspect (3:4 portrait chosen as default), cabinet colours and side art.
-- Architecture defaults to confirm (see section 16 of the architecture doc): monorepo, Tweakpane, lint tool for import rules.
+- Where online matches run (step 5): Cloudflare Durable Object (recommended: free, server decides, no cold start), peer-to-peer PeerJS (no server, but the host could see picks without commit-reveal), or Colyseus on Render free (sleeps after 15 min, ~1 min wake-up). GitHub Pages can't host it (static only). Details: `docs/architecture/ONLINE-OPTIONS.md`.
+- Online seat: always show yourself on the left (recommended) or real sides.
 - 100 starting health right? 5s or 3s timer?
 - Art direction references for the NEXT step (user, 2026-10-11): use the user's four redesign mock-ups in `docs/mockups/redesign/` as the starting point. `mockups-characters-1.png`: one Ryu-like karate fighter (brown hair, red wraps, torn gi, black belt, barefoot) in nine pixel styles (classic 16-bit, modern, low-res, anime, detailed, chibi, dark, minimalist, cartoon). `mockups-characters-2.png`: the same fighter as a chibi in nine variants (clean, white sticker outline, shaded, anime, Game Boy, SNES, dithered, minimalist, expressive). `mockups-game-1.png` and `mockups-game-2.png` ("RPS Rivals" sheet): the vertical cabinet with marquee art, joystick plus red/yellow/blue ROCK/PAPER/SCISSORS buttons, menu, fighter select, fight HUD, hit effects, K.O., online match, and a palette of hot pink, cyan, violet, navy and pale lavender. These lean toward relabelling the moves Rock/Paper/Scissors (see Move animations).
 - Move animations (user's note 2026-10-10): Attack, Throw and Block currently look nearly the same. Either make each clearly read as a strike, a grab/throw and a block/counter, or relabel the moves Rock, Paper, Scissors with animations to match. Roadmap doc recommends trying distinct silhouettes on the placeholders first.
@@ -286,6 +288,8 @@ Architecture rules:
 - 2026-10-11: The README discloses that RPS Rivals is AI-developed, in a whimsical centered banner right under the title and Play link ("This is a Claude-run operation", "Coded on only the purest of vibes", shields.io badges). User's request; v0.5.2, PR #12 merged into main @ e82ad95 at the user's request.
 - 2026-10-11: Asset rebrand plan proposed in its own thread (`docs/rebrand/REBRAND-PLAN.md`): pixel RPS RIVALS wordmark, palette shift to the sheet's pink/cyan/violet/navy/lavender, ROCK/PAPER/SCISSORS buttons and icons, moves renamed Rock (=Attack), Paper (=Block), Scissors (=Throw) with the same rules, chibi fighters (own designs, not Ryu/Chun-Li lookalikes). Waiting on the user's approval; v0.6.0 planned.
 - 2026-10-11: Rebrand thread: the redesign mock-ups are AI images, not real pixel art, so they are a style guide only, not cut up into assets. The user can't afford PixelLab; UI is drawn in code for free. At the user's request the UI rebrand kit was built in a separate folder, not in the game: `docs/rebrand/` (kit + previews), source `sources/rebrand/draw_ui.py`. Fighters and stage in the previews are stand-ins. Waiting on the user's feedback before anything goes into the game.
-- 2026-10-11: Checked how pixels are enforced (user's question): the native-size canvas, nearest-neighbour upscaling, `pixelArt`/`roundPixels`/`antialias: false` force everything onto one grid with no blur, but nothing converts a smooth image into pixel art (no palette reduction, no averaging on shrink). Art must be made at native size in palette colours first; an import helper would go in `tools/`. Documented in architecture section 7; v0.5.3.
+- 2026-10-11: Checked how pixels are enforced (user's question): the native-size canvas, nearest-neighbour upscaling, `pixelArt`/`roundPixels`/`antialias: false` force everything onto one grid with no blur, but nothing converts a smooth image into pixel art (no palette reduction, no averaging on shrink). Art must be made at native size in palette colours first; an import helper would go in `tools/`. Documented in architecture section 7; v0.5.3, PR #13 merged into main @ 580de26 at the user's request.
 - 2026-10-11: The user wants a different direction from the neon kit: a bright, colourful 90s fighting-game look (Street Fighter II era) for the UI, stage and cabinet, with big clear rock/paper/scissors icons on the buttons. Mock-ups made in `docs/rebrand/mockups-90s/` (source `sources/rebrand/draw_90s.py`), in two layouts: current (216x288 monitor) and square (216x216 monitor, marquee grown from 26 to 98 px for bigger marquee art). Waiting on the user's pick.
 - 2026-10-11: Round 3 mock-ups (`docs/rebrand/mockups-round3/`, source `sources/rebrand/draw_round3.py`) after the user's feedback: they like the SF2-style health bars (now 12 px tall) and want a much bigger timer (now 15x21 digits) with juice in the real game (noted under Polish and game feel). They didn't like the cabinet, so four cabinet styles, four stages, four marquees and two flatter button-icon styles (white, engraved) were drawn. Square screen used by default. Waiting on the user's picks.
+- 2026-10-11: The asset rebrand thread is paused at the user's request, after round 3. Nothing is in the game yet. On resume: get the user's picks (cabinet, stage, marquee, icon style, square vs tall screen, Rock/Paper/Scissors naming), then build v0.6.0.
+- 2026-10-11: At the user's request (saved architecture prompt), the architecture doc was rewritten to match the real code (v0.5.4): real types, events, timings, tuning values, scenes, GameContext, lint rules and tests, planned parts marked; 7 diagrams redrawn, 2 new (code map, online hosting options). Section 10 now lists what is already online-ready and the gaps (opponent name, seat side, disconnect events, rematch waiting, lobby, server input checks, version match). New `ONLINE-OPTIONS.md` compares free online hosts; recommends a Cloudflare Durable Object per room (free plan: 100k requests and 13,000 GB-s a day, about 800 two-minute matches) over PeerJS P2P or Colyseus on Render. Waiting on the user's pick of host.
