@@ -12,6 +12,9 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - **How to Play.** A new HOW TO PLAY item on the home menu opens a short card: rock beats scissors, scissors beats paper, paper beats rock, how much damage a winning hit does with each (rock 15, scissors 20, paper 10), and the few rules (pick with buttons 1 2 3 before the timer runs out, a pick is made for you if you don't, the same move is a clash, win 2 rounds). Any button goes back.
 - **A wood-grain cabinet.** The cabinet body has a subtle wood grain (down the sides, along the front face), and a bit of wear: light scratches on the front of the control panel and the sides, and the pink trim on the front lip rubbed paler where hands rest.
 
+- **A proper browser tab and link preview.** The tab now reads "RPS Rivals: Rock Paper Scissors Fighter" with a pixel-art Rock button as its icon (also used when the game is added to a phone's home screen), and links shared on social sites and chat apps show the marquee and the three buttons with "PLAY FREE IN YOUR BROWSER". Made from the game's own art by `tools/make-icons.mjs`.
+- **New README and screenshots.** A big PLAY button, a description of the game, fresh screenshots of every screen (including How to Play and the K.O.), the technologies used, an architecture diagram, and a full list of where every asset comes from.
+
 ## 0.10.0 (2026-10-11)
 
 - **New fighters.** Player 1 (left) is now a strong brawler in blue jeans, brown boots and an open red shirt over a white undershirt. Player 2 (right) is a martial artist with a high ponytail, a teal wrap top with white trim, a gold sash, navy pants, white boots and wrapped hands. Both are still drawn in code at 64 px tall, with every pose (idle, rock, paper, scissors, hurt, K.O., win) redrawn; the real sprite sheets can replace them later under the same names.

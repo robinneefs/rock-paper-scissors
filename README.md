@@ -16,112 +16,152 @@
 
 </div>
 
-A pixel-art fighting game built on rock paper scissors, played in the browser.
+---
 
-Two fighters face off inside an arcade cabinet. Each exchange, both players secretly pick **Rock**, **Paper** or **Scissors** before a 5 second countdown runs out. The picks are revealed together, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds.
+<div align="center">
 
-![The game in a desktop browser: picking a move with 3 seconds left](docs/screenshots/browser-pick.png)
+<a href="https://robinneefs.github.io/rps-rivals/"><img src="docs/readme/play-button.png" alt="PLAY NOW" width="296" /></a>
 
-> **Status: v0.8.0.** Logo intro, home menu with Options, a full best-of-three match against a random CPU or a friend online, the Retry / Main menu screen, and chiptune sound effects and music ([docs/audio/AUDIO.md](docs/audio/AUDIO.md)). The art is still placeholder; final fighter art and more effects come next.
+**Free · No install · Desktop and phone**
 
-| Logo intro | Home | Fight | Result |
-|---|---|---|---|
-| ![Logo intro](docs/screenshots/phone-logo.png) | ![Home menu](docs/screenshots/phone-home.png) | ![Scissors beat paper](docs/screenshots/phone-reveal.png) | ![Result screen](docs/screenshots/phone-result.png) |
+vs the CPU, or vs a friend online with a 4-letter room code
 
-Screenshots of the current build on a phone. Recapture them with `node sources/screenshots/capture.mjs`.
+<sub>Online: one player picks **ONLINE → CREATE ROOM** and reads out the code, the other picks **JOIN ROOM** and types it in.</sub>
 
-## Play it locally
+</div>
+
+---
+
+## The game
+
+RPS Rivals is a pixel-art arcade fighter built on rock paper scissors. Two fighters face off on the monitor of an upright '90s arcade cabinet. Each exchange, both players secretly pick **Rock**, **Paper** or **Scissors** on the cabinet's big buttons before a 3 second timer runs out. The picks clash in the middle of the screen, the winning move lands, and the loser takes damage. Win two rounds to win the match.
+
+It's not classic rock paper scissors, because every move hits for a different amount:
+
+| Winning move | Beats    | Damage |
+|--------------|----------|--------|
+| ✂️ Scissors  | Paper    | **20** |
+| 🪨 Rock      | Scissors | **15** |
+| 📄 Paper     | Rock     | **10** |
+
+- Each fighter starts a round with 50 health. Only the loser of an exchange gets hurt.
+- The same move on both sides is a **clash**: no damage.
+- No pick before the timer runs out? A random one is made for you (marked AUTO).
+- Best of three rounds. Three stages (Night Street, Sunny Field, Castle Roof), picked at random.
+
+**The mind game.** Scissors is the tempting big hit, but Rock punishes it. The balanced mix works out to roughly **Rock 44%, Paper 33%, Scissors 22%**: the biggest hit is the one you should pick least. At low health the stakes shift again, since a 10 damage paper counter may not finish the round while a 15 or 20 hit will.
+
+### Controls
+
+| | Desktop | Phone |
+|---|---|---|
+| Pick Rock / Paper / Scissors | keys **1 / 2 / 3**, or click the buttons | tap the buttons |
+| Move through menus | arrow keys, or drag the joystick | drag the joystick, or tap an item |
+| Select / back | any button, Enter or Space / Esc | any button / the BACK item |
+
+## Screenshots
+
+| Home | How to play | Pick | Clash | K.O. | Result |
+|---|---|---|---|---|---|
+| ![Home menu](docs/screenshots/phone-home.png) | ![How to play card](docs/screenshots/phone-howto.png) | ![Picking a move, 1 second left](docs/screenshots/phone-pick.png) | ![Both picked paper: a clash](docs/screenshots/phone-reveal.png) | ![K.O.](docs/screenshots/phone-ko.png) | ![Result screen with Retry and Main menu](docs/screenshots/phone-result.png) |
+
+![The game in a desktop browser](docs/screenshots/browser-ko.png)
+
+<sub>Captured from the real build by `node sources/screenshots/capture.mjs` (seeded, so the shots come out the same every run).</sub>
+
+## Built with
+
+| Part | What |
+|---|---|
+| Game engine | [Phaser 3](https://phaser.io/), pixel-art mode with whole-number scaling |
+| Language | [TypeScript](https://www.typescriptlang.org/) (strict), in an npm workspace monorepo |
+| Build and dev server | [Vite](https://vite.dev/) |
+| Online match server | [Cloudflare Workers](https://workers.cloudflare.com/) with one Durable Object per room, over WebSockets |
+| Hosting | GitHub Pages (game) and Cloudflare (match rooms), deployed by GitHub Actions |
+| Tests | [Vitest](https://vitest.dev/) for the rules, referee and sessions; [Playwright](https://playwright.dev/) for in-browser smoke tests |
+| Code quality | ESLint (with layer import rules) and Prettier |
+| Dev tuning panel | [Tweakpane](https://tweakpane.github.io/docs/) (dev builds only) |
+| Art and sound tools | Node scripts and Python + Pillow, all in `tools/` |
+
+## How it's built
+
+```mermaid
+flowchart TB
+  subgraph Browser["Browser (GitHub Pages)"]
+    P["<b>Presentation</b><br/>Phaser scenes, fight director, views,<br/>menus, effects, input, audio"]
+    S["<b>Session</b><br/>LocalSession (vs CPU) or OnlineSession"]
+    C1["<b>Core</b> · @rps/core<br/>rules + referee, zero dependencies"]
+    PL["<b>Platform</b><br/>screen scaling, saved settings"]
+    P --> S --> C1
+    P --> PL
+  end
+  subgraph Cloudflare["Cloudflare Worker"]
+    R["Room (Durable Object)<br/>one per room code"]
+    C2["<b>Core</b> · the same @rps/core referee"]
+    R --> C2
+  end
+  S -. "WebSocket (online only)" .-> R
+```
+
+- **Core** (`packages/core`) holds the rules (who wins, damage, health, rounds) and the referee that runs the match phases. It's plain TypeScript with no engine, timers or network, so the exact same code referees online matches on the server.
+- **Session** is "a match in progress" from one player's side. Against the CPU it runs the referee locally; online it talks to the room. The rest of the game can't tell the two apart.
+- **Presentation** draws and animates everything and never decides a result. Dependencies only point down, and the linter enforces it.
+- **Online**, the room keeps both picks secret until the reveal and runs the clock, so neither player can peek or stall.
+
+The full write-up, with diagrams, is in [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
+
+## Assets and credits
+
+Nearly everything in the game is generated by code in this repository, and every asset is disclosed below.
+
+| Asset | Where it comes from |
+|---|---|
+| Fighters, cabinet, buttons, stages, menus, icons, effects, K.O. letters | Drawn pixel by pixel in code by Claude (`apps/game/src/assets/placeholders/`). Original. |
+| Pixel font (5×7) | Designed in code for this project (`apps/game/src/assets/glyphs.ts`). Original. |
+| Marquee art (the RPS RIVALS banner) | Cut from a mock-up sheet the project owner made with an AI image generator (`tools/make-marquee.py`). |
+| Chain Shift studio logo | The project owner's own logo, turned into pixel art by `tools/make-logo.py`. |
+| Sound effects and both music loops | Synthesised from scratch as chiptune by `tools/audio/make-audio.mjs`. Original; no samples. See [docs/audio/AUDIO.md](docs/audio/AUDIO.md). |
+| Browser icon and link preview image | Made from the game's own button and marquee art by `tools/make-icons.mjs`. |
+| Code and docs | Written by Claude (Anthropic) in Claude Code, directed by the project owner. |
+| Phaser, Tweakpane and the other libraries | Used under their own open source licences (MIT). |
+
+## Run it locally
 
 Needs Node 22.
 
 ```sh
 npm install
-npm run dev        # opens the game at http://localhost:5173
+npm run dev          # the game at http://localhost:5173
+npm run dev:server   # optional: a local match server for online play (ws://localhost:8787)
 ```
 
-In `npm run dev` a **tuning panel** in the top-right corner lets you change every feel value, the rules and the phase timings while you play, then copy the changes back into the code. The backquote key (`) hides it. How to use it and how it's built: [docs/tuning/TUNING-PANEL.md](docs/tuning/TUNING-PANEL.md).
-
-Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Rock / Paper / Scissors. In menus the arrow keys (or dragging the joystick) move the cursor and any cabinet button, Enter or Space selects. Esc goes back.
+In `npm run dev` a **tuning panel** in the top-right corner lets you change every feel value, the rules and the phase timings while you play, then copy the changes back into the code. The backquote key (`) hides it. See [docs/tuning/TUNING-PANEL.md](docs/tuning/TUNING-PANEL.md).
 
 | Command | What it does |
 |---|---|
 | `npm test` | Rules, referee and session tests (Vitest) |
-| `npm run test:e2e` | Browser smoke test (Playwright) |
+| `npm run test:e2e` | Browser smoke tests (Playwright) |
 | `npm run lint` | ESLint, including the layer import rules |
 | `npm run typecheck` | TypeScript, strict |
 | `npm run build` | Production build into `apps/game/dist` |
-
-## How it plays
-
-| Winning move    | Beats  | Damage to loser |
-|-----------------|--------|-----------------|
-| Scissors        | Paper    | 20              |
-| Rock            | Scissors | 15              |
-| Paper (counter) | Rock     | 10              |
-
-- Ties deal no damage, and only the loser of an exchange gets hurt.
-- Each fighter has 100 health per round. Health resets every round.
-- Best of three rounds wins the match.
-- No pick before the timer runs out? You get a random move.
-
-### The mind game
-
-Because the damage is uneven, this is not classic rock paper scissors. Scissors is the tempting big hit, but Rock punishes it. The balanced mix works out to roughly **Rock 44%, Paper 33%, Scissors 22%**: the biggest hit is the one you should pick least. At low health the stakes shift again, since a 10 damage paper counter may not finish the round while a 15 or 20 hit will.
-
-## Look and feel
-
-- **Arcade cabinet layout.** The whole game is drawn as an upright arcade machine: the fight on the monitor, three physical buttons (Rock, Paper, Scissors) on the control panel, and a joystick just for fun. The vertical layout works the same in a desktop browser and on a phone held upright.
-- **Pixel perfect.** One pixel size everywhere, whole-number scaling only, no blur or sub-pixel drift, pixel fonts and a shared palette.
-- **Cute fighters, neon '80s arcade.** Short, wide chibi martial artists (64 px tall) in a synthwave arcade setting. The overall style is still being refined.
-- **Game feel matters.** Punchy screen shake, hit flashes, sparks, hit-pause, lively animations and sound for every action.
-
-| Browser | Phone |
-|---|---|
-| ![Reveal in the browser: scissors beat paper](docs/screenshots/browser-reveal.png) | ![Picking on a phone](docs/screenshots/phone-pick.png) |
-
-## Technology
-
-| Part | Choice |
-|---|---|
-| Engine | Phaser 3 |
-| Language | TypeScript |
-| Build | Vite |
-| Tests | Vitest |
-| Online play (later) | Node + Colyseus, server-authoritative |
-| Android (later) | Capacitor |
-
-The game rules live in a plain TypeScript module with no engine, timers or networking, so the same rules can run on a server for online play. See the [architecture document](docs/architecture/ARCHITECTURE.md) for the full plan.
-
-## Roadmap
-
-1. Rules core with tests
-2. Playable prototype with placeholder fighters
-3. Art and juice: sprites, effects, sound and music
-4. Polish and release on the web, including a dedicated game-feel pass
-5. Online play with room codes
-6. Android app
+| `npm run audio` | Regenerate every sound and music file (needs ffmpeg) |
 
 ## Repository layout
 
 | Path | What's in it |
 |---|---|
-| [`packages/core/`](packages/core/) | `@rps/core`: the rules and the referee, plain TypeScript with zero dependencies |
-| [`apps/game/`](apps/game/) | The Phaser game: scenes, views, session, input, pixel scaler, tuning |
-| [`config/`](config/) | Shared TypeScript settings (`tsconfig.base.json`) and the unit test setup (`vitest.config.ts`) |
-| [`tools/`](tools/) | Small scripts (building the in-game logo from `docs/brand/`) |
-| [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions, open questions and the decision log |
-| [`docs/idea/`](docs/idea/) | The original idea brief |
-| [`docs/design/interactive-gdd.html`](docs/design/interactive-gdd.html) | Interactive design document with a playable sketch (open in a browser) |
-| [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) | How the code is structured, matched to the real code: layers, code map, match phases, sessions, pixel-perfect rendering, tuning, what online play still needs |
-| [`docs/architecture/ONLINE-OPTIONS.md`](docs/architecture/ONLINE-OPTIONS.md) | Free ways to host online matches (the game stays on GitHub Pages), compared, with a recommendation |
-| [`docs/tuning/TUNING-PANEL.md`](docs/tuning/TUNING-PANEL.md) | The dev tuning panel: how to use it for the game-feel pass and how it's set up |
-| [`docs/screenshots/`](docs/screenshots/) | Screenshots of the current build (browser and phone) |
-| [`docs/brand/`](docs/brand/) | Studio logo masters (Chain Shift, white and purple) |
-| [`docs/mockups/redesign/`](docs/mockups/redesign/) | Mock-ups for the planned redesign: game screens and fighter character styles |
-| [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Arcade cabinet mock-ups drawn before the build (browser and phone) |
-| [`docs/mockups/landscape-superseded/`](docs/mockups/landscape-superseded/) | Earlier landscape mock-ups, replaced by the cabinet layout |
-| [`docs/art-direction/`](docs/art-direction/) | Art direction samples: sprite sizes, character styles, body shapes |
-| [`sources/`](sources/) | The HTML/JS that draws the mock-ups, art samples and architecture diagrams, plus Playwright scripts to render them and to capture game screenshots |
+| [`packages/core/`](packages/core/) | `@rps/core`: the rules and the referee, zero dependencies |
+| [`apps/game/`](apps/game/) | The Phaser game: scenes, views, sessions, input, audio, pixel scaler, tuning |
+| [`apps/server/`](apps/server/) | The online match server: a Cloudflare Worker with a Durable Object per room |
+| [`tools/`](tools/) | Scripts that make the logo, marquee, icons and all audio |
+| [`docs/`](docs/) | Architecture, design document, audio notes, tuning panel guide, screenshots, mock-ups and art direction |
+| [`sources/`](sources/) | Scripts that draw the mock-ups and diagrams and capture the screenshots |
+| [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions and the decision log |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed in every version |
+
+## Privacy
+
+No accounts, no ads, no tracking. Your settings (scaling, sound, CRT screen) are saved in your own browser. Online matches only send your picks to the match room, which forgets everything when the match ends.
 
 ## License
 
