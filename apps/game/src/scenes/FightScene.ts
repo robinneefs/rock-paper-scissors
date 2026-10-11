@@ -1,4 +1,3 @@
-import { defaultRules } from '@rps/core';
 import Phaser from 'phaser';
 import { Tex } from '../assets/keys';
 import { STAGE } from '../config/layout';
@@ -40,10 +39,10 @@ export class FightScene extends Phaser.Scene {
       p1: new MoveIconView(this, STAGE.fighterX.p1, iconY),
       p2: new MoveIconView(this, STAGE.fighterX.p2, iconY),
     };
-    const hud = new HudView(this, { p1: 'YOU', p2: 'CPU' }, defaultRules.startHealth);
+    const hud = new HudView(this, { p1: 'YOU', p2: 'CPU' }, session.rules.startHealth);
     const banner = new BannerView(this, 96);
 
-    new FightDirector(this, session, { fighters, icons, hud, banner }, defaultRules.roundsToWin, {
+    new FightDirector(this, session, { fighters, icons, hud, banner }, session.rules.roundsToWin, {
       clearPick: () => lights.select(null),
       matchOver: (winner, state) => flow.toResult({ setup, session, winner, state }),
     });

@@ -304,7 +304,7 @@ There are two homes for numbers, on purpose:
 | `packages/core/src/config.ts` | Damage, health, rounds, phase timings (`pickMs`, `revealMs`, ...) | The server must use the same values. Changing them changes the game's rules. |
 | `apps/game/src/config/tuning.ts` | Everything about look and feel | Client only. Changing them never changes who wins. |
 
-**Dev tuning panel:** in development builds only, a small panel (Tweakpane) lists both files' values with sliders, edits them live while you play, and has a "copy as code" button to paste the result back. It is stripped from release builds. This makes the planned game-feel pass fast.
+**Dev tuning panel:** in development builds only, a small panel (Tweakpane) lists both files' values with sliders, edits them live while you play, and has a "copy changes" button that lists every changed value and its file, to paste the result back. Feel values apply live; rules and phase timings apply from the next match (each session gets its own copy), with a restart button. Edits are remembered in localStorage while tuning; the backquote key hides it. It is stripped from release builds (`main.ts` loads it behind `import.meta.env.DEV`, and a lint rule keeps the rest of the game from importing `dev/`). This makes the planned game-feel pass fast. User guide and setup details: [`docs/tuning/TUNING-PANEL.md`](../tuning/TUNING-PANEL.md).
 
 ## 9. Input, audio, assets, settings
 
@@ -417,5 +417,5 @@ Defaults picked in this document that are easy to change now and harder later (t
 | Choice | Default | Alternative |
 |---|---|---|
 | Repo shape | npm workspaces monorepo (`packages/core`, `apps/game`, later `apps/server`) (built this way) | One app with a `core/` folder, split later |
-| Dev tuning panel | Tweakpane, dev builds only (not added yet; step 3) | lil-gui, or no panel |
+| Dev tuning panel | Tweakpane, dev builds only (built in v0.5.0: `apps/game/src/dev/`) | lil-gui, or no panel |
 | Lint for import rules | `eslint-plugin-import` `no-restricted-paths` plus `no-restricted-imports` for Phaser and the `Referee` (built this way, `eslint.config.js`) | `dependency-cruiser` |

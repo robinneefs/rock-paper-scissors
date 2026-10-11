@@ -22,7 +22,7 @@ export class LocalSession implements MatchSession {
   private myPick: Move | null = null;
 
   constructor(
-    rules: RulesConfig,
+    readonly rules: RulesConfig,
     timings: PhaseTimings,
     private readonly clock: Clock,
     private readonly rng: Rng,
