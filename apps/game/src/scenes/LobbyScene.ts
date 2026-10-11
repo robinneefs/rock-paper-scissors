@@ -107,6 +107,35 @@ export class LobbyScene extends Phaser.Scene {
     );
   }
 
+  /**
+   * A tappable button on the monitor. Phones have no Esc key, so the create and join screens need
+   * one to get back to the lobby menu.
+   */
+  private tapButton(y: number, label: string, onTap: () => void): void {
+    const w = 80;
+    const h = 17;
+    const x = Math.round((MONITOR.width - w) / 2);
+    const gfx = this.add.graphics();
+    const paint = (down: boolean) => {
+      gfx.clear();
+      gfx.fillStyle(palette.ink).fillRect(x - 1, y - 1, w + 2, h + 2);
+      gfx.fillStyle(down ? palette.select : palette.panel).fillRect(x, y, w, h);
+      frameRect(gfx, x, y, w, h, down ? palette.pink : palette.panelEdge);
+    };
+    paint(false);
+    new PixelText(this, MONITOR.width / 2, y + 5, label, { color: palette.text, align: 'center' });
+    this.add
+      .zone(x, y, w, h)
+      .setOrigin(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => paint(true))
+      .on('pointerout', () => paint(false))
+      .on('pointerup', () => {
+        paint(false);
+        onTap();
+      });
+  }
+
   /** Back / Esc returns home from the menu, or to the lobby menu from create and join. */
   private listen(fn: (a: Action) => void): void {
     const { input } = getContext(this);
@@ -157,7 +186,8 @@ export class LobbyScene extends Phaser.Scene {
       shadow: palette.shadow,
     });
     const status = this.statusLines(132);
-    this.hint(['TELL YOUR RIVAL THE CODE', 'BACK TO CANCEL']);
+    this.hint(['TELL YOUR RIVAL THE CODE']);
+    this.tapButton(178, 'CANCEL', () => this.toMode('menu'));
 
     let tries = 0;
     const open = () => {
@@ -185,7 +215,10 @@ export class LobbyScene extends Phaser.Scene {
       status(lines, palette.pink);
     };
     open();
-    this.listen((a) => a.type === 'back' && this.toMode('menu'));
+    // nothing else to do here, so any cabinet button, Enter or Esc cancels
+    this.listen((a) => {
+      if (a.type === 'back' || a.type === 'confirm' || a.type === 'pick') this.toMode('menu');
+    });
   }
 
   private showJoin(): void {
@@ -198,6 +231,7 @@ export class LobbyScene extends Phaser.Scene {
     });
     const status = this.statusLines(132);
     this.hint(['TAP THE BOXES TO TYPE', 'OR PICK LETTERS WITH THE STICK']);
+    this.tapButton(178, 'BACK', () => this.toMode('menu'));
 
     // four letter boxes; -1 = empty
     const slots: number[] = Array.from({ length: ROOM_CODE_LENGTH }, () => -1);
