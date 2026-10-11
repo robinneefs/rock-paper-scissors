@@ -1,6 +1,6 @@
 # Architecture
 
-_Status: describes the code as it is in v0.5.4 (2026-10-11), checked file by file. Steps 1 and 2 of the build order are built, plus the dev tuning panel from step 3. Anything not built yet is marked **(planned)**. Change this document when the code or a decision changes._
+_Status: describes the code as it is in v0.5.4 (2026-10-11), checked file by file, plus the online play added in v0.6.0 (section 10). Steps 1 and 2 of the build order are built, plus the dev tuning panel from step 3 and a first version of step 5. Anything not built yet is marked **(planned)**. Change this document when the code or a decision changes._
 
 How the RPS Rivals code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, arcade cabinet layout, pixel perfect, polish as a core goal). Where online matches could be hosted for free is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md).
 
@@ -387,7 +387,7 @@ There are two homes for numbers, on purpose:
 
 ## 10. Online play
 
-Online play is step 5 and not built. This section says what the code already gets right for it, what still has to change, and how the online part is meant to work. **Where** the match room runs (it can't be GitHub Pages, which only serves files) is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md). The recommendation there is a free Cloudflare Durable Object running the same `Referee`; the choice is still open.
+Online play is step 5; its first version is built (v0.6.0). This section says what the code already gets right for it, what still has to change, and how the online part is meant to work. **Where** the match room runs (it can't be GitHub Pages, which only serves files) is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md). The user chose a free Cloudflare Durable Object running the same `Referee` (2026-10-11); the first version is built (v0.6.0, below).
 
 ![Online exchange sequence](diagrams/6-online-exchange.svg)
 
@@ -410,19 +410,33 @@ Online play is step 5 and not built. This section says what the code already get
 | A match is described by `MatchSetup`, and sessions are built in one place | `createSession(setup)` |
 | An ONLINE slot already sits on the home menu | `menus/homeMenu.ts` |
 
-**Still to change for online play:**
+**Built in v0.6.0 (Cloudflare Durable Objects, the user's choice on 2026-10-11):**
 
-| Gap | Today | Change |
+| Part | Where | What it does |
 |---|---|---|
-| Opponent's name | `FightScene` labels the HUD `YOU` / `CPU`; `ResultScene` says `CPU WINS` | Add the opponent's display name to the session; use it in both scenes |
-| Which side I am | `LocalSession.me` is always `p1`, shown on the left | Online you may be `p2`. Decide: mirror so you are always on the left (recommended), or show real sides |
-| Leaving and disconnects | No event for it | New session events (e.g. `opponentLeft`, `connection`), a grace period in the room, then auto-picks or a forfeit |
-| Rematch waiting | Accepted at once | Result screen shows "waiting for opponent"; a decline or leave goes back to the menu |
-| Lobby | None | `LobbyScene` (create a room, join with a code), the ONLINE item enabled, `MatchSetup { mode: 'online'; roomCode }` |
-| Input checks on the server | `Referee.submitPick` trusts its types | The room checks every message (a real `Move`, the sender's own side) before calling the referee |
-| Version match | None | Clients send `VERSION` when joining; the room refuses a mismatch so both run the same rules |
-| Server randomness | `mathRandomRng` | Fine for a hobby game; `crypto.getRandomValues` if it ever matters |
-| Server package | None | `apps/server` (planned) importing `@rps/core`, with its own tests |
+| Protocol | `packages/core/src/online/protocol.ts` | The JSON messages both ways (`ClientMessage`, `ServerMessage`), `PROTOCOL_VERSION`, room codes (four consonants, so no words) and `parseClientMessage`, which turns anything unexpected into `null` |
+| Match room | `apps/server/src/MatchRoom.ts` | Seats `create` as p1 and `join` as p2, refuses wrong codes, full rooms, other protocol versions and a rival on another build; starts the `Referee` when both are ready; forwards its events with `msLeft`; rematch when both ask; closes the room when someone leaves or it sits idle (10 min lobby, 2 min after a match) |
+| Worker | `apps/server/src/index.ts` | `GET /room/CODE` (WebSocket) goes to the Durable Object named after the code; `RoomObject` holds the two sockets and feeds `MatchRoom` |
+| Deploy | `.github/workflows/deploy-server.yml` | Wrangler deploy on pushes to main that touch the server or core; skipped until the Cloudflare secrets exist |
+| `OnlineSession` | `apps/game/src/session/OnlineSession.ts` | WebSocket client implementing `MatchSession`; turns `msLeft` into a local deadline; reports `opponentJoined`, `refused`, `rematchRequested`, `opponentLeft`, `disconnected` |
+| Seat mirror | `apps/game/src/session/mirror.ts` | You are always shown as p1 on the left: the room's real sides are swapped for the p2 player, so scenes, director and HUD are unchanged |
+| Lobby | `apps/game/src/scenes/LobbyScene.ts`, `menus/lobbyMenu.ts` | CREATE ROOM (shows the code, waits) and JOIN ROOM (four letter boxes; stick or typed letters); hands the connected session to `flow.toFight({ mode: 'online', roomCode }, session)` |
+| Server address | `apps/game/src/config/online.ts` | `VITE_SERVER_URL`, else `ws://localhost:8787` in dev, else the deployed Worker; null keeps ONLINE greyed out |
+
+How the gaps from the earlier list were closed:
+
+| Gap | Now |
+|---|---|
+| Opponent's name | `MatchSession.opponentName` (`CPU` or `RIVAL`) on the HUD and the result screen. Typed player names are a later step |
+| Which side I am | Always on the left (mirrored in the session) |
+| Leaving and disconnects | The room tells the other player and closes; the fight and result screens show RIVAL LEFT or OFFLINE and go home. No reconnect grace period yet |
+| Rematch waiting | RETRY shows WAITING FOR RIVAL; the other player sees RIVAL WANTS A REMATCH; MAIN MENU stays available |
+| Lobby | Built (above) |
+| Input checks on the server | `parseClientMessage` checks every message; picks only count for the sender's own seat |
+| Version match | Protocol version against the server; game version between the two players |
+| Server randomness | Still `mathRandomRng` |
+
+**Still open:** reconnecting after a short drop, typed player names, a share link that fills in the room code, and the Worker's real address in `config/online.ts` once it is deployed.
 
 ## 11. Android
 

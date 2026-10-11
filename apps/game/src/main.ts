@@ -11,6 +11,7 @@ import { CabinetLights, setContext } from './scenes/context';
 import { FightScene } from './scenes/FightScene';
 import { SceneFlow } from './scenes/flow';
 import { HomeScene } from './scenes/HomeScene';
+import { LobbyScene } from './scenes/LobbyScene';
 import { LogoScene } from './scenes/LogoScene';
 import { OptionsScene } from './scenes/OptionsScene';
 import { ResultScene } from './scenes/ResultScene';
@@ -36,6 +37,7 @@ const game = new Phaser.Game({
     LogoScene,
     HomeScene,
     OptionsScene,
+    LobbyScene,
     FightScene,
     ResultScene,
     TransitionScene,

@@ -1,4 +1,13 @@
-import type { MatchState, Move, Phase, RefereeEvents, RulesConfig, Side, Unsubscribe } from '@rps/core';
+import type {
+  JoinError,
+  MatchState,
+  Move,
+  Phase,
+  RefereeEvents,
+  RulesConfig,
+  Side,
+  Unsubscribe,
+} from '@rps/core';
 
 /** What a match looks like right now, from one player's seat. */
 export interface MatchView {
@@ -16,6 +25,17 @@ export interface SessionEvents extends Record<string, unknown> {
   matchOver: RefereeEvents['matchOver'];
   /** Both sides agreed to play again (locally: at once). The fight screen can start over. */
   rematchAccepted: Record<string, never>;
+  // Online only (a CPU match never sends these):
+  /** The opponent asked to play again; `side` is who asked. */
+  rematchRequested: { side: Side };
+  /** The second player arrived in the room (lobby). */
+  opponentJoined: Record<string, never>;
+  /** The room refused this player (wrong code, full, other build...). The session is over. */
+  refused: { error: JoinError };
+  /** The opponent left or dropped. The session is over. */
+  opponentLeft: Record<string, never>;
+  /** The connection to the room closed (or never opened). The session is over. */
+  disconnected: Record<string, never>;
 }
 
 /**
@@ -24,6 +44,8 @@ export interface SessionEvents extends Record<string, unknown> {
  */
 export interface MatchSession {
   readonly me: Side;
+  /** Shown on the HUD and the result screen ("CPU", "RIVAL"). */
+  readonly opponentName: string;
   /** The rules this match is played with (start health, rounds to win, damage). */
   readonly rules: RulesConfig;
   /** The scene is listening: locally this starts the match; online it tells the server this client is ready. */
@@ -36,7 +58,6 @@ export interface MatchSession {
 }
 
 /** Describes a match, so Retry can replay the same kind of match. */
-export type MatchSetup = { mode: 'cpu'; cpu: CpuKind };
-// Step 5 adds: | { mode: 'online'; roomCode: string }
+export type MatchSetup = { mode: 'cpu'; cpu: CpuKind } | { mode: 'online'; roomCode: string };
 
 export type CpuKind = 'random';

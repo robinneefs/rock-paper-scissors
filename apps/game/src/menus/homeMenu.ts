@@ -1,3 +1,4 @@
+import { SERVER_URL } from '../config/online';
 import type { SceneFlow } from '../scenes/flow';
 import type { MenuItem } from './MenuItem';
 
@@ -9,6 +10,9 @@ export const homeMenu = (flow: SceneFlow): MenuItem[] => [
     enabled: true,
     onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }),
   },
-  { id: 'online', label: 'ONLINE', tag: 'SOON', enabled: false }, // step 5: opens the lobby
+  // greyed out in a build that has no match server address
+  SERVER_URL
+    ? { id: 'online', label: 'ONLINE', tag: 'VS FRIEND', enabled: true, onSelect: () => flow.toLobby() }
+    : { id: 'online', label: 'ONLINE', tag: 'SOON', enabled: false },
   { id: 'options', label: 'OPTIONS', enabled: true, onSelect: () => flow.toOptions() },
 ];

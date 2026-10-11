@@ -2,6 +2,14 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.6.0 (2026-10-11)
+
+- **Online play, first version.** ONLINE on the home menu opens a lobby: CREATE ROOM shows a four-letter room code and waits; your friend picks JOIN ROOM on their own device and enters the code (stick up and down picks letters, or type them). Then you fight a normal best of three. The match runs on a small server (a Cloudflare Worker with one room per code) using the game's own referee, so neither player can see the other's pick before the reveal, and the countdown can't be stretched by a slow connection.
+- Online, you always appear on the left, your opponent shows as RIVAL, and RETRY waits until both players want a rematch ("WAITING FOR RIVAL", "RIVAL WANTS A REMATCH"). If the other player leaves or the connection drops, the screen says so and goes back to the main menu.
+- Both players must be on the same version of the game to share a room.
+- New publishing setup. The game now publishes itself from this repository: the `production` branch is the live game at https://robinneefs.github.io/rps-rivals/, and `main` is a staging copy at https://robinneefs.github.io/rps-rivals/staging/ for testing new builds first. Each has its own online match server. Going live means merging main into production; version tags and releases are now made at that point. The old address, robinneefs.github.io/RPS-Fighter/, will forward to the new one.
+- ONLINE stays greyed out in published builds until the Cloudflare setup is done; in `npm run dev` it connects to a local server (`npm run dev:server`). Setup and deploy notes: `apps/server/README.md`.
+
 ## 0.5.4 (2026-10-11)
 
 - The architecture doc is rewritten to match the code as it is now: real file names, types, events, phase timings and tuning values, the scenes and shared services, the lint rules and the tests, with planned parts marked. Its seven diagrams are redrawn with the current values, and two are new: a code map of every folder, and the free ways to host online matches.

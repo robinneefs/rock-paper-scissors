@@ -1,0 +1,54 @@
+name: Deploy server
+
+# Deploys the online match server (apps/server) to Cloudflare Workers:
+#   main       -> rps-rivals-server-staging  (used by the staging copy of the game)
+#   production -> rps-rivals-server          (used by the live game)
+# Runs when the server or the rules it uses (packages/core) change. Needs two repository secrets:
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (see apps/server/README.md). Without them it is skipped.
+on:
+  push:
+    branches: [main, production]
+    paths:
+      - apps/server/**
+      - packages/core/**
+      - .github/workflows/deploy-server.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Cloudflare secrets
+        id: secrets
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set; skipping the deploy"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.secrets.outputs.ok == 'true'
+      - run: npm test
+        if: steps.secrets.outputs.ok == 'true'
+      - uses: cloudflare/wrangler-action@v3
+        if: steps.secrets.outputs.ok == 'true'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/server
+          wranglerVersion: 4.137.0
+          command: ${{ github.ref_name == 'production' && 'deploy' || 'deploy --env staging' }}

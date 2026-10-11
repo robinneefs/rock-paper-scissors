@@ -76,7 +76,8 @@ test('scaling fills the height by default; options switches it and remembers', a
   await untilScene(page, 'Home');
   expect(await scale(page)).toBeCloseTo(1000 / 472, 3); // 600 x 1000 window: fills the height
 
-  await page.keyboard.press('ArrowDown'); // ONLINE is greyed out, so the cursor lands on OPTIONS
+  await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('ArrowDown'); // OPTIONS
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');
 
@@ -90,12 +91,25 @@ test('scaling fills the height by default; options switches it and remembers', a
 
   await page.keyboard.press('Digit1');
   await untilScene(page, 'Home');
-  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowUp'); // wraps round to OPTIONS
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');
   await page.keyboard.press('ArrowRight'); // flips back to FILL HEIGHT
   await run(page, 100);
   expect(await scale(page)).toBeCloseTo(1000 / 472, 3);
+  await page.keyboard.press('Escape');
+  await untilScene(page, 'Home');
+});
+
+test('ONLINE opens the lobby, and BACK returns home', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1'); // skip the logo
+  await untilScene(page, 'Home');
+  await page.keyboard.press('ArrowDown'); // ONLINE (enabled in dev builds: local server address)
+  await page.keyboard.press('Enter');
+  await untilScene(page, 'Lobby');
   await page.keyboard.press('Escape');
   await untilScene(page, 'Home');
 });

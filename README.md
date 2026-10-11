@@ -1,6 +1,6 @@
 # RPS Rivals
 
-**[▶ Play it in your browser](https://robinneefs.github.io/RPS-Fighter/)** on desktop or on a phone held upright, no install needed.
+**[▶ Play it in your browser](https://robinneefs.github.io/rps-rivals/)** on desktop or on a phone held upright, no install needed. ([Staging copy](https://robinneefs.github.io/rps-rivals/staging/) with the newest changes, for testing.)
 
 <div align="center">
 

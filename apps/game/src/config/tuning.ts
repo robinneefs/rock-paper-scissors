@@ -26,4 +26,6 @@ export const tuning = {
   menu: { cursorBlinkMs: 400, repeatDelayMs: 300 },
   banner: { slamMs: 180, holdMs: 900 },
   result: { delayAfterMatchMs: 400 },
+  /** Online: how long "RIVAL LEFT" and other ending messages stay up before going home; lobby text blink. */
+  online: { endedHoldMs: 2500, waitBlinkMs: 500 },
 } as const;
