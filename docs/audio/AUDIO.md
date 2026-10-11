@@ -16,17 +16,18 @@ When an outside sound or track is added later, add a row here with its author, l
 | Sound | When |
 | --- | --- |
 | `menuMove`, `menuSelect`, `menuBack` | Moving the menu cursor, choosing an item, going back (also the lobby's code entry) |
+| `stickClick` | The joystick snapping into a new direction, and springing back to the centre |
 | `roundStart` | The ROUND / FINAL ROUND banner |
 | `fight` | The FIGHT! banner at the start of each round |
 | `tick` | Each of the last 3 seconds of the pick timer, a bit higher each second (silent once you've picked) |
 | `lockIn` | Your pick locks in |
 | `timeUp` | The timer ran out and a move was picked for someone (the slam) |
-| `whoosh` | The move icons drop in at the reveal |
+| `whoosh` | The move badges fly in at the reveal |
 | `hitRock`, `hitPaper`, `hitScissors` | The winning move lands: a heavy thud, a slap, a metal slash. Three variations each, picked at random and slightly detuned, so repeated hits don't sound the same |
 | `clash` | A tie |
 | `ko` | K.O. |
 | `winJingle`, `loseJingle` | The result screen |
-| Music `menu` | Home, Options and the lobby, and the result screen once the jingle is done |
+| Music `menu` | Home, How to play, Options and the lobby, and the result screen once the jingle is done |
 | Music `fight` | During a match |
 
 ## Settings
