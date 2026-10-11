@@ -2,13 +2,27 @@
 
 **[▶ Play it in your browser](https://robinneefs.github.io/RPS-Fighter/)** on desktop or on a phone held upright, no install needed.
 
+<div align="center">
+
+[![Built by Claude](https://img.shields.io/badge/built_by-Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](https://claude.ai/code)
+![Vibes: 100% pure](https://img.shields.io/badge/vibes-100%25_pure-ff69b4?style=for-the-badge)
+![Hand-written code: 0 lines](https://img.shields.io/badge/hand--written_code-0_lines-8a2be2?style=for-the-badge)
+
+### 🤖✨ This is a Claude-run operation ✨🤖
+
+***Coded on only the purest of vibes.***
+
+<sub>RPS Rivals is an AI-developed project: the code, docs and placeholder art are written by Claude, with a human calling the shots.</sub>
+
+</div>
+
 A pixel-art fighting game built on rock paper scissors, played in the browser.
 
 Two fighters face off inside an arcade cabinet. Each exchange, both players secretly pick **Attack**, **Throw** or **Block** before a 5 second countdown runs out. The picks are revealed together, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds.
 
 ![The game in a desktop browser: picking a move with 3 seconds left](docs/screenshots/browser-pick.png)
 
-> **Status: first playable (v0.5.0).** Logo intro, home menu with Options, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
+> **Status: first playable (v0.5.2).** Logo intro, home menu with Options, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
 
 | Logo intro | Home | Fight | Result |
 |---|---|---|---|
