@@ -1,7 +1,7 @@
 import { BUTTONS, CABINET, JOYSTICK, MARQUEE, MONITOR, PANEL } from '../../config/layout';
 import { moveColors, palette } from '../../config/palette';
 import { drawSymbol, lighten, symbolTones } from './icons';
-import { PixelBuffer, shade } from './PixelBuffer';
+import { PixelBuffer, shade, type RGB } from './PixelBuffer';
 
 const BODY = 0x2c1658;
 const BODY_DARK = 0x1c0c3c;
@@ -20,6 +20,17 @@ export function paintRoomTile(): PixelBuffer {
   return b;
 }
 
+const MARQUEE_BEZEL = { mx: 8, my: MARQUEE.y + 3, mw: CABINET.width - 16, mh: 98 };
+/** The neon loop round the marquee art, halfway into its bezel (CabinetScene flickers it). */
+export const MARQUEE_NEON = {
+  x: MARQUEE_BEZEL.mx + 4,
+  y: MARQUEE_BEZEL.my + 4,
+  w: MARQUEE_BEZEL.mw - 8,
+  h: MARQUEE_BEZEL.mh - 8,
+};
+/** The neon tube's colour when it is off; its inner line is always this. */
+export const NEON_OFF = 0x5a1450;
+
 /** Cabinet body, marquee, monitor bezel and control panel. Buttons and joystick are separate sprites. */
 export function paintCabinet(): PixelBuffer {
   const W = CABINET.width;
@@ -33,18 +44,15 @@ export function paintCabinet(): PixelBuffer {
   // marquee: a bezel all around the art window, with a neon strip running round it;
   // CabinetScene puts assets/marquee.png in the window
   const art = MARQUEE.art;
-  const mx = 8;
-  const my = MARQUEE.y + 3;
-  const mw = W - 16;
-  const mh = 98;
+  const { mx, my, mw, mh } = MARQUEE_BEZEL;
   b.rect(mx, my, mw, mh, 0x181028);
   b.rect(mx, my, mw, 1, 0x3a2a5c); // highlight top and left
   b.rect(mx, my, 1, mh, 0x3a2a5c);
   b.rect(mx, my + mh - 1, mw, 1, 0x0b0716); // shade bottom and right
   b.rect(mx + mw - 1, my, 1, mh, 0x0b0716);
-  const n = { x: mx + 4, y: my + 4, w: mw - 8, h: mh - 8 }; // neon loop, halfway into the bezel
+  const n = MARQUEE_NEON;
   b.frame(n.x, n.y, n.w, n.h, palette.pink);
-  b.frame(n.x + 1, n.y + 1, n.w - 2, n.h - 2, 0x5a1450);
+  b.frame(n.x + 1, n.y + 1, n.w - 2, n.h - 2, NEON_OFF);
   b.rect(art.x - 1, MARQUEE.y + art.y - 1, art.width + 2, art.height + 2, palette.black);
 
   // monitor bezel (the monitor scenes draw inside it)
@@ -113,15 +121,94 @@ export function paintCabinet(): PixelBuffer {
   b.ell(JOYSTICK.x, JOYSTICK.y + 2, 17, 10, 0x241642);
   b.ell(JOYSTICK.x, JOYSTICK.y + 2, 6, 3, 0x0c0618);
 
-  // button wells, labels and key hints
+  // button wells with a chrome collar (light at the back, dark at the front), labels and key hints
   (['rock', 'paper', 'scissors'] as const).forEach((m, i) => {
     const x = BUTTONS.x[m];
-    b.ell(x, BUTTONS.y + 10, 26, 17, shade(PANEL_TOP, 1.25));
-    b.ell(x, BUTTONS.y + 9, 25, 16, 0x120822);
+    b.ell(x, BUTTONS.y + 11, 27, 17, palette.ink);
+    b.ell(x, BUTTONS.y + 10, 27, 17, 0x56507a);
+    b.ell(x, BUTTONS.y + 9, 26, 16, 0xc8c4e0);
+    b.ell(x, BUTTONS.y + 10, 26, 16, 0x8e88b4);
+    b.rect(x - 14, BUTTONS.y - 7, 5, 1, palette.white); // chrome glint
+    b.ell(x, BUTTONS.y + 9, 24, 15, 0x120822);
     b.text(m, x, BUTTONS.y + 26, moveColors[m].main, { center: true, shadow: palette.ink });
     b.text(String(i + 1), x + 20, BUTTONS.y - 16, palette.lilac);
   });
+  woodGrain(b, lip);
+  wear(b, lip);
   return b;
+}
+
+/** A pixel's colour, or null where nothing is drawn. */
+function colorAt(b: PixelBuffer, x: number, y: number): RGB | null {
+  if (!b.isSet(x, y)) return null;
+  const i = (y * b.width + x) * 4;
+  return (b.data[i]! << 16) | (b.data[i + 1]! << 8) | b.data[i + 2]!;
+}
+
+/** A repeatable 0..1 value per whole-number position, so the texture is the same every load. */
+function hash(x: number, y: number): number {
+  const h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return h - Math.floor(h);
+}
+
+/**
+ * Wood grain on the painted body (only on pixels still in a body colour): long wavy streaks a shade
+ * darker or lighter, broken up so they read as grain and not as stripes. They run down the sides
+ * and along the front face below the control panel (`across` and below).
+ */
+function woodGrain(b: PixelBuffer, across: number): void {
+  for (const base of [BODY, BODY_DARK]) {
+    const dark = shade(base, 0.78);
+    const light = shade(base, 1.22);
+    for (let y = 0; y < b.height; y++)
+      for (let x = 0; x < b.width; x++) {
+        if (colorAt(b, x, y) !== base) continue;
+        // (a, d): across the grain and along it
+        const [a, d] = y >= across ? [y, x] : [x, y];
+        const u = a + 1.6 * Math.sin(d / 23 + a / 7) + 0.8 * Math.sin(d / 61 + a);
+        const line = Math.floor(u / 3);
+        const along = Math.floor(d / (14 + Math.floor(hash(line, 0) * 26)));
+        if (hash(line, along) < 0.3) continue; // streaks break off and pick up again
+        const pos = u - line * 3;
+        if (pos < 0.8) b.px(x, y, dark);
+        else if (pos > 1.6 && pos < 2.2 && hash(line, along + 7) > 0.55) b.px(x, y, light);
+      }
+  }
+}
+
+/**
+ * Wear where hands rest: short light scratches on the front of the control panel and the body,
+ * and the pink trim on the front lip rubbed paler in a few spots.
+ */
+function wear(b: PixelBuffer, lip: number): void {
+  const W = b.width;
+  const scratch = (x: number, y: number, len: number, dir: number) => {
+    for (let i = 0; i < len; i++) {
+      const px = x + i;
+      const py = y + Math.round(i * dir);
+      const c = colorAt(b, px, py);
+      if (c !== null && c !== palette.white) b.px(px, py, lighten(c, 0.3));
+    }
+  };
+  // scratches on the front of the slope, mostly near the middle where the buttons are
+  for (let i = 0; i < 14; i++) {
+    const x = Math.round(30 + hash(i, 1) * (W - 70));
+    const y = Math.round(lip - 22 + hash(i, 2) * 18);
+    scratch(x, y, 2 + Math.round(hash(i, 3) * 4), hash(i, 4) > 0.5 ? 0.5 : -0.34);
+  }
+  // a few on the body sides and the front face
+  for (let i = 0; i < 10; i++) {
+    const left = hash(i, 5) > 0.5;
+    const x = left ? 6 + Math.round(hash(i, 6) * 6) : W - 14 + Math.round(hash(i, 6) * 6);
+    scratch(x, Math.round(120 + hash(i, 7) * 200), 2 + Math.round(hash(i, 8) * 2), 1);
+  }
+  for (let i = 0; i < 6; i++)
+    scratch(Math.round(20 + hash(i, 9) * (W - 40)), lip + 8 + Math.round(hash(i, 10) * 4), 3, 0);
+  // the trim on the lip, rubbed paler where palms slide over it
+  for (let x = 0; x < W; x++)
+    for (let y = lip + 1; y <= lip + 3; y++)
+      if (colorAt(b, x, y) === palette.pink && hash(x, y) > (Math.abs(x - W / 2) < 60 ? 0.88 : 0.98))
+        b.px(x, y, lighten(palette.pink, 0.35));
 }
 
 /** Frames are 52x44; the button top's centre sits at (26, 16) in each frame. */
@@ -130,15 +217,46 @@ export const BUTTON_FRAME = {
   height: 44,
   topX: 26,
   topY: 16,
-  /** up; pressed down; lit (the locked-in move); dim (another move is locked in); flash (lock-in flash). */
-  states: ['up', 'down', 'lit', 'dim', 'flash'] as const,
+  /**
+   * up; pressed down; lit (the locked-in move); dim (another move is locked in); flash (lock-in
+   * flash); hover (pointer over it); shine0..2 (a glint sweeping across the cap).
+   */
+  states: ['up', 'down', 'lit', 'dim', 'flash', 'hover', 'shine0', 'shine1', 'shine2'] as const,
 };
 export type ButtonState = (typeof BUTTON_FRAME.states)[number];
+export const BUTTON_SHINE_FRAMES = 3;
 
 /** How far the top travels when pressed, and how much side shows when it is up. */
 const TRAVEL = { upSide: 7, downSide: 1 };
 
-/** One frame per move and state, in the flat style of the round 3 mock-ups: dark rim, flat top, white icon. */
+/**
+ * Fills an ellipse pixel by pixel, asking `color` for each one with its position inside the
+ * ellipse: nx, ny from -1 to 1, and r, the distance from the centre (1 = the edge).
+ */
+function shadedEll(
+  b: PixelBuffer,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  color: (nx: number, ny: number, r: number) => RGB | null,
+): void {
+  for (let y = -ry; y <= ry; y++) {
+    const w = Math.round(rx * Math.sqrt(Math.max(0, 1 - (y / (ry + 0.5)) ** 2)));
+    for (let x = -w; x <= w; x++) {
+      const nx = x / (rx + 0.5);
+      const ny = y / (ry + 0.5);
+      const c = color(nx, ny, Math.sqrt(nx * nx + ny * ny));
+      if (c !== null) b.px(cx + x, cy + y, c);
+    }
+  }
+}
+
+/**
+ * One frame per move and state, in the flat style of the round 3 mock-ups, shaded like a real
+ * arcade button: a round side lit from the left, a cap with a raised rim that catches the light
+ * at the back and a shallow dish inside, a hard glint top-left, and an embossed white icon.
+ */
 export function paintButtons(): PixelBuffer {
   const { width: fw, height: fh, states } = BUTTON_FRAME;
   const moves = ['rock', 'paper', 'scissors'] as const;
@@ -148,25 +266,58 @@ export function paintButtons(): PixelBuffer {
     states.forEach((state, i) => {
       const cx = i * fw + BUTTON_FRAME.topX;
       const base = row * fh + BUTTON_FRAME.topY;
-      const pressed = state !== 'up' && state !== 'dim';
+      const pressed = state === 'down' || state === 'lit' || state === 'flash';
       const dim = state === 'dim';
+      const lit = state === 'lit';
       const side = pressed ? TRAVEL.downSide : TRAVEL.upSide;
       const top = base + TRAVEL.upSide - side;
-      const k = dim ? 0.4 : 1;
-      // dark rim, then the side, then the flat top with a thin shade ring and a highlight
+      // how bright the cap is: dimmed, pushed into the shadow of the well, lit up, or hovered
+      const k = dim ? 0.42 : state === 'down' ? 0.86 : 1;
+      const up = lit ? 0.35 : state === 'hover' ? 0.12 : 0;
+      const tone = (c: RGB, f = 0) => lighten(shade(c, k), Math.min(1, up + f));
+
+      // dark rim, then the side: a cylinder, light on the left, dark on the right
       b.ell(cx, top + side + 1, 23, 16, palette.ink);
-      for (let s = side; s >= 0; s--) b.ell(cx, top + s, 22, 15, shade(dark, 0.75 * k));
+      for (let s = side; s >= 0; s--)
+        shadedEll(b, cx, top + s, 22, 15, (nx) =>
+          nx < -0.55 ? tone(dark, 0.12) : nx < 0.35 ? tone(shade(dark, 0.85)) : tone(shade(dark, 0.65)),
+        );
+      if (side > 1) b.rect(cx - 15, top + 13, 3, side, tone(dark, 0.3)); // a soft sheen down the side
       b.ell(cx, top, 23, 16, palette.ink);
+
       if (state === 'flash') {
         b.ell(cx, top, 22, 15, palette.white);
         drawSymbol(b, m, cx - 11, top - 8, { white: main, outline: dark, tint: main, detail: dark });
         return;
       }
-      const lit = state === 'lit';
-      b.ell(cx, top, 22, 15, dim ? shade(dark, 0.45) : lit ? lighten(main, 0.7) : dark);
-      b.ell(cx, top - 1, 21, 14, dim ? shade(main, 0.4) : lit ? lighten(main, 0.12) : main);
-      if (!dim) b.ell(cx - 10, top - 9, 5, 2, lighten(main, lit ? 0.85 : 0.6));
-      drawSymbol(b, m, cx - 11, top - 9, symbolTones(m, dim));
+      // the cap: a rim band, light at the back and dark at the front, round a shallow dish
+      shadedEll(b, cx, top, 22, 15, (nx, ny, r) => {
+        if (r > 0.84) return ny < -0.1 ? tone(main, 0.3) : ny < 0.6 ? tone(main) : tone(dark);
+        return r > 0.76 && ny < -0.2 ? tone(shade(main, 0.88)) : tone(main); // the rim's shadow in the dish
+      });
+      if (!dim) {
+        // hard glint on the rim, top-left
+        const glint = lighten(main, 0.85);
+        b.rect(cx - 13, top - 13, 5, 1, glint);
+        b.rect(cx - 16, top - 12, 3, 1, glint);
+        b.px(cx - 18, top - 11, glint);
+        b.px(cx - 7, top - 13, lighten(main, 0.5));
+      }
+      const shine = state.startsWith('shine') ? Number(state.slice(5)) : -1;
+      if (shine >= 0) {
+        // a diagonal band of light crossing the cap, left to right over the frames
+        const at = -14 + shine * 14;
+        shadedEll(b, cx, top, 21, 14, (nx, ny) => {
+          const d = nx * 21 + ny * 8 - at;
+          return d >= 0 && d < 7 ? lighten(main, d < 3 ? 0.75 : 0.45) : null;
+        });
+      }
+      // the icon, embossed: its dark silhouette one pixel down and right, then the icon
+      const ix = cx - 11;
+      const iy = top - 9;
+      const ink = dim ? shade(dark, 0.3) : shade(dark, lit ? 0.75 : 0.6);
+      drawSymbol(b, m, ix + 1, iy + 1, { white: ink, outline: ink, tint: ink, detail: ink });
+      drawSymbol(b, m, ix, iy, symbolTones(m, dim));
     });
   });
   return b;

@@ -111,7 +111,7 @@ export class FightDirector {
           shake(this.scene, this.scene.cameras.main, tuning.shake.koPx, tuning.shake.durationMs * 1.5);
           this.hooks.shakeCabinet(tuning.cabinet.koPx, tuning.cabinet.koMs);
           this.sfx.play('ko');
-          banner.show('K.O.', { color: palette.red, holdMs: Infinity });
+          banner.showKo();
         }
         hud.setRounds(state.roundsWon, this.roundsToWin);
         break;

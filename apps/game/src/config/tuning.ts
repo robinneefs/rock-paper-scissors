@@ -81,11 +81,23 @@ export const tuning = {
    * white `lockFlashes` times (`lockFlashMs` per flash and gap) while a ring pops out round it,
    * one ring frame every `ringFrameMs`.
    */
-  buttons: { pressDepthPx: 6, releaseMs: 80, lockFlashes: 2, lockFlashMs: 45, ringFrameMs: 45 },
-  joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6 },
+  /** Buttons: press and lock-in timings; a glint sweeps them every shineGapMs (frames shineFrameMs apart). */
+  buttons: {
+    pressDepthPx: 6,
+    releaseMs: 80,
+    lockFlashes: 2,
+    lockFlashMs: 45,
+    ringFrameMs: 45,
+    shineGapMs: 6000,
+    shineFrameMs: 50,
+    shineStaggerMs: 110,
+  },
+  /** Joystick: on release it springs back, overshoots by `wobble` of a full tilt, and settles (wobbleMs a step). */
+  joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6, wobble: 0.35, wobbleMs: 60 },
   idle: { breatheEveryMs: 420 },
   intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },
-  transitions: { wipeMs: 240, bandPx: 8 },
+  /** Screen changes: the CRT closes to a line (closeMs), the line shrinks to a dot (lineMs), it stays off (offMs), then back on; a frame every stepMs. */
+  transitions: { closeMs: 120, lineMs: 80, offMs: 60, stepMs: 20 },
   /** Menus; the backdrop's diagonal stripes move one pixel every stripeStepMs. */
   menu: { cursorBlinkMs: 400, repeatDelayMs: 300, stripeStepMs: 90 },
   banner: { slamMs: 180, holdMs: 900 },
@@ -121,8 +133,18 @@ export const tuning = {
     bigHitWarpPx: 2,
     bigHitWarpMs: 260,
   },
-  /** The marquee light flickers (dims to dimAlpha) every minGapMs to maxGapMs, on its own. */
-  marquee: { minGapMs: 4000, maxGapMs: 11000, dimAlpha: 0.45 },
+  /**
+   * The marquee light flickers every minGapMs to maxGapMs, on its own: dips darken the art to
+   * dimAlpha, blackouts to blackoutAlpha, and it flashes surgeAlpha bright for surgeMs as it comes back.
+   */
+  marquee: {
+    minGapMs: 1500,
+    maxGapMs: 4500,
+    dimAlpha: 0.45,
+    blackoutAlpha: 0.7,
+    surgeAlpha: 0.1,
+    surgeMs: 50,
+  },
   result: { delayAfterMatchMs: 400 },
   /** Online: how long "RIVAL LEFT" and other ending messages stay up before going home; lobby text blink. */
   online: { endedHoldMs: 2500, waitBlinkMs: 500 },

@@ -52,13 +52,23 @@ try {
     const scenes = () => page.evaluate(() => window.__rps.scenes());
     const until = async (done) => { for (let i = 0; i < 400 && !(await done()); i++) await run(100); };
 
+    await page.keyboard.press('Backquote'); // hide the dev tuning panel
     await run(1300); await shot('logo');
     await until(async () => (await scenes()).includes('Home'));
     await run(800); await shot('home');
+    // How to play (third menu item), then back home
+    await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await until(async () => (await scenes()).includes('HowTo'));
+    await run(800); await shot('howto');
+    await page.keyboard.press('Enter');
+    await until(async () => (await scenes()).includes('Home'));
+    await run(800);
     await page.keyboard.press('Enter');
     // Play exchanges with a fixed pattern (Throw first, the big hit) until the result screen is up.
     const picks = ['Digit2', 'Digit1', 'Digit3', 'Digit2', 'Digit1'];
     let n = 0;
+    let koShot = false;
     while (!(await scenes()).includes('Result') && n < 60) {
       await until(async () => (await view()) === 'picking' || (await scenes()).includes('Result'));
       if ((await view()) !== 'picking') break;
@@ -68,6 +78,15 @@ try {
       await until(async () => (await view()) !== 'picking');
       await run(700); // around the impact
       if (n === 0) await shot('reveal');
+      if (!koShot) {
+        // the first K.O. of the match: the round ends while the K.O. letters are up
+        await until(async () => (await view()) !== 'reveal');
+        if ((await view()) === 'roundOver') {
+          await run(900);
+          await shot('ko');
+          koShot = true;
+        }
+      }
       n++;
     }
     await until(async () => (await scenes()).includes('Result'));
@@ -79,4 +98,5 @@ try {
 } finally {
   await browser.close();
   server.kill();
+  process.exit(0);
 }

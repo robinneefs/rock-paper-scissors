@@ -2,6 +2,19 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.11.0 (2026-10-11)
+
+- **Polished cabinet buttons.** Each button now sits in a chrome collar, has a rounded side lit from the left, a cap with a raised rim that catches the light at the back, a sharp glint, and an embossed icon. Buttons brighten when the mouse is over them, look pushed into shadow when pressed, and every few seconds a glint sweeps across all three, left to right. Tune the glint under `buttons` in the dev tuning panel.
+- **A more frequent marquee flicker.** The marquee light now flickers every 1.5 to 4.5 seconds (was 4 to 11), sometimes dipping a little and sometimes nearly blacking out. The pink neon tube round the art goes out with it, and the art flashes a little brighter as the tube strikes back. There are six flicker patterns now (was three). Tune it under `marquee` in the dev tuning panel.
+- **New K.O. letters.** The K.O. banner is now big, chunky letters leaning forward, filled pale yellow to gold to orange to red, with a white shine on top, a dark red and black outline and a drop shadow, like a '90s arcade fighter.
+- **Joystick juice.** The joystick clicks every time it snaps into a new direction (spin it round and it keeps clicking) and when you let go, and the stick wobbles past the centre and back before it settles. Tune it under `joystick` in the dev tuning panel.
+- **CRT screen transitions.** Changing screens now switches the monitor off and on like an old tube: the picture closes to a bright line, shrinks to a dot and goes black, then opens back up on the new screen. Tune it under `transitions`.
+- **How to Play.** A new HOW TO PLAY item on the home menu opens a short card: rock beats scissors, scissors beats paper, paper beats rock, how much damage a winning hit does with each (rock 15, scissors 20, paper 10), and the few rules (pick with buttons 1 2 3 before the timer runs out, a pick is made for you if you don't, the same move is a clash, win 2 rounds). Any button goes back.
+- **A wood-grain cabinet.** The cabinet body has a subtle wood grain (down the sides, along the front face), and a bit of wear: light scratches on the front of the control panel and the sides, and the pink trim on the front lip rubbed paler where hands rest.
+
+- **A proper browser tab and link preview.** The tab now reads "RPS Rivals: Rock Paper Scissors Fighter" with a pixel-art Rock button as its icon (also used when the game is added to a phone's home screen), and links shared on social sites and chat apps show the marquee and the three buttons with "PLAY FREE IN YOUR BROWSER". Made from the game's own art by `tools/make-icons.mjs`.
+- **New README and screenshots.** A big PLAY button, a description of the game, fresh screenshots of every screen (including How to Play and the K.O.), the technologies used, an architecture diagram, and a full list of where every asset comes from.
+
 ## 0.10.0 (2026-10-11)
 
 - **New fighters.** Player 1 (left) is now a strong brawler in blue jeans, brown boots and an open red shirt over a white undershirt. Player 2 (right) is a martial artist with a high ponytail, a teal wrap top with white trim, a gold sash, navy pants, white boots and wrapped hands. Both are still drawn in code at 64 px tall, with every pose (idle, rock, paper, scissors, hurt, K.O., win) redrawn; the real sprite sheets can replace them later under the same names.
