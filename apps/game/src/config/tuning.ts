@@ -18,9 +18,11 @@ export const tuning = {
   shake: { byDamage: { 10: 2, 15: 3, 20: 4 } as Record<number, number>, durationMs: 280, koPx: 5 },
   flash: { frames: 2, frameMs: 33 },
   /**
-   * HUD. Timer: gold from timerWarnMs (the ticks start there too), red and shaking from timerRedMs
-   * (twice as hard in the last second); each new second pops one size up for timerPopMs; at 0 a red
-   * 0 drops timerSlamDropPx and slams down in timerSlamMs, then holds for timerSlamHoldMs.
+   * HUD. Timer: the first second is drawn at font size timerBaseSize, and each next second
+   * timerGrowPerTick sizes bigger and timerDriftPx lower (towards the middle). Gold from
+   * timerWarnMs (the ticks start there too), red, shaking and tilting by timerTiltDeg from
+   * timerRedMs (harder in the last second). Each new second pops one size up for timerPopMs.
+   * At 0 a red 0 drops timerSlamDropPx and slams down in timerSlamMs, then holds timerSlamHoldMs.
    */
   hud: {
     drainMs: 600,
@@ -28,6 +30,10 @@ export const tuning = {
     lowHealth: 15,
     timerWarnMs: 3000,
     timerRedMs: 2000,
+    timerBaseSize: 4,
+    timerGrowPerTick: 1,
+    timerDriftPx: 9,
+    timerTiltDeg: 4,
     timerPopMs: 90,
     timerShakePx: 1,
     timerShakeEveryMs: 40,
