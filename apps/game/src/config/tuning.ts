@@ -103,6 +103,19 @@ export const tuning = {
     timeUpPx: 2,
     timeUpMs: 140,
   },
+  /**
+   * CRT screen (Options > CRT SCREEN): glow is how much bright colours bleed, vignette darkens the
+   * edges, cornerRadius rounds the corners (fraction of the screen), roll is the slow bright band.
+   * Scanlines: a dark line scanlineThickness of each pixel row tall, at scanlineAlpha.
+   */
+  crt: {
+    glow: 0.9,
+    vignette: 0.45,
+    cornerRadius: 0.06,
+    roll: 0.035,
+    scanlineThickness: 0.35,
+    scanlineAlpha: 0.28,
+  },
   /** The marquee light flickers (dims to dimAlpha) every minGapMs to maxGapMs, on its own. */
   marquee: { minGapMs: 4000, maxGapMs: 11000, dimAlpha: 0.45 },
   result: { delayAfterMatchMs: 400 },

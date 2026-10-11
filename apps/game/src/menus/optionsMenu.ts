@@ -22,12 +22,18 @@ export const volumeTag = (v: number): string =>
 
 export const soundTag = (muted: boolean): string => (muted ? 'OFF' : 'ON');
 
+export const onOffTag = (on: boolean): string => (on ? 'ON' : 'OFF');
+
+/** Under the menu while the cursor is on CRT SCREEN. */
+export const CRT_HINT: [string, string] = ['SCANLINES AND A SOFT GLOW', 'LIKE AN OLD ARCADE TUBE'];
+
 export type VolumeId = 'music' | 'sfx';
 
 export const optionsMenu = (
   settings: Settings,
   actions: {
     cycleScaling: () => void;
+    toggleCrt: () => void;
     toggleSound: () => void;
     stepVolume: (id: VolumeId) => void;
     back: () => void;
@@ -39,6 +45,13 @@ export const optionsMenu = (
     tag: SCALING_LABEL[settings.scaling],
     enabled: true,
     onSelect: actions.cycleScaling,
+  },
+  {
+    id: 'crt',
+    label: 'CRT SCREEN',
+    tag: onOffTag(settings.crt),
+    enabled: true,
+    onSelect: actions.toggleCrt,
   },
   {
     id: 'sound',

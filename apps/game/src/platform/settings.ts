@@ -21,6 +21,8 @@ export interface Settings {
   muted: boolean;
   musicVolume: number;
   sfxVolume: number;
+  /** The CRT screen look: scanlines, glow and rounded corners on the monitor (WebGL only). */
+  crt: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   muted: false,
   musicVolume: 6,
   sfxVolume: 8,
+  crt: true,
 };
 
 /** The part of the Web Storage API we use (localStorage now, Capacitor Preferences later). */
@@ -76,6 +79,7 @@ function load(store: KeyValueStore | null): Settings {
       muted: typeof saved.muted === 'boolean' ? saved.muted : DEFAULT_SETTINGS.muted,
       musicVolume: volume(saved.musicVolume, DEFAULT_SETTINGS.musicVolume),
       sfxVolume: volume(saved.sfxVolume, DEFAULT_SETTINGS.sfxVolume),
+      crt: typeof saved.crt === 'boolean' ? saved.crt : DEFAULT_SETTINGS.crt,
     };
   } catch {
     return DEFAULT_SETTINGS;

@@ -3,6 +3,8 @@ import { Tex } from '../assets/keys';
 import { MONITOR } from '../config/layout';
 import { palette } from '../config/palette';
 import {
+  CRT_HINT,
+  onOffTag,
   optionsMenu,
   SCALING_HINT,
   SCALING_LABEL,
@@ -50,6 +52,7 @@ export class OptionsScene extends Phaser.Scene {
     };
     const cycleScaling = () => settings.set('scaling', nextScalingMode(settings.value.scaling));
     const toggleSound = () => settings.set('muted', !settings.value.muted);
+    const toggleCrt = () => settings.set('crt', !settings.value.crt);
     /** Select steps the volume up and wraps to OFF; the stick steps it either way. */
     const changeVolume = (id: VolumeId, dir: 1 | -1, wrap: boolean) => {
       const key = VOLUME_KEY[id];
@@ -61,6 +64,7 @@ export class OptionsScene extends Phaser.Scene {
       this,
       optionsMenu(settings.value, {
         cycleScaling,
+        toggleCrt,
         toggleSound,
         stepVolume: (id) => changeVolume(id, 1, true),
         back,
@@ -83,11 +87,17 @@ export class OptionsScene extends Phaser.Scene {
     const show = () => {
       const s = settings.value;
       menu.setTag('scaling', SCALING_LABEL[s.scaling]);
+      menu.setTag('crt', onOffTag(s.crt));
       menu.setTag('sound', soundTag(s.muted));
       menu.setTag('music', volumeTag(s.musicVolume));
       menu.setTag('sfx', volumeTag(s.sfxVolume));
       const id = menu.selectedId;
-      const lines = id === 'sound' || id === 'music' || id === 'sfx' ? SOUND_HINT : SCALING_HINT[s.scaling];
+      const lines =
+        id === 'sound' || id === 'music' || id === 'sfx'
+          ? SOUND_HINT
+          : id === 'crt'
+            ? CRT_HINT
+            : SCALING_HINT[s.scaling];
       lines.forEach((line, i) => hint[i]?.setText(line));
     };
     show();
@@ -104,6 +114,7 @@ export class OptionsScene extends Phaser.Scene {
           const dir = a.dir === 'right' ? 1 : -1;
           const id = menu.selectedId;
           if (id === 'scaling') cycleScaling();
+          else if (id === 'crt') toggleCrt();
           else if (id === 'sound') toggleSound();
           else if (id === 'music' || id === 'sfx') changeVolume(id, dir, false);
         }
