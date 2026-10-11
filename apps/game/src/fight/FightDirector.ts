@@ -121,7 +121,10 @@ export class FightDirector {
     const at = (ms: number, fn: () => void) => this.scene.time.delayedCall(ms, fn);
     for (const side of ['p1', 'p2'] as const) icons[side].drop(e.picks[side], e.autoPicked[side]);
     // the slam when the timer ran out on someone, then the icons whoosh in
-    if (e.autoPicked.p1 || e.autoPicked.p2) this.sfx.play('timeUp');
+    if (e.autoPicked.p1 || e.autoPicked.p2) {
+      this.sfx.play('timeUp');
+      hud.slamTimer();
+    }
     this.sfx.play('whoosh', { volume: 0.7 });
 
     const outcome = e.outcome;

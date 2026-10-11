@@ -17,7 +17,24 @@ export const tuning = {
   hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } as Record<number, number> },
   shake: { byDamage: { 10: 2, 15: 3, 20: 4 } as Record<number, number>, durationMs: 280, koPx: 5 },
   flash: { frames: 2, frameMs: 33 },
-  hud: { drainMs: 600, trailDelayMs: 120, lowHealth: 30, timerWarnMs: 3000 },
+  /**
+   * HUD. Timer: gold from timerWarnMs (the ticks start there too), red and shaking from timerRedMs
+   * (twice as hard in the last second); each new second pops one size up for timerPopMs; at 0 a red
+   * 0 drops timerSlamDropPx and slams down in timerSlamMs, then holds for timerSlamHoldMs.
+   */
+  hud: {
+    drainMs: 600,
+    trailDelayMs: 120,
+    lowHealth: 15,
+    timerWarnMs: 3000,
+    timerRedMs: 2000,
+    timerPopMs: 90,
+    timerShakePx: 1,
+    timerShakeEveryMs: 40,
+    timerSlamDropPx: 10,
+    timerSlamMs: 160,
+    timerSlamHoldMs: 450,
+  },
   /**
    * Cabinet buttons. releaseMs: how long a quick tap stays down. Lock-in: the chosen button flashes
    * white `lockFlashes` times (`lockFlashMs` per flash and gap) while a ring pops out round it,

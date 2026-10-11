@@ -8,6 +8,7 @@ import { PixelText } from './PixelText';
 
 const BAR = { y: 8, w: 88, h: 8, inset: 6 } as const;
 const PIP = { y: 21, size: 5, gap: 3 } as const;
+const TIMER = { x: MONITOR.width / 2, y: 5 } as const;
 
 interface BarState {
   shown: number; // what the bar shows now (animates toward the target)
@@ -19,6 +20,12 @@ interface BarState {
 export class HudView {
   private readonly gfx: Phaser.GameObjects.Graphics;
   private readonly timer: PixelText;
+  /** One size up, shown for a moment on each new second (the pop) and for the slam at 0. */
+  private readonly timerPop: PixelText;
+  private readonly timerSlam: PixelText;
+  private lastSecs = 0;
+  private popUntil = 0;
+  private slamHide: Phaser.Time.TimerEvent | null = null;
   private readonly prompt: PixelText;
   private readonly ready: Record<Side, PixelText>;
   private readonly bars: Record<Side, BarState>;
@@ -35,12 +42,13 @@ export class HudView {
       p2: { shown: maxHealth, trail: maxHealth, max: maxHealth },
     };
     this.gfx = scene.add.graphics();
-    this.timer = new PixelText(scene, MONITOR.width / 2, 6, '', {
-      size: 2,
-      color: palette.text,
-      align: 'center',
-      shadow: palette.ink,
-    });
+    // big timer between the health bars: 15x21 digits, 20x28 for the pop, both centred on TIMER
+    const big = { align: 'center', outline: palette.ink, shadow: palette.shadow } as const;
+    this.timer = new PixelText(scene, TIMER.x, TIMER.y, '', { ...big, size: 3, color: palette.text });
+    this.timerPop = new PixelText(scene, TIMER.x, TIMER.y - 4, '', { ...big, size: 4, color: palette.white });
+    this.timerSlam = new PixelText(scene, TIMER.x, TIMER.y - 4, '0', { ...big, size: 4, color: palette.red });
+    this.timerPop.setVisible(false);
+    this.timerSlam.setVisible(false);
     new PixelText(scene, BAR.inset, PIP.y, names.p1, { color: palette.text, shadow: palette.ink });
     new PixelText(scene, MONITOR.width - BAR.inset, PIP.y, names.p2, {
       color: palette.text,
@@ -103,17 +111,55 @@ export class HudView {
     });
   }
 
-  /** Seconds left, or null to hide the timer. */
+  /**
+   * Seconds left, or null to hide the timer. Called every frame while picking: each new second pops
+   * in one size bigger, and in the last seconds the timer turns gold, then red, and shakes.
+   */
   setTimer(msLeft: number | null): void {
+    const t = tuning.hud;
     if (msLeft === null) {
       this.timer.setVisible(false);
+      this.timerPop.setVisible(false);
+      this.lastSecs = 0;
       return;
     }
+    const now = this.scene.time.now;
     const secs = Math.ceil(msLeft / 1000);
-    this.timer
-      .setVisible(true)
-      .setText(String(secs))
-      .setColor(msLeft <= tuning.hud.timerWarnMs ? palette.red : palette.text);
+    const color =
+      msLeft <= t.timerRedMs ? palette.red : msLeft <= t.timerWarnMs ? palette.gold : palette.text;
+    if (secs !== this.lastSecs) {
+      this.lastSecs = secs;
+      this.popUntil = now + t.timerPopMs;
+      this.timer.setText(String(secs));
+      this.timerPop.setText(String(secs)).setColor(palette.white);
+    }
+    const popping = now < this.popUntil;
+    this.timer.setVisible(!popping).setColor(color);
+    this.timerPop.setVisible(popping);
+    // whole-pixel jitter, stronger in the last second
+    const amp = msLeft <= 1000 ? t.timerShakePx * 2 : msLeft <= t.timerRedMs ? t.timerShakePx : 0;
+    const step = Math.floor(now / Math.max(1, t.timerShakeEveryMs));
+    const jitter = (k: number) => (amp ? ((step * 7 + k * 13) % (amp * 2 + 1)) - amp : 0);
+    this.timer.setAnchorX(TIMER.x + jitter(1)).setY(TIMER.y + jitter(2));
+  }
+
+  /** Time ran out: a big red 0 slams down and holds for a moment. */
+  slamTimer(): void {
+    const t = tuning.hud;
+    this.slamHide?.remove();
+    this.timer.setVisible(false);
+    this.timerPop.setVisible(false);
+    this.timerSlam.setVisible(true).setY(TIMER.y - 4 - t.timerSlamDropPx);
+    this.scene.tweens.add({
+      targets: this.timerSlam,
+      y: TIMER.y - 4,
+      duration: t.timerSlamMs,
+      ease: 'Back.easeOut',
+      onUpdate: () => this.timerSlam.setY(Math.round(this.timerSlam.y)),
+    });
+    this.slamHide = this.scene.time.delayedCall(t.timerSlamMs + t.timerSlamHoldMs, () =>
+      this.timerSlam.setVisible(false),
+    );
   }
 
   setReady(side: Side, ready: boolean): void {
