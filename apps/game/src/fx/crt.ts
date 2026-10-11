@@ -53,12 +53,13 @@ void main() {
     return;
   }
 
-  // phosphor glow: a 5x5 average of the neighbourhood, only its bright part, added on top
+  // phosphor glow: the average of 9 taps spread over a 5x5 neighbourhood, only its bright part,
+  // added on top (9 reads, not 25, so it stays cheap on slow GPUs)
   vec3 sum = vec3(0.0);
-  for (int i = -2; i <= 2; i++)
-    for (int j = -2; j <= 2; j++)
-      sum += texture2D(uMainSampler, uv + vec2(float(i), float(j)) * px).rgb;
-  sum /= 25.0;
+  for (int i = -1; i <= 1; i++)
+    for (int j = -1; j <= 1; j++)
+      sum += texture2D(uMainSampler, uv + vec2(float(i), float(j)) * 2.0 * px).rgb;
+  sum /= 9.0;
   vec3 col = base.rgb + max(sum - 0.3, 0.0) * uGlow;
 
   // vignette: darker towards the edges
@@ -121,7 +122,9 @@ export function registerCrt(game: Phaser.Game): boolean {
 /** Puts the monitor shader on a camera (WebGL only). The CRT look itself follows screenFx.crt. */
 export function useScreenShader(cam: Phaser.Cameras.Scene2D.Camera): void {
   if (!(cam.scene.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer)) return;
-  cam.setPostPipeline(CRT_PIPELINE);
+  // a scene keeps its camera when it restarts, so only add the shader once
+  const has = cam.getPostPipeline(CRT_PIPELINE);
+  if (Array.isArray(has) ? has.length === 0 : !has) cam.setPostPipeline(CRT_PIPELINE);
 }
 
 /**
