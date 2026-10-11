@@ -1,4 +1,4 @@
-// Pixel-art stage renderer for Rock Paper Scissors Fighter mock-ups.
+// Pixel-art stage renderer for RPS Rivals mock-ups.
 // Draws on a 320x180 canvas, scaled up 4x with crisp pixels.
 (function () {
   const W = 320, H = 180, GROUND = 140;

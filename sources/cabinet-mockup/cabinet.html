@@ -142,7 +142,7 @@ function monitor(st){
 function overlays(s,lay,mon,st,opts){
  const h=st.hud,mx=lay.mx,my=lay.my,P=(x,y)=>`left:${x*s}px;top:${y*s}px`;
  const side=(cls,nm,hp,lost,won)=>`<div class="side ${cls}"><div class="nm">${nm}</div><div class="bar"><i class="lost" style="width:${lost??hp}%"></i><i class="hp" style="width:${hp}%"></i></div><div class="pips"><span class="pip ${won>0?'won':''}"></span><span class="pip ${won>1?'won':''}"></span></div></div>`;
-let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${13*s}px">RPS FIGHTER<small>ATTACK · THROW · BLOCK</small></div>`;
+let o=`<div class="abs marq" style="${P(lay.x0+8,lay.y0+3)};width:${(CAB.W-16)*s}px;height:${(CAB.marq-7)*s}px;font-size:${13*s}px">RPS RIVALS<small>ATTACK · THROW · BLOCK</small></div>`;
  if(!st.menu){o+=`<div class="abs hud" style="${P(mx+6,my+7)};width:${204*s}px">${side('l','YOU',h.hp1,h.lost1,h.won1)}
   <div class="timer ${h.timer==null?'vs':h.timer<=2?'hurry':''}"><span>${h.timer??'VS'}</span><span class="lbl">${h.label}</span></div>${side('r','CPU',h.hp2,h.lost2,h.won2)}</div>`;
  if(h.mine)o+=`<div class="abs mine" style="${P(mx+mon.x1+2,my+mon.by-20)}">ONLY YOU SEE THIS</div>`;
@@ -177,7 +177,7 @@ function build(kind,st){
  if(kind==='browser'){
   const VW=1920,VH=1200,s=2,top=64,TOP=64,LW=VW/s,LH=(VH-top)/s;
   const v=document.createElement('div');v.className='view';v.style.width=VW+'px';v.style.height=VH+'px';
-  v.innerHTML=`<div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url">localhost:5173 · RPS Fighter</div></div>`;
+  v.innerHTML=`<div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url">localhost:5173 · RPS Rivals</div></div>`;
   const cv=document.createElement('canvas');cv.className='px';cv.width=LW;cv.height=LH;cv.style.top=top+'px';cv.style.width=VW+'px';cv.style.height=(VH-top)+'px';v.appendChild(cv);
   const ctx=cv.getContext('2d');
   const cabH=CAB.marq+CAB.bezV*2+CAB.monH+CAB.panel+CAB.door,x0=(LW-CAB.W)/2,y0=LH-cabH-14;

@@ -2,7 +2,7 @@
 
 _Status: in use, 2026-10-10. Steps 1 and 2 of the build order are built (`packages/core`, `apps/game`); the code follows this document. Change it when a decision changes._
 
-How the Rock Paper Scissors Fighter code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, Colyseus later, Capacitor later, arcade cabinet layout, pixel perfect, polish as a core goal).
+How the RPS Rivals code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, Colyseus later, Capacitor later, arcade cabinet layout, pixel perfect, polish as a core goal).
 
 ## Contents
 

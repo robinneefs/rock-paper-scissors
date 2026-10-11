@@ -1,4 +1,4 @@
-# Rock Paper Scissors Fighter
+# RPS Rivals
 
 **[▶ Play it in your browser](https://robinneefs.github.io/RPS-Fighter/)** on desktop or on a phone held upright, no install needed.
 

@@ -1,4 +1,4 @@
-# Rock Paper Scissors Fighter: Project Context
+# RPS Rivals: Project Context
 
 _Last updated: 2026-10-10_
 
@@ -225,7 +225,6 @@ Architecture rules:
 - Cabinet look: monitor aspect (3:4 portrait chosen as default), cabinet colours and side art.
 - Architecture defaults to confirm (see section 16 of the architecture doc): monorepo, Tweakpane, lint tool for import rules.
 - 100 starting health right? 5s or 3s timer?
-- Game name beyond "Rock Paper Scissors Fighter"?
 - Art direction references for the NEXT step (user, 2026-10-11): use the user's four redesign mock-ups in `docs/mockups/redesign/` as the starting point. `mockups-characters-1.png`: one Ryu-like karate fighter (brown hair, red wraps, torn gi, black belt, barefoot) in nine pixel styles (classic 16-bit, modern, low-res, anime, detailed, chibi, dark, minimalist, cartoon). `mockups-characters-2.png`: the same fighter as a chibi in nine variants (clean, white sticker outline, shaded, anime, Game Boy, SNES, dithered, minimalist, expressive). `mockups-game-1.png` and `mockups-game-2.png` ("RPS Rivals" sheet): the vertical cabinet with marquee art, joystick plus red/yellow/blue ROCK/PAPER/SCISSORS buttons, menu, fighter select, fight HUD, hit effects, K.O., online match, and a palette of hot pink, cyan, violet, navy and pale lavender. These lean toward relabelling the moves Rock/Paper/Scissors (see Move animations).
 - Move animations (user's note 2026-10-10): Attack, Throw and Block currently look nearly the same. Either make each clearly read as a strike, a grab/throw and a block/counter, or relabel the moves Rock, Paper, Scissors with animations to match. Roadmap doc recommends trying distinct silhouettes on the placeholders first.
 
@@ -279,4 +278,5 @@ Architecture rules:
 - 2026-10-10: At the user's request, documented the tuning panel: new guide `docs/tuning/TUNING-PANEL.md` (how to use it, a tuning workflow, how changes get back into the code, and how it is built and extended), linked from the README, the architecture doc and the changelog, with a screenshot (`docs/screenshots/browser-tuning-panel.png`). Workflow agreed: the user tunes, presses Copy changes and pastes the note in the thread; Claude writes the values in as new defaults.
 - 2026-10-11: v0.4.2: the user's four redesign mock-ups added to `docs/mockups/redesign/` (PR #10, merged into main @ 533d40b at the user's request; Release workflow tags v0.4.2). Docs only; not republished to GitHub Pages. PR #8 (tuning panel, v0.5.0) will need its version/changelog lines merged with this.
 - 2026-10-11: Decided to move hosting, once the game is rebranded and renamed, to a free GitHub organization named after the game at `<org>.github.io`, replacing robinneefs.github.io/RPS-Fighter/. Added to the roadmap doc.
-- 2026-10-11: PR #8 (dev tuning panel, v0.5.0) merged into main at the user's request (Release workflow tags v0.5.0). Not republished to GitHub Pages (the panel is dev-only, so the online game looks the same). The user put the music/sound/juice thread on hold; next in that thread when resumed: juice, then sound.
+- 2026-10-11: PR #8 (dev tuning panel, v0.5.0) merged into main @ d34be69 at the user's request (Release workflow tags v0.5.0). The user's local checkout (D:\Vibe Coding Projects\rock-paper-scissors) is on main. Not republished to GitHub Pages (the panel is dev-only, so the online game looks the same). The user put the music/sound/juice thread on hold; next in that thread when resumed: juice, then sound.
+- 2026-10-11: The game is renamed **RPS Rivals** (user's decision, replacing "Rock Paper Scissors Fighter" / "RPS Fighter"). All docs updated. Kept on purpose until later steps: the live URL robinneefs.github.io/RPS-Fighter/ (moves with the planned hosting change), the `rps-fighter.*` localStorage keys (changing them would reset saved settings), and in-game text such as the cabinet marquee (part of the asset rebrand, next). The GitHub repo rename to `rps-rivals` and the user's local folder rename are done by the user.
