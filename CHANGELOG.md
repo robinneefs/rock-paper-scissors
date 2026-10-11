@@ -2,6 +2,10 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.10.0 (2026-10-11)
+
+- **New fighters.** Player 1 (left) is now a strong brawler in blue jeans, brown boots and an open red shirt over a white undershirt. Player 2 (right) is a martial artist with a high ponytail, a teal wrap top with white trim, a gold sash, navy pants, white boots and wrapped hands. Both are still drawn in code at 64 px tall, with every pose (idle, rock, paper, scissors, hurt, K.O., win) redrawn; the real sprite sheets can replace them later under the same names.
+
 ## 0.9.1 (2026-10-11)
 
 - **Online: fixed sides for both players.** The player who creates the room (the host) is always Player 1 on the left, and the player who joins is always Player 2 on the right, the same on both screens. Before, each player saw themselves on the left. The name tags now read "P1 YOU" and "P2 RIVAL" (or the other way round for the guest), and the result screen shows the score as P1's rounds - P2's rounds. Both players need this version.

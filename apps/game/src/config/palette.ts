@@ -31,25 +31,46 @@ export const moveColors = {
   scissors: { main: 0x3ff0ff, shade: 0x1496be },
 } as const;
 
-/** Fighter placeholder colours (p1 white gi + red band, p2 blue gi + gold band). */
+/**
+ * Fighter colours. p1: a strong brawler in a red shirt over a white undershirt and blue jeans.
+ * p2: a martial artist in a teal wrap top with white trim, gold sash, navy pants and white boots.
+ */
 export const fighterColors = {
   p1: {
-    gi: 0xf2ecff,
-    giShade: 0xa99bd6,
-    band: 0xff3b6b,
-    belt: 0x241c3a,
-    skin: 0xffcf9e,
-    skinShade: 0xe09a6e,
-    hair: 0x2d2452,
+    kind: 'brawler',
+    skin: 0xf0b088,
+    skinShade: 0xb8724e,
+    hair: 0x3a2418,
+    hairLight: 0x6a4430,
+    top: 0xe0303a,
+    topShade: 0x96182a,
+    under: 0xf6f2ff,
+    underShade: 0xc4bcd8,
+    legs: 0x3d6fc4,
+    legsShade: 0x26468a,
+    legsLight: 0x7aa4e4,
+    belt: 0x5a3a24,
+    buckle: 0xffb321,
+    shoes: 0x4a2c1c,
+    shoesShade: 0x2a180e,
   },
   p2: {
-    gi: 0x4a4aaa,
-    giShade: 0x2c286c,
-    band: 0xffcf4a,
-    belt: 0xffcf4a,
-    skin: 0xecaa78,
-    skinShade: 0xb8704a,
-    hair: 0x1e1628,
+    kind: 'striker',
+    skin: 0xf2c098,
+    skinShade: 0xc0805c,
+    hair: 0x2b1838,
+    hairLight: 0x5e3c80,
+    top: 0x22b4c4,
+    topShade: 0x136f86,
+    under: 0xf6f2ff,
+    underShade: 0xc4bcd8,
+    legs: 0x2c2a5c,
+    legsShade: 0x1a1838,
+    legsLight: 0x4a4890,
+    belt: 0xffb321,
+    buckle: 0xc46c14,
+    shoes: 0xf6f2ff,
+    shoesShade: 0xa99bd6,
   },
 } as const;
 
