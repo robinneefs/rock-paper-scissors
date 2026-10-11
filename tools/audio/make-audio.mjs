@@ -32,11 +32,7 @@ const MUSIC_SR = 44100;
 
 // ------------------------------------------------------------------ sound effects
 
-/**
- * Each entry: name -> (buf, variation index, random) => void. `variations` makes name_1..n.
- * `peak` (default 0.89) sets how loud the sound is written, to balance it against the others:
- * every sound is scaled so its loudest sample hits `peak`, so dense sounds need a lower one.
- */
+/** Each entry: name -> (buf, variation index, random) => void. `variations` makes name_1..n. */
 const sfx = {
   menuMove: {
     len: 0.08,
@@ -161,31 +157,18 @@ const sfx = {
   },
   ko: {
     len: 1.4,
-    peak: 0.72, // softer onset and level: the noise burst used to crack at full volume
     make: (b) => {
-      voice(b, 0, {
-        wave: 'noise',
-        f0: 5000,
-        f1: 500,
-        dur: 1.2,
-        decay: 0.35,
-        vol: 0.8,
-        seed: 77,
-        attack: 0.015,
-      });
+      voice(b, 0, { wave: 'noise', f0: 5000, f1: 500, dur: 1.2, decay: 0.35, vol: 0.8, seed: 77 });
       voice(b, 0, { f0: 220, f1: 30, dur: 0.8, duty: 0.5, decay: 0.3, vol: 0.4 });
-      voice(b, 0, { wave: 'sine', f0: 90, f1: 28, dur: 1.0, decay: 0.35, vol: 0.9, attack: 0.01 });
+      voice(b, 0, { wave: 'sine', f0: 90, f1: 28, dur: 1.0, decay: 0.35, vol: 0.9 });
       voice(b, 0.05, { wave: 'metal', f0: 2000, f1: 400, dur: 0.6, decay: 0.2, vol: 0.2 });
     },
   },
   roundStart: {
     len: 0.8,
-    peak: 0.42, // a dense square-wave arpeggio: at full peak it was twice as loud as the hits
     make: (b) => {
       const s = 0.075;
-      ['C5', 'E5', 'G5'].forEach((n, i) =>
-        voice(b, i * s, { f0: hz(n), dur: s, duty: 0.25, vol: 0.4, attack: 0.006 }),
-      );
+      ['C5', 'E5', 'G5'].forEach((n, i) => voice(b, i * s, { f0: hz(n), dur: s, duty: 0.25, vol: 0.4 }));
       voice(b, 3 * s, {
         f0: hz('C6'),
         dur: 0.45,
@@ -194,23 +177,21 @@ const sfx = {
         sustain: 0.2,
         vol: 0.4,
         vib: 0.006,
-        attack: 0.006,
       });
-      voice(b, 3 * s, { f0: hz('G5'), dur: 0.45, duty: 0.5, decay: 0.2, vol: 0.15, attack: 0.006 });
+      voice(b, 3 * s, { f0: hz('G5'), dur: 0.45, duty: 0.5, decay: 0.2, vol: 0.15 });
     },
   },
   fight: {
     len: 0.6,
-    peak: 0.75, // with a soft onset: the noise and kick used to hit full volume in the first sample
     make: (b) => {
-      voice(b, 0, { wave: 'noise', f0: 9000, dur: 0.1, decay: 0.03, vol: 0.5, seed: 4, attack: 0.008 });
-      voice(b, 0, { wave: 'sine', f0: 150, f1: 40, dur: 0.2, decay: 0.07, vol: 0.8, attack: 0.006 });
+      voice(b, 0, { wave: 'noise', f0: 9000, dur: 0.1, decay: 0.03, vol: 0.5, seed: 4 });
+      voice(b, 0, { wave: 'sine', f0: 150, f1: 40, dur: 0.2, decay: 0.07, vol: 0.8 });
       for (const n of ['A4', 'C#5', 'E5', 'A5'])
         voice(b, 0.02, { f0: hz(n), dur: 0.45, duty: 0.25, decay: 0.12, sustain: 0.1, vol: 0.2 });
     },
   },
   winJingle: { len: 2.0, make: (b) => jingle(b, true) },
-  loseJingle: { len: 2.2, peak: 0.6, make: (b) => jingle(b, false) }, // denser than the win jingle
+  loseJingle: { len: 2.2, make: (b) => jingle(b, false) },
 };
 
 function jingle(b, won) {
@@ -356,7 +337,7 @@ for (const [name, def] of Object.entries(sfx)) {
     const b = new Buffer32(SFX_SR, def.len);
     def.make(b, v, rng(1000 + v * 31 + name.length));
     const file = count > 1 ? `${name}_${v + 1}.wav` : `${name}.wav`;
-    writeFileSync(join(OUT, 'sfx', file), wav(trim(normalize(b, def.peak))));
+    writeFileSync(join(OUT, 'sfx', file), wav(trim(normalize(b))));
   }
 }
 

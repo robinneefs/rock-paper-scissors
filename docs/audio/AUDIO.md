@@ -37,7 +37,6 @@ Options has SOUND (on or off), MUSIC and EFFECTS. The stick left and right chang
 
 1. Edit or add the sound in `tools/audio/make-audio.mjs` (each effect is a few `voice()` calls; the music is written as note steps per bar).
 2. If it is new, add its key to `SFX` in `apps/game/src/audio/sounds.ts` (with the number of variations), and call `audio.play('key')` where it should play.
-   Every effect is scaled so its loudest sample hits the same peak, so a dense sound (a chord, an arpeggio, noise) ends up louder than a sparse one. If one stands out, give it a lower `peak` (like `roundStart` and `ko`), and give hard-hitting voices a few ms of `attack` so they don't crack.
 3. Run `npm run audio` (needs `ffmpeg` installed for the music files). It rewrites the files in `apps/game/public/assets/audio/`.
 4. `npm test` checks that every sound the game loads has a file.
 
