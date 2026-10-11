@@ -29,7 +29,7 @@ export class FightScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { input, flow, lights, audio } = getContext(this);
+    const { input, flow, lights, audio, cabinetShake } = getContext(this);
     const { session, setup } = this.fight;
     useMonitorCamera(this);
     // ?stage=<id> in the address forces a stage, for trying one out
@@ -47,6 +47,7 @@ export class FightScene extends Phaser.Scene {
     new FightDirector(this, session, { fighters, clash, hud, banner }, audio, session.rules.roundsToWin, {
       clearPick: () => lights.select(null),
       matchOver: (winner, state) => flow.toResult({ setup, session, winner, state }),
+      shakeCabinet: (px, ms) => cabinetShake.kick(px, ms),
     });
 
     // online only: the match ends early if the other player leaves or the connection drops

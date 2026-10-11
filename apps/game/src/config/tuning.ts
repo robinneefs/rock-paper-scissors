@@ -37,6 +37,19 @@ export const tuning = {
   hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } as Record<number, number> },
   shake: { byDamage: { 10: 2, 15: 3, 20: 4 } as Record<number, number>, durationMs: 280, koPx: 5 },
   flash: { frames: 2, frameMs: 33 },
+  /** The K.O. hit freezes on a white frame for freezeMs, then plays at slowScale speed for slowMs (real time). */
+  ko: { freezeMs: 110, flashAlpha: 0.85, slowScale: 0.3, slowMs: 650 },
+  /** Hit sparks in the winning move's colours, more for bigger hits; dust kicks up behind a lunge. */
+  sparks: {
+    countByDamage: { 10: 8, 15: 11, 20: 14 } as Record<number, number>,
+    speedMin: 50,
+    speedMax: 120,
+    spreadDeg: 110,
+    gravity: 260,
+    lifeMs: 380,
+    sizePx: 3,
+  },
+  dust: { count: 5, speedMin: 12, speedMax: 30, gravity: -20, lifeMs: 360, sizePx: 3 },
   /**
    * HUD. Timer: the first second is drawn at font size timerBaseSize, and each next second
    * timerGrowPerTick sizes bigger and timerDriftPx lower (towards the middle). Gold from
@@ -48,6 +61,8 @@ export const tuning = {
     drainMs: 600,
     trailDelayMs: 120,
     lowHealth: 15,
+    /** At low health the bar pulses brighter and its frame flashes red, flipping every lowPulseMs. */
+    lowPulseMs: 260,
     timerWarnMs: 3000,
     timerRedMs: 2000,
     timerBaseSize: 4,
@@ -74,6 +89,22 @@ export const tuning = {
   /** Menus; the backdrop's diagonal stripes move one pixel every stripeStepMs. */
   menu: { cursorBlinkMs: 400, repeatDelayMs: 300, stripeStepMs: 90 },
   banner: { slamMs: 180, holdMs: 900 },
+  /**
+   * The whole cabinet rattles against the room: on a K.O., on a hit of bigHitDamage or more,
+   * and once when the pick timer runs out. It moves to a new offset every shakeStepMs.
+   */
+  cabinet: {
+    shakeStepMs: 40,
+    koPx: 3,
+    koMs: 480,
+    bigHitDamage: 20,
+    bigHitPx: 1,
+    bigHitMs: 180,
+    timeUpPx: 2,
+    timeUpMs: 140,
+  },
+  /** The marquee light flickers (dims to dimAlpha) every minGapMs to maxGapMs, on its own. */
+  marquee: { minGapMs: 4000, maxGapMs: 11000, dimAlpha: 0.45 },
   result: { delayAfterMatchMs: 400 },
   /** Online: how long "RIVAL LEFT" and other ending messages stay up before going home; lobby text blink. */
   online: { endedHoldMs: 2500, waitBlinkMs: 500 },

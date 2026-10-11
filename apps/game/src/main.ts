@@ -8,6 +8,7 @@ import { PixelScaler } from './platform/PixelScaler';
 import { browserStore, SettingsStore } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
 import { CabinetScene } from './scenes/CabinetScene';
+import { CabinetShake } from './fx/cabinetShake';
 import { CabinetLights, setContext } from './scenes/context';
 import { FightScene } from './scenes/FightScene';
 import { SceneFlow } from './scenes/flow';
@@ -47,7 +48,15 @@ const game = new Phaser.Game({
 
 const audio = new AudioService(game, settings);
 const flow = new SceneFlow(game, audio);
-setContext(game, { input: new InputRouter(), scaler, settings, flow, lights: new CabinetLights(), audio });
+setContext(game, {
+  input: new InputRouter(),
+  scaler,
+  settings,
+  flow,
+  lights: new CabinetLights(),
+  audio,
+  cabinetShake: new CabinetShake(),
+});
 
 settings.onChange((s) => scaler.setMode(s.scaling));
 scaler.onChange((l) => {

@@ -20,6 +20,12 @@ Every build that goes online gets a new version number (in `apps/game/package.js
   - The menus keep the sunset backdrop. Stages are listed in `apps/game/src/config/stages.ts`, so adding or removing one is one line plus its painter. Add `?stage=field` (or `street`, `castle`) to the address to try a stage.
 - **A new menu backdrop.** The home, options and online screens drop the '80s sunset for a '90s arcade select-screen look: deep purple with a soft glow behind the menu, a pink diagonal slash, halftone dots in two corners, big faint move symbols, and thin stripes drifting slowly across.
 - **Evened-out sound levels.** The menu blips, the ROUND sting and the win and lose jingles were much louder than the fight sounds (most noticeable after a match, when choosing Retry or Main menu). They now play at about the same level as the rest.
+- **The cabinet shakes.** The whole arcade machine rattles against the room: hard on a K.O., a little on a 20-damage hit, and once when the pick timer runs out.
+- **K.O. slow motion.** The finishing hit freezes on a white flash, then plays in slow motion for a moment before the K.O. banner.
+- **Hit sparks and dust.** Sparks in the winning move's colours fly off the hurt fighter (more for bigger hits), and dust kicks up behind a fighter's back foot as they lunge.
+- **Low health pulse.** At 15 health or less, a health bar pulses brighter and its frame flashes red.
+- **A flickering marquee.** Every few seconds the marquee's backlight flickers like an old tube, on its own, whatever is happening in the game.
+- All of these are tunable in the dev panel (`cabinet`, `ko`, `sparks`, `dust`, `marquee`, and `lowPulseMs` under `hud`).
 - **Falling damage numbers.** When a hit lands, the damage (like "-15") hops up next to the hurt fighter's head in the winning move's colour, then falls away.
 
 ## 0.8.0 (2026-10-11)

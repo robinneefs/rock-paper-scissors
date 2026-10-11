@@ -1,9 +1,12 @@
-import { opponentOf, type MatchState, type Side } from '@rps/core';
+import { opponentOf, type MatchState, type Move, type Side } from '@rps/core';
 import type Phaser from 'phaser';
 import { HIT_SFX, type SfxPlayer } from '../audio/sounds';
-import { palette } from '../config/palette';
+import { STAGE } from '../config/layout';
+import { moveColors, palette } from '../config/palette';
 import { tuning } from '../config/tuning';
 import { flash } from '../fx/flash';
+import { koImpact } from '../fx/koImpact';
+import { burst } from '../fx/particles';
 import { shake } from '../fx/shake';
 import type { MatchSession, SessionEvents } from '../session/MatchSession';
 import type { BannerView } from '../views/BannerView';
@@ -33,7 +36,12 @@ export class FightDirector {
     private readonly views: FightViews,
     private readonly sfx: SfxPlayer,
     private readonly roundsToWin: number,
-    private readonly hooks: { clearPick: () => void; matchOver: (winner: Side, state: MatchState) => void },
+    private readonly hooks: {
+      clearPick: () => void;
+      matchOver: (winner: Side, state: MatchState) => void;
+      /** Rattles the whole cabinet against the room. */
+      shakeCabinet: (px: number, ms: number) => void;
+    },
   ) {
     this.offs.push(
       session.on('phase', this.onPhase),
@@ -100,6 +108,7 @@ export class FightDirector {
           fighters[winner].setOffset(0);
           clash.hide();
           shake(this.scene, this.scene.cameras.main, tuning.shake.koPx, tuning.shake.durationMs * 1.5);
+          this.hooks.shakeCabinet(tuning.cabinet.koPx, tuning.cabinet.koMs);
           this.sfx.play('ko');
           banner.show('K.O.', { color: palette.red, holdMs: Infinity });
         }
@@ -123,6 +132,7 @@ export class FightDirector {
     if (e.autoPicked.p1 || e.autoPicked.p2) {
       this.sfx.play('timeUp');
       hud.slamTimer();
+      this.hooks.shakeCabinet(tuning.cabinet.timeUpPx, tuning.cabinet.timeUpMs);
     }
     at(r.flyAtMs, () => {
       clash.fly(r.impactAtMs - r.flyAtMs);
@@ -135,6 +145,7 @@ export class FightDirector {
         fighters[side].pose(e.picks[side]);
         const lunges = outcome.kind === 'tie' || outcome.winner === side;
         fighters[side].setOffset(lunges ? r.lungePx : 0);
+        if (lunges) this.dust(side);
       }
     });
 
@@ -150,6 +161,11 @@ export class FightDirector {
       loser.setOffset(-r.lungePx / 2);
       flash(this.scene, loser.sprite, tuning.flash.frames, tuning.flash.frameMs);
       this.sfx.play(HIT_SFX[e.picks[outcome.winner]], { detune: (Math.random() - 0.5) * 80 });
+      this.sparks(outcome.loser, e.picks[outcome.winner], outcome.damage);
+      const ko = e.events.some((ev) => ev.type === 'ko');
+      if (ko) koImpact(this.scene, tuning.ko);
+      else if (outcome.damage >= tuning.cabinet.bigHitDamage)
+        this.hooks.shakeCabinet(tuning.cabinet.bigHitPx, tuning.cabinet.bigHitMs);
       const pause = tuning.hitPause.byDamage[outcome.damage] ?? 60;
       at(pause, () => {
         shake(
@@ -163,12 +179,47 @@ export class FightDirector {
         const amount = hit?.type === 'damage' ? hit.amount : outcome.damage;
         clash.showDamage(outcome.loser, amount, e.picks[outcome.winner]);
       });
-      if (e.events.some((ev) => ev.type === 'ko')) this.koSide = outcome.loser;
+      if (ko) this.koSide = outcome.loser;
     });
 
+    // after a K.O. the slow motion pushes this past the round's end, where the K.O. and win poses rule
     at(r.recoverAtMs, () => {
-      for (const side of ['p1', 'p2'] as const) if (side !== this.koSide) fighters[side].toIdle();
+      if (this.koSide) return;
+      for (const side of ['p1', 'p2'] as const) fighters[side].toIdle();
     });
     at(r.clearAtMs, () => clash.hide());
   };
+
+  /** Sparks fly off the hurt fighter, away from the hit, in the winning move's colours. */
+  private sparks(loser: Side, move: Move, damage: number): void {
+    const s = tuning.sparks;
+    const away = loser === 'p2' ? 1 : -1;
+    const c = moveColors[move];
+    burst(this.scene, STAGE.fighterX[loser] - away * 8, STAGE.floorY - 34, {
+      count: s.countByDamage[damage] ?? 10,
+      colors: [palette.white, c.main, c.main, c.shade],
+      angleDeg: away === 1 ? -35 : -145,
+      spreadDeg: s.spreadDeg,
+      speed: [s.speedMin, s.speedMax],
+      gravity: s.gravity,
+      lifeMs: s.lifeMs,
+      sizePx: s.sizePx,
+    });
+  }
+
+  /** A little dust kicks up behind a fighter's back foot as they lunge. */
+  private dust(side: Side): void {
+    const d = tuning.dust;
+    const back = side === 'p1' ? -1 : 1;
+    burst(this.scene, STAGE.fighterX[side] + back * 10, STAGE.floorY - 2, {
+      count: d.count,
+      colors: [0xd8c8e8, 0xb8a8d0],
+      angleDeg: back === -1 ? -160 : -20,
+      spreadDeg: 40,
+      speed: [d.speedMin, d.speedMax],
+      gravity: d.gravity,
+      lifeMs: d.lifeMs,
+      sizePx: d.sizePx,
+    });
+  }
 }

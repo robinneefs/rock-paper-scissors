@@ -23,6 +23,8 @@ interface BarState {
 }
 
 /** Health bars, round pips, timer, names, "READY" markers and the pick prompt. Shows what it's told. */
+const SIDES = ['p1', 'p2'] as const;
+
 export class HudView {
   private readonly gfx: Phaser.GameObjects.Graphics;
   /** The timer: one text per font size inside a box that moves, shakes and tilts as a whole. */
@@ -40,6 +42,8 @@ export class HudView {
   private readonly bars: Record<Side, BarState>;
   private roundsWon: Record<Side, number> = { p1: 0, p2: 0 };
   private roundsToWin = 2;
+  /** Flips every lowPulseMs: a bar at low health glows brighter and its frame turns red. */
+  private pulse = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -51,6 +55,14 @@ export class HudView {
       p2: { shown: maxHealth, trail: maxHealth, max: maxHealth },
     };
     this.gfx = scene.add.graphics();
+    scene.time.addEvent({
+      delay: tuning.hud.lowPulseMs,
+      loop: true,
+      callback: () => {
+        this.pulse = !this.pulse;
+        if (SIDES.some((s) => this.isLow(this.bars[s]))) this.draw();
+      },
+    });
     // the timer box sits on the timer's centre; each text is centred on the box, so the box can
     // move, shake and tilt the digits around their middle
     this.timerBox = scene.add.container(TIMER.x, TIMER.y);
@@ -211,6 +223,10 @@ export class HudView {
     this.prompt.setVisible(on);
   }
 
+  private isLow(bar: BarState): boolean {
+    return bar.shown > 0 && bar.shown <= tuning.hud.lowHealth;
+  }
+
   private draw(): void {
     const g = this.gfx.clear();
     for (const side of ['p1', 'p2'] as const) {
@@ -224,12 +240,14 @@ export class HudView {
       g.fillStyle(palette.ink).fillRect(x - 1, BAR.y - 1, BAR.w + 2, BAR.h + 2);
       g.fillStyle(palette.hpBack).fillRect(x + 1, y, inner, h);
       g.fillStyle(shade(palette.hpBack, 0.6)).fillRect(x + 1, y, inner, 2); // the empty bar's inner shadow
-      const color =
-        bar.shown <= tuning.hud.lowHealth
-          ? palette.hpRed
-          : bar.shown <= bar.max / 2
-            ? palette.hpYellow
-            : palette.hpGreen;
+      const low = this.isLow(bar);
+      const color = low
+        ? this.pulse
+          ? lighten(palette.hpRed, 0.35)
+          : palette.hpRed
+        : bar.shown <= bar.max / 2
+          ? palette.hpYellow
+          : palette.hpGreen;
       // p1's bar is anchored on the left edge, p2's on the right: both drain toward the outside
       const anchor = (w: number) => (side === 'p1' ? x + 1 : x + 1 + inner - w);
       if (trailW > fillW) g.fillStyle(palette.hpTrail).fillRect(anchor(trailW), y, trailW, h);
@@ -249,7 +267,7 @@ export class HudView {
         const nx = x + 1 + Math.round((inner * i) / 10);
         g.fillStyle(palette.ink, 0.35).fillRect(nx, y + 3, 1, h - 5);
       }
-      frameRect(g, x, BAR.y, BAR.w, BAR.h, palette.gold);
+      frameRect(g, x, BAR.y, BAR.w, BAR.h, low && this.pulse ? palette.red : palette.gold);
       g.fillStyle(lighten(palette.gold, 0.5)).fillRect(x + 1, BAR.y, BAR.w - 2, 1); // frame highlight
 
       // round pips next to the name, toward the centre

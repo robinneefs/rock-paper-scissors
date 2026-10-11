@@ -1,6 +1,7 @@
 import { Emitter, type Move } from '@rps/core';
 import type Phaser from 'phaser';
 import type { AudioService } from '../audio/AudioService';
+import type { CabinetShake } from '../fx/cabinetShake';
 import type { InputRouter } from '../input/InputRouter';
 import type { PixelScaler } from '../platform/PixelScaler';
 import type { SettingsStore } from '../platform/settings';
@@ -34,6 +35,7 @@ export interface GameContext {
   flow: SceneFlow;
   lights: CabinetLights;
   audio: AudioService;
+  cabinetShake: CabinetShake;
 }
 
 const KEY = 'gameContext';
