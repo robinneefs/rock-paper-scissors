@@ -30,23 +30,28 @@ export function paintCabinet(): PixelBuffer {
   b.rect(2, 0, 1, CABINET.height, palette.pink);
   b.rect(W - 3, 0, 1, CABINET.height, palette.pink);
 
-  // marquee: a bezel above and below the art window; CabinetScene puts assets/marquee.png in it
+  // marquee: a bezel all around the art window, with a neon strip running round it;
+  // CabinetScene puts assets/marquee.png in the window
   const art = MARQUEE.art;
-  const top = MARQUEE.y + 3;
-  const bottom = MARQUEE.y + art.y + art.height + 1;
-  const bezel = (y: number, h: number, lightY: number) => {
-    b.rect(8, y, W - 16, h, 0x181028);
-    b.rect(8, y, W - 16, 1, 0x3a2a5c); // top highlight
-    b.rect(8, y + h - 1, W - 16, 1, 0x0b0716); // bottom shade
-    b.rect(14, lightY, W - 28, 1, palette.pink); // neon strip
-    b.rect(14, lightY + 1, W - 28, 1, 0x5a1450);
-    for (const x of [11, W - 12]) {
-      b.px(x, y + Math.floor(h / 2) - 1, 0x8a7ab0); // screw heads
-      b.px(x, y + Math.floor(h / 2), 0x4a3a70);
-    }
-  };
-  bezel(top, art.y - 4, top + Math.floor((art.y - 4) / 2) - 1);
-  bezel(bottom, MARQUEE.y + 101 - bottom, bottom + Math.floor((101 - bottom) / 2) - 1);
+  const mx = 8;
+  const my = MARQUEE.y + 3;
+  const mw = W - 16;
+  const mh = 98;
+  b.rect(mx, my, mw, mh, 0x181028);
+  b.rect(mx, my, mw, 1, 0x3a2a5c); // highlight top and left
+  b.rect(mx, my, 1, mh, 0x3a2a5c);
+  b.rect(mx, my + mh - 1, mw, 1, 0x0b0716); // shade bottom and right
+  b.rect(mx + mw - 1, my, 1, mh, 0x0b0716);
+  const n = { x: mx + 4, y: my + 4, w: mw - 8, h: mh - 8 }; // neon loop, halfway into the bezel
+  b.frame(n.x, n.y, n.w, n.h, palette.pink);
+  b.frame(n.x + 1, n.y + 1, n.w - 2, n.h - 2, 0x5a1450);
+  for (const [x, y] of [
+    [mx + 2, my + 2],
+    [mx + mw - 3, my + 2],
+    [mx + 2, my + mh - 3],
+    [mx + mw - 3, my + mh - 3],
+  ] as const)
+    b.px(x, y, 0x8a7ab0); // screw heads in the corners
   b.rect(art.x - 1, MARQUEE.y + art.y - 1, art.width + 2, art.height + 2, palette.black);
 
   // monitor bezel (the monitor scenes draw inside it)
