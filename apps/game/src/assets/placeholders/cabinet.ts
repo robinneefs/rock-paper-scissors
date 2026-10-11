@@ -1,6 +1,6 @@
 import { BUTTONS, CABINET, JOYSTICK, MARQUEE, MONITOR, PANEL } from '../../config/layout';
 import { moveColors, palette } from '../../config/palette';
-import { SYMBOLS } from './icons';
+import { drawSymbol, lighten, symbolTones } from './icons';
 import { PixelBuffer, shade } from './PixelBuffer';
 
 const BODY = 0x2c1658;
@@ -52,14 +52,63 @@ export function paintCabinet(): PixelBuffer {
   b.rect(MONITOR.x - 3, MONITOR.y - 3, MONITOR.width + 6, MONITOR.height + 6, 0x181028);
   b.rect(MONITOR.x, MONITOR.y, MONITOR.width, MONITOR.height, palette.black);
 
-  // control panel
-  b.rect(0, PANEL.y, W, PANEL.height, PANEL_TOP);
-  b.rect(0, PANEL.y, W, 2, PANEL_EDGE);
-  [palette.pink, palette.gold, palette.cyan].forEach((c, i) => b.rect(8, PANEL.y + 98 + i * 5, W - 16, 2, c));
-  b.rect(0, PANEL.y + 116, W, 12, BODY_DARK);
-  b.rect(0, PANEL.y + 116, W, 1, PANEL_EDGE);
+  // control panel: a slanted top that catches light at the back, bevelled sides, a raised
+  // front lip with a pink trim strip, and a dark front face that drops away below it
+  const P = PANEL.y;
+  const lip = P + 108; // where the slanted top meets the front lip
+  b.rect(0, P - 3, W, 3, BODY_DARK); // shadow cast by the monitor bezel onto the panel
+  b.rect(0, P, W, lip - P, PANEL_TOP);
+  // light falls on the back of the slope and fades towards the player: bands of the panel colour,
+  // each dithered into the next so the slope reads as one tilted surface
+  const bands = [
+    { y: P + 2, f: 1.5 },
+    { y: P + 6, f: 1.32 },
+    { y: P + 12, f: 1.16 },
+    { y: P + 22, f: 1 },
+    { y: lip - 30, f: 0.88 },
+    { y: lip - 14, f: 0.76 },
+  ];
+  bands.forEach((band, i) => {
+    const end = bands[i + 1]?.y ?? lip;
+    const c = shade(PANEL_TOP, band.f);
+    b.rect(0, band.y, W, end - band.y, c);
+    if (i > 0) for (let x = 0; x < W; x += 2) b.px(x + (band.y % 2), band.y - 1, c);
+  });
+  b.rect(0, P, W, 1, shade(PANEL_EDGE, 1.6)); // back edge highlight
+  b.rect(0, P + 1, W, 1, shade(PANEL_EDGE, 1.25));
+  // bevelled sides: darker faces that widen towards the front
+  for (let y = P; y < lip; y++) {
+    const w = 3 + Math.floor(((y - P) * 5) / (lip - P));
+    b.rect(0, y, w, 1, BODY_DARK);
+    b.rect(W - w, y, w, 1, BODY_DARK);
+    b.px(w, y, shade(PANEL_TOP, 0.7));
+    b.px(W - w - 1, y, shade(PANEL_TOP, 0.7));
+  }
+  // corner bolts
+  for (const [x, y] of [
+    [14, P + 7],
+    [W - 15, P + 7],
+    [14, lip - 8],
+    [W - 15, lip - 8],
+  ] as const) {
+    b.rect(x - 1, y - 1, 3, 3, BODY_DARK);
+    b.px(x, y, shade(PANEL_EDGE, 1.5));
+  }
+  // decorative stripes on the slope
+  [palette.pink, palette.gold, palette.cyan].forEach((c, i) => b.rect(24, P + 92 + i * 4, W - 48, 2, c));
+  // raised front lip with a trim strip, then the front face in shadow
+  b.rect(0, lip - 1, W, 1, shade(PANEL_TOP, 0.6)); // crease where the slope meets the lip
+  b.rect(0, lip, W, 1, shade(PANEL_EDGE, 1.6));
+  b.rect(0, lip + 1, W, 3, palette.pink);
+  b.rect(0, lip + 1, W, 1, lighten(palette.pink, 0.45));
+  b.rect(0, lip + 4, W, 1, palette.shadow);
+  b.rect(0, lip + 5, W, CABINET.height - lip - 5, BODY_DARK);
+  b.rect(0, lip + 5, W, 2, palette.ink);
+  for (let x = 0; x < W; x += 2) b.px(x, CABINET.height - 6, palette.ink);
+  b.rect(0, CABINET.height - 5, W, 5, palette.ink);
 
   // joystick base (the stick and ball are drawn live by JoystickView)
+  b.ell(JOYSTICK.x, JOYSTICK.y + 5, 21, 13, shade(PANEL_TOP, 1.25));
   b.ell(JOYSTICK.x, JOYSTICK.y + 4, 20, 12, 0x140a28);
   b.ell(JOYSTICK.x, JOYSTICK.y + 2, 17, 10, 0x241642);
   b.ell(JOYSTICK.x, JOYSTICK.y + 2, 6, 3, 0x0c0618);
@@ -67,6 +116,7 @@ export function paintCabinet(): PixelBuffer {
   // button wells, labels and key hints
   (['rock', 'paper', 'scissors'] as const).forEach((m, i) => {
     const x = BUTTONS.x[m];
+    b.ell(x, BUTTONS.y + 10, 26, 17, shade(PANEL_TOP, 1.25));
     b.ell(x, BUTTONS.y + 9, 25, 16, 0x120822);
     b.text(m, x, BUTTONS.y + 26, moveColors[m].main, { center: true, shadow: palette.ink });
     b.text(String(i + 1), x + 20, BUTTONS.y - 16, palette.lilac);
@@ -80,29 +130,68 @@ export const BUTTON_FRAME = {
   height: 44,
   topX: 26,
   topY: 16,
-  states: ['up', 'down', 'dim'] as const,
+  /** up; pressed down; lit (the locked-in move); dim (another move is locked in); flash (lock-in flash). */
+  states: ['up', 'down', 'lit', 'dim', 'flash'] as const,
 };
 export type ButtonState = (typeof BUTTON_FRAME.states)[number];
 
-/** One frame per move and state: up, pressed down, and dimmed (another move is selected). */
+/** How far the top travels when pressed, and how much side shows when it is up. */
+const TRAVEL = { upSide: 7, downSide: 1 };
+
+/** One frame per move and state, in the flat style of the round 3 mock-ups: dark rim, flat top, white icon. */
 export function paintButtons(): PixelBuffer {
   const { width: fw, height: fh, states } = BUTTON_FRAME;
   const moves = ['rock', 'paper', 'scissors'] as const;
   const b = new PixelBuffer(fw * states.length, fh * moves.length);
   moves.forEach((m, row) => {
-    const col = moveColors[m].main;
+    const { main, shade: dark } = moveColors[m];
     states.forEach((state, i) => {
       const cx = i * fw + BUTTON_FRAME.topX;
       const base = row * fh + BUTTON_FRAME.topY;
-      const press = state === 'down';
+      const pressed = state !== 'up' && state !== 'dim';
       const dim = state === 'dim';
-      const top = press ? base + 5 : base;
-      const side = press ? 2 : 7;
-      for (let s = side; s >= 0; s--) b.ell(cx, top + s, 22, 15, shade(col, dim ? 0.25 : 0.55));
-      b.ell(cx, top, 22, 15, shade(col, dim ? 0.35 : press ? 1 : 0.88));
-      b.ell(cx - 5, top - 5, 10, 5, dim ? shade(col, 0.45) : shade(col, 1.25));
-      b.bitmap(SYMBOLS[m], cx - 4, top - 3, dim ? 0x3c285a : palette.white);
+      const side = pressed ? TRAVEL.downSide : TRAVEL.upSide;
+      const top = base + TRAVEL.upSide - side;
+      const k = dim ? 0.4 : 1;
+      // dark rim, then the side, then the flat top with a thin shade ring and a highlight
+      b.ell(cx, top + side + 1, 23, 16, palette.ink);
+      for (let s = side; s >= 0; s--) b.ell(cx, top + s, 22, 15, shade(dark, 0.75 * k));
+      b.ell(cx, top, 23, 16, palette.ink);
+      if (state === 'flash') {
+        b.ell(cx, top, 22, 15, palette.white);
+        drawSymbol(b, m, cx - 11, top - 8, { white: main, outline: dark, tint: main, detail: dark });
+        return;
+      }
+      const lit = state === 'lit';
+      b.ell(cx, top, 22, 15, dim ? shade(dark, 0.45) : lit ? lighten(main, 0.7) : dark);
+      b.ell(cx, top - 1, 21, 14, dim ? shade(main, 0.4) : lit ? lighten(main, 0.12) : main);
+      if (!dim) b.ell(cx - 10, top - 9, 5, 2, lighten(main, lit ? 0.85 : 0.6));
+      drawSymbol(b, m, cx - 11, top - 9, symbolTones(m, dim));
     });
+  });
+  return b;
+}
+
+/** The ring that pops out round a button when its move is locked in: frames 0..2, growing. */
+export const BUTTON_RING = { width: 72, height: 52, cx: 36, cy: 26, frames: 3 };
+
+export function paintButtonRings(): PixelBuffer {
+  const { width: w, height: h, cx, cy, frames } = BUTTON_RING;
+  const moves = ['rock', 'paper', 'scissors'] as const;
+  const b = new PixelBuffer(w * frames, h * moves.length);
+  moves.forEach((m, row) => {
+    for (let f = 0; f < frames; f++) {
+      const ring = new PixelBuffer(w, h);
+      const rx = 26 + f * 4;
+      const ry = 18 + f * 3;
+      ring.ell(cx, cy, rx, ry, palette.white);
+      const hole = new PixelBuffer(w, h);
+      hole.ell(cx, cy, rx - (f === 0 ? 2 : 1), ry - (f === 0 ? 2 : 1), palette.white);
+      const color = f === frames - 1 ? moveColors[m].main : lighten(moveColors[m].main, 0.5);
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++)
+          if (ring.isSet(x, y) && !hole.isSet(x, y)) b.px(f * w + x, row * h + y, color);
+    }
   });
   return b;
 }

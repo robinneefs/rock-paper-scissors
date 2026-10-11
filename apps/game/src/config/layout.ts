@@ -24,6 +24,5 @@ export const JOYSTICK = { x: 44, y: PANEL.y + 58 } as const;
 /** Where the fighters stand on the monitor. */
 export const STAGE = {
   floorY: 180,
-  horizonY: 110,
   fighterX: { p1: 84, p2: 132 },
 } as const;

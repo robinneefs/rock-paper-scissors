@@ -21,6 +21,9 @@ export class LocalSession implements MatchSession {
   private readonly referee: Referee;
   private readonly unsubs: Unsubscribe[] = [];
   private myPick: Move | null = null;
+  /** Picks the first stage; its own Math.random so the referee's rng sequence is untouched. */
+  private readonly stageBase = Math.floor(Math.random() * 1000);
+  private rematches = 0;
 
   constructor(
     readonly rules: RulesConfig,
@@ -61,7 +64,13 @@ export class LocalSession implements MatchSession {
 
   /** Locally the CPU always agrees; the next ready() starts the new match. */
   requestRematch(): void {
+    this.rematches++;
     this.events.emit('rematchAccepted', {});
+  }
+
+  /** A random start, then the next stage on each rematch, so a Retry never repeats the stage. */
+  stageSeed(): number {
+    return this.stageBase + this.rematches;
   }
 
   snapshot(): MatchView {

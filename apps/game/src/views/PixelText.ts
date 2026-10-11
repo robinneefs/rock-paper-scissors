@@ -10,6 +10,8 @@ export interface PixelTextStyle {
   align?: 'left' | 'center' | 'right';
   shadow?: number;
   outline?: number;
+  /** How far the outline and shadow sit from the text, in pixels (default: one font pixel). */
+  edgePx?: number;
 }
 
 /**
@@ -31,6 +33,7 @@ export class PixelText extends Phaser.GameObjects.Container {
     this.style = { size: 1, color: palette.text, align: 'left', ...style };
     this.anchorX = x;
     const s = this.style.size;
+    const e = this.style.edgePx ?? s;
     const add = (dx: number, dy: number, color: number, role: 'main' | 'fx') => {
       const t = scene.add
         .bitmapText(dx, dy, fontKey(s), '')
@@ -41,13 +44,13 @@ export class PixelText extends Phaser.GameObjects.Container {
     };
     if (this.style.outline !== undefined)
       for (const [dx, dy] of [
-        [-s, 0],
-        [s, 0],
-        [0, -s],
-        [0, s],
+        [-e, 0],
+        [e, 0],
+        [0, -e],
+        [0, e],
       ] as const)
         add(dx, dy, this.style.outline, 'fx');
-    if (this.style.shadow !== undefined) add(s, s, this.style.shadow, 'fx');
+    if (this.style.shadow !== undefined) add(e, e, this.style.shadow, 'fx');
     add(0, 0, this.style.color, 'main');
     this.setText(text);
     scene.add.existing(this);

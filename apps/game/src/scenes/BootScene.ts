@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { audioFiles } from '../audio/sounds';
-import { Tex } from '../assets/keys';
+import { FONT_SIZES, Tex } from '../assets/keys';
 import { generatePlaceholders } from '../assets/placeholders';
 import { registerPixelFont } from '../assets/pixelFont';
 import { palette } from '../config/palette';
@@ -34,7 +34,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    for (const size of [1, 2, 3, 4] as const) registerPixelFont(this, size);
+    for (const size of FONT_SIZES) registerPixelFont(this, size);
     generatePlaceholders(this);
     this.scene.launch(SceneKey.cabinet);
     this.scene.launch(SceneKey.transition);

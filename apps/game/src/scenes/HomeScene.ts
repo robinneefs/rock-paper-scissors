@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
-import { Tex } from '../assets/keys';
 import { MONITOR } from '../config/layout';
 import { palette } from '../config/palette';
 import { homeMenu } from '../menus/homeMenu';
 import { FighterView } from '../views/FighterView';
 import { MenuView } from '../views/MenuView';
 import { PixelText } from '../views/PixelText';
+import { addMenuBackdrop } from '../views/MenuBackdrop';
 import { getContext } from './context';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
@@ -22,7 +22,7 @@ export class HomeScene extends Phaser.Scene {
     useMonitorCamera(this);
     lights.select(null);
     const cx = MONITOR.width / 2;
-    this.add.image(0, 0, Tex.stage).setOrigin(0);
+    addMenuBackdrop(this);
     new FighterView(this, 'p1', 46, 206);
     new FighterView(this, 'p2', 170, 206);
 

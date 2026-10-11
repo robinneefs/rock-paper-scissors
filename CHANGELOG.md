@@ -2,6 +2,34 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.9.0 (2026-10-11)
+
+- **Flat white move icons.** The cabinet buttons and the move badges on the reveal now show big, clear white icons (a boulder, a sheet of paper, open scissors) with a dark outline, in the style picked from the round 3 mock-ups.
+- **Punchier buttons.** The buttons have a dark rim and go deeper when pressed. Locking in a move flashes its button white twice while a ring pops out round it; it then stays down and lit, and the other two dim.
+- New tuning values for the lock-in flash and ring (`buttons` in the dev tuning panel).
+- **The control panel has depth.** Its top now looks slanted: lit at the back and darker towards you, with bevelled sides, corner bolts, button wells with a lit rim, and a raised front lip with a pink trim strip over a shadowed front face.
+- **A big, juiced timer.** The pick timer is big and outlined so it stands out against the sky. Each new second is one size bigger than the last and sits a little lower, moving towards the middle of the screen, and pops in white. It is gold at 3, then red at 2 and 1, shaking and tilting from side to side (harder at 1). When time runs out a big red 0 slams down. All of this can be tuned under `hud` in the dev tuning panel.
+- **Thicker health bars.** The bars are 12 pixels tall (was 8) and look like lit tubes: a shine along the top, darker bands underneath, a bright leading edge, notches every tenth, and a gold frame.
+- **Fixed: a short loud burst of music on every screen change**, even with sound off. A new music track started at full volume for a moment before fading to its real level; it now starts silent and fades in.
+- **Faster, shorter fights.** You now have 3 seconds to pick instead of 5, and each fighter starts a round with 50 health instead of 100, so a round takes about 3 or 4 exchanges. The health bars turn red below 15 health (was 30). Online, both players need this version.
+- **A new reveal: the moves collide.** The falling move coins are gone. When both picks are in, a bigger move badge with a gold starburst pops in beside each fighter (with AUTO over it if the timer picked for that player). Both badges fly to the middle and collide with a white flash. The winning badge stays in the middle and the losing one is knocked away off the screen, turning as it goes. "ROCK WINS", "PAPER WINS" or "SCISSORS WINS" slams in above in the winning move's colour; a tie bounces both badges back and says "CLASH!". It works the same in online matches. Tune it under `reveal` in the dev tuning panel.
+- **Three fight stages, picked at random.** Each match is fought on one of them, and Retry moves on to the next, so you never get the same stage twice in a row. Online, both players always see the same stage.
+  - **Night Street:** brick buildings with lit windows and pink BAR and cyan RPS neon signs, a skyline and a crescent moon, street lamps, and a wet road that reflects the neon.
+  - **Sunny Field:** blue sky with a sun and puffy clouds, rolling hills, a big tree on each side, a wooden fence, and grass with flowers around a worn dirt patch.
+  - **Castle Roof** (a nod to the '90s arcade fighters): a sunset sky with a big moon, mountains and pines, a tiered castle, red banners, and a plank floor.
+  - The menus keep the sunset backdrop. Stages are listed in `apps/game/src/config/stages.ts`, so adding or removing one is one line plus its painter. Add `?stage=field` (or `street`, `castle`) to the address to try a stage.
+- **A new menu backdrop.** The home, options and online screens drop the '80s sunset for a '90s arcade select-screen look: deep purple with a soft glow behind the menu, a pink diagonal slash, halftone dots in two corners, big faint move symbols, and thin stripes drifting slowly across.
+- **Evened-out sound levels.** The menu blips, the ROUND sting and the win and lose jingles were much louder than the fight sounds (most noticeable after a match, when choosing Retry or Main menu). They now play at about the same level as the rest.
+- **The cabinet shakes.** The whole arcade machine rattles against the room: hard on a K.O., a little on a 20-damage hit, and once when the pick timer runs out.
+- **K.O. slow motion.** The finishing hit freezes on a white flash, then plays in slow motion for a moment before the K.O. banner.
+- **Hit sparks and dust.** Sparks in the winning move's colours fly off the hurt fighter (more for bigger hits), and dust kicks up behind a fighter's back foot as they lunge.
+- **Low health pulse.** At 15 health or less, a health bar pulses brighter and its frame flashes red.
+- **A flickering marquee.** Every few seconds the marquee's backlight flickers like an old tube, on its own, whatever is happening in the game.
+- All of these are tunable in the dev panel (`cabinet`, `ko`, `sparks`, `dust`, `marquee`, and `lowPulseMs` under `hud`).
+- **CRT screen.** The game screen now looks like an arcade tube: fine scanlines, a soft glow around bright colours, darker edges, rounded corners and a faint band rolling down. It is a WebGL shader on the monitor plus a scanline layer in the page; the cabinet around it stays crisp. Turn it off with the new CRT SCREEN option (on by default). Tune it under `crt` in the dev panel.
+- **Impact shader effects.** On a K.O. the screen's colours split apart (red and blue pulled sideways) and settle back, and a 20-damage hit makes the screen's rows wobble for a moment. They play even with the CRT look turned off (WebGL only). Tune them under `crt` in the dev panel.
+- **Falling damage numbers.** When a hit lands, the damage (like "-15") hops up next to the hurt fighter's head in the winning move's colour, then falls away.
+
 ## 0.8.0 (2026-10-11)
 
 - **Sound and music.** 90s arcade chiptune throughout: menu blips, a tick for each of the last 3 seconds of the timer (higher each second) and a slam when it runs out, a lock-in chime when you pick, a whoosh as the icons drop, a different hit for each winning move (a heavy thud for Rock, a slap for Paper, a metal slash for Scissors, each with three variations), a clang for a tie, a big K.O., ROUND and FIGHT! stings, and win and lose jingles.

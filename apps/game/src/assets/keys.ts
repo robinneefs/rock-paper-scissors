@@ -6,11 +6,14 @@ export const Tex = {
   marquee: 'marquee',
   room: 'room',
   cabinet: 'cabinet',
-  stage: 'stage',
+  /** The menus' backdrop and its drifting stripes (fight stages are in config/stages.ts). */
+  menuBackdrop: 'menu-backdrop',
+  menuStripes: 'menu-stripes',
   fighterP1: 'fighter-p1',
   fighterP2: 'fighter-p2',
-  icons: 'move-icons',
+  badges: 'move-badges',
   buttons: 'cabinet-buttons',
+  buttonRings: 'cabinet-button-rings',
   joystickBall: 'joystick-ball',
   dither: 'dither',
 } as const;
@@ -19,7 +22,16 @@ export const Tex = {
 export const FighterFrames = ['idle0', 'idle1', 'rock', 'paper', 'scissors', 'hurt', 'ko', 'win'] as const;
 export type FighterFrame = (typeof FighterFrames)[number];
 
-/** Pixel font sizes: 5x7 glyphs drawn at whole multiples (pixel-perfect rule 5). */
-export const Fonts = { s1: 'pixfont-1', s2: 'pixfont-2', s3: 'pixfont-3', s4: 'pixfont-4' } as const;
-export type FontSize = 1 | 2 | 3 | 4;
+/** Pixel font sizes: 5x7 glyphs drawn at whole multiples (pixel-perfect rule 5); 5 to 7 are for the big timer. */
+export const Fonts = {
+  s1: 'pixfont-1',
+  s2: 'pixfont-2',
+  s3: 'pixfont-3',
+  s4: 'pixfont-4',
+  s5: 'pixfont-5',
+  s6: 'pixfont-6',
+  s7: 'pixfont-7',
+} as const;
+export type FontSize = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const FONT_SIZES: readonly FontSize[] = [1, 2, 3, 4, 5, 6, 7];
 export const fontKey = (size: FontSize): string => Fonts[`s${size}`];

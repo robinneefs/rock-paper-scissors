@@ -7,7 +7,7 @@ import type { RulesConfig } from './rules/types';
 export const defaultRules: RulesConfig = {
   beats: { rock: 'scissors', scissors: 'paper', paper: 'rock' },
   damage: { rock: 15, paper: 10, scissors: 20 },
-  startHealth: 100,
+  startHealth: 50,
   roundsToWin: 2,
 };
 
@@ -28,7 +28,7 @@ export interface PhaseTimings {
 
 export const defaultTimings: PhaseTimings = {
   roundIntroMs: 1600,
-  pickMs: 5000,
+  pickMs: 3000,
   revealMs: 1800,
   roundOverMs: 2200,
 };

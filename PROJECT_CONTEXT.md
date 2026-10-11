@@ -43,9 +43,9 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 ## Where things stand
 
 - Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), merged into `main` as PR #3 on 2026-10-10. The user also runs it locally from `D:\Vibe Coding Projects\rps-rivals` (`npm run dev`).
-- What works: Chain Shift studio logo intro in purple (skippable, since v0.4.0), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone. OPTIONS on the home menu opens an Options screen with one setting, Scaling: Fill height (default since v0.3.0, fills the screen) or Pixel perfect (whole-number), remembered between visits.
+- What works: Chain Shift studio logo intro in purple (skippable, since v0.4.0), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (3s countdown since v0.9.0, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone. OPTIONS on the home menu opens an Options screen with one setting, Scaling: Fill height (default since v0.3.0, fills the screen) or Pixel perfect (whole-number), remembered between visits.
 - Art is **placeholder**, drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so final sprites swap in without touching views. Sound and music arrive in v0.8.0 (see Audio).
-- Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane; **done in v0.5.0**, merged as PR #8 on 2026-10-11), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Open feel questions: 5s vs 3s timer, 100 health (rounds take about 6 to 8 exchanges).
+- Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane; **done in v0.5.0**, merged as PR #8 on 2026-10-11), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Feel questions settled 2026-10-11: 3s timer and 50 health (v0.9.0).
 - `archive/old-draft/` in this folder is an **earlier draft the user discarded**. Do not build on it. It is not in the repository.
 
 ## Code (2026-10-10)
@@ -73,7 +73,7 @@ Publishing (since v0.6.0, agreed with the user 2026-10-11; replaces the manual c
 
 ## The game in one paragraph
 
-A browser fighting game built on rock paper scissors. Two pixel-art fighters stand close together in the middle of the screen. Each exchange, both players secretly pick Attack, Throw or Block within a 5 second countdown; the picks are revealed together, move icons drop in, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds. Single player against a random computer first; online multiplayer and an Android app later.
+A browser fighting game built on rock paper scissors. Two pixel-art fighters stand close together in the middle of the screen. Each exchange, both players secretly pick Attack, Throw or Block within a 3 second countdown; the picks are revealed together, move icons drop in, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds. Single player against a random computer first; online multiplayer and an Android app later.
 
 ## Core rules
 
@@ -84,7 +84,7 @@ A browser fighting game built on rock paper scissors. Two pixel-art fighters sta
 | Block (counter) | Attack | 10              |
 
 - Tie: no damage. Only the loser of an exchange takes damage (no double KO).
-- 100 health per fighter per round (starting value, to tune).
+- 50 health per fighter per round (was 100 until v0.9.0; tunable).
 - Round ends when a fighter hits 0. Match = best of three rounds. Health resets each round.
 - Computer opponent: uniformly random pick (decided by the user; no pattern reading for now).
 
@@ -99,7 +99,7 @@ Uneven damage makes this different from classic RPS. Throw is the tempting big h
 
 ## Exchange flow
 
-1. 5 second countdown (3s is the alternative to playtest). Player picks via tap/click or keys 1/2/3; can change until time is up.
+1. 3 second countdown (was 5s until v0.9.0). Player picks via tap/click or keys 1/2/3; can change until time is up.
 2. Timer hits 0: anyone without a pick gets a random move. Picks hidden until both are locked.
 3. Reveal: each fighter's move icon drops in above their head with a bounce, at the same time.
 4. Both fighters animate their move. Winner lands with hit flash, hit sound, small screen shake. Tie = clash, no damage.
@@ -232,7 +232,6 @@ Architecture rules:
 - Art tools (researched 2026-10-10): best fit is **PixelLab** (pixel-art AI with character directions + animations, hosted MCP at https://api.pixellab.ai/mcp, Bearer API key, plans from ~$12/mo). Alternatives: Retro Diffusion (great look, Aseprite extension, $20-65 one-time, has API), Ludo, Scenario; Aseprite for hand cleanup. Claude's cloud sessions currently cannot reach api.pixellab.ai (built-in environment blocks it): needs a cloud environment that allows the domain plus the key as a secret, or run Claude Code locally with the MCP. User wants a more attractive pixel style with slightly bigger pixels.
 - Cabinet look: monitor aspect (3:4 portrait chosen as default), cabinet colours and side art.
 - Online seat: always show yourself on the left (recommended) or real sides.
-- 100 starting health right? 5s or 3s timer?
 - Art direction references for the NEXT step (user, 2026-10-11): use the user's four redesign mock-ups in `docs/mockups/redesign/` as the starting point. `mockups-characters-1.png`: one Ryu-like karate fighter (brown hair, red wraps, torn gi, black belt, barefoot) in nine pixel styles (classic 16-bit, modern, low-res, anime, detailed, chibi, dark, minimalist, cartoon). `mockups-characters-2.png`: the same fighter as a chibi in nine variants (clean, white sticker outline, shaded, anime, Game Boy, SNES, dithered, minimalist, expressive). `mockups-game-1.png` and `mockups-game-2.png` ("RPS Rivals" sheet): the vertical cabinet with marquee art, joystick plus red/yellow/blue ROCK/PAPER/SCISSORS buttons, menu, fighter select, fight HUD, hit effects, K.O., online match, and a palette of hot pink, cyan, violet, navy and pale lavender. These lean toward relabelling the moves Rock/Paper/Scissors (see Move animations).
 - Move animations (user's note 2026-10-10): Attack, Throw and Block currently look nearly the same. Either make each clearly read as a strike, a grab/throw and a block/counter, or relabel the moves Rock, Paper, Scissors with animations to match. Roadmap doc recommends trying distinct silhouettes on the placeholders first.
 
@@ -305,3 +304,4 @@ Architecture rules:
 - 2026-10-11: v0.6.1 (PR #16, merged into main @ f427573 with the user's pre-approval; on staging, not yet live): JOIN ROOM letters now come from `KeyboardEvent.key` (AZERTY reported by the user typed by QWERTY position before), and the code boxes are backed by an invisible `<input>` laid over them so phones open their keyboard on tap. Pattern for future text entry: a transparent DOM input positioned from `scaler.layout` + `scaler.zoom`; `InputRouter` leaves letters and Backspace to a focused text field.
 - 2026-10-11: v0.6.2 (PR #17, merged into main @ c51cd60 at the user's OK; on staging, not yet live): NEW ROOM and JOIN ROOM get on-screen CANCEL/BACK buttons (the user found no way back on the create screen; only Esc worked, nothing on phones or cabinet buttons). Any cabinet button or Enter also cancels NEW ROOM. Room codes skipping vowels (A etc.) is intended; the user said to leave it without a hint.
 - 2026-10-11: Audio ("Game audio" thread): the user took all the recommended defaults (chiptune, generated SFX, music loops, SFX first, no announcer). Built as v0.8.0: `audio/AudioService` in the GameContext, music per screen from `SceneFlow`, SOUND / MUSIC / EFFECTS in Options. CC0 sites were unreachable from the cloud session, so all audio is generated by `tools/audio/make-audio.mjs`. PR into main waits on the user's OK to merge.
+- 2026-10-11: Polish thread, v0.9.0 (PR #20, draft): flat white move icons on the cabinet buttons and reveal coins (round 3 "white icons" style), deeper button press with a lock-in flash and ring, a control panel with depth (slanted lit top, bevels, bolts, front lip). At the user's request the pick timer is now 3s (was 5s) and start health 50 (was 100). Polish changes are copied straight into the user's local clone for testing before any merge.

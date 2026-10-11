@@ -8,6 +8,9 @@ import { PixelScaler } from './platform/PixelScaler';
 import { browserStore, SettingsStore } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
 import { CabinetScene } from './scenes/CabinetScene';
+import { CabinetShake } from './fx/cabinetShake';
+import { registerCrt, screenFx } from './fx/crt';
+import { CrtOverlay } from './fx/crtOverlay';
 import { CabinetLights, setContext } from './scenes/context';
 import { FightScene } from './scenes/FightScene';
 import { SceneFlow } from './scenes/flow';
@@ -47,7 +50,28 @@ const game = new Phaser.Game({
 
 const audio = new AudioService(game, settings);
 const flow = new SceneFlow(game, audio);
-setContext(game, { input: new InputRouter(), scaler, settings, flow, lights: new CabinetLights(), audio });
+const cabinetShake = new CabinetShake();
+setContext(game, {
+  input: new InputRouter(),
+  scaler,
+  settings,
+  flow,
+  lights: new CabinetLights(),
+  audio,
+  cabinetShake,
+});
+
+// the CRT screen: a shader on the monitor cameras (WebGL) plus the scanline overlay in the page
+const crtOverlay = new CrtOverlay(game.canvas, scaler, cabinetShake);
+game.events.once(Phaser.Core.Events.READY, () => {
+  const webgl = registerCrt(game);
+  const apply = (on: boolean) => {
+    screenFx.crt = on;
+    crtOverlay.setVisible(webgl && on);
+  };
+  apply(settings.value.crt);
+  settings.onChange((s) => apply(s.crt));
+});
 
 settings.onChange((s) => scaler.setMode(s.scaling));
 scaler.onChange((l) => {

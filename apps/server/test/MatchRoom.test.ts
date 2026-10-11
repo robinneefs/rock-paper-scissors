@@ -1,4 +1,4 @@
-import { defaultTimings, PROTOCOL_VERSION, seededRng, type ServerMessage } from '@rps/core';
+import { defaultRules, defaultTimings, PROTOCOL_VERSION, seededRng, type ServerMessage } from '@rps/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { FakeClock } from '../../../packages/core/test/fakeClock';
 import { CloseCode, defaultRoomTimeouts, MatchRoom, type Connection } from '../src/MatchRoom';
@@ -95,7 +95,8 @@ describe('MatchRoom', () => {
     send(room, b, { type: 'ready' });
     const [phase] = a.of('phase');
     expect(phase).toMatchObject({ phase: 'roundIntro', msLeft: defaultTimings.roundIntroMs, round: 1 });
-    expect(phase?.state.health).toEqual({ p1: 100, p2: 100 });
+    const full = defaultRules.startHealth;
+    expect(phase?.state.health).toEqual({ p1: full, p2: full });
     expect(b.of('phase')).toEqual(a.of('phase'));
   });
 
