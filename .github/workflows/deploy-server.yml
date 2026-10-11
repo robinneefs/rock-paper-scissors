@@ -1,11 +1,13 @@
 name: Deploy server
 
-# Deploys the online match server (apps/server) to Cloudflare Workers when it, or the rules it
-# runs (packages/core), change on main. Needs two repository secrets: CLOUDFLARE_API_TOKEN and
-# CLOUDFLARE_ACCOUNT_ID (see apps/server/README.md). Without them the deploy is skipped.
+# Deploys the online match server (apps/server) to Cloudflare Workers:
+#   main       -> rps-rivals-server-staging  (used by the staging copy of the game)
+#   production -> rps-rivals-server          (used by the live game)
+# Runs when the server or the rules it uses (packages/core) change. Needs two repository secrets:
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (see apps/server/README.md). Without them it is skipped.
 on:
   push:
-    branches: [main]
+    branches: [main, production]
     paths:
       - apps/server/**
       - packages/core/**
@@ -13,7 +15,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-server
+  group: deploy-server-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -49,3 +51,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/server
           wranglerVersion: 4.137.0
+          command: ${{ github.ref_name == 'production' && 'deploy' || 'deploy --env staging' }}

@@ -1,5 +1,7 @@
-// Cloudflare settings for the match server. Deployed by .github/workflows/deploy-server.yml on
-// pushes to main (or by hand with `npm run deploy -w @rps/server` after `npx wrangler login`).
+// Cloudflare settings for the match server. Deployed by .github/workflows/deploy-server.yml:
+// pushes to production deploy the live server (rps-rivals-server), pushes to main the staging one
+// (`--env staging`, rps-rivals-server-staging). By hand: `npx wrangler login`, then
+// `npm run deploy -w @rps/server` (live) or `npm run deploy -w @rps/server -- --env staging`.
 {
   "name": "rps-rivals-server",
   "main": "src/index.ts",
@@ -10,4 +12,14 @@
   // The free plan only offers SQLite-backed Durable Objects, so the class is declared as one
   // (the room keeps everything in memory and never uses the storage).
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomObject"] }],
+  "env": {
+    // A separate Worker with its own rooms, for the staging copy of the game.
+    "staging": {
+      "name": "rps-rivals-server-staging",
+      "durable_objects": {
+        "bindings": [{ "name": "ROOMS", "class_name": "RoomObject" }],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomObject"] }],
+    },
+  },
 }

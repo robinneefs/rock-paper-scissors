@@ -21,12 +21,19 @@ Open the game in two browser windows: CREATE ROOM in one, JOIN ROOM with the cod
 
 ## Deploy
 
-`.github/workflows/deploy-server.yml` deploys on every push to `main` that touches `apps/server/` or `packages/core/`, and can be run by hand (Actions → Deploy server → Run workflow). It needs two repository secrets, **never** committed:
+There are two Workers, one per copy of the game:
+
+| Branch | Worker | Used by |
+|---|---|---|
+| `production` | `rps-rivals-server` | the live game, robinneefs.github.io/rps-rivals/ |
+| `main` | `rps-rivals-server-staging` (`--env staging`) | the staging copy, robinneefs.github.io/rps-rivals/staging/ |
+
+`.github/workflows/deploy-server.yml` deploys the matching Worker on every push to those branches that touches `apps/server/` or `packages/core/`, and can be run by hand (Actions → Deploy server → Run workflow). It needs two repository secrets, **never** committed:
 
 - `CLOUDFLARE_API_TOKEN`: a Cloudflare API token from the "Edit Cloudflare Workers" template
 - `CLOUDFLARE_ACCOUNT_ID`: the Cloudflare account ID
 
-Without them the workflow skips the deploy with a warning. The Worker then lives at `https://rps-rivals-server.<workers.dev subdomain>.workers.dev`; that address (as `wss://...`) goes into `apps/game/src/config/online.ts` so release builds show ONLINE.
+Without them the workflow skips the deploy with a warning. The game finds its server through the repository **variable** (not secret) `CLOUDFLARE_WORKERS_SUBDOMAIN`, set to your workers.dev subdomain: the publish workflow (`.github/workflows/pages.yml`) builds production against `wss://rps-rivals-server.<subdomain>.workers.dev` and staging against `wss://rps-rivals-server-staging.<subdomain>.workers.dev`. Until it is set, published builds show ONLINE greyed out.
 
 ## Free plan limits
 

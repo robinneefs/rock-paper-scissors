@@ -1,11 +1,12 @@
 name: Release
 
 # Tags each new version and makes a GitHub release from its CHANGELOG.md entry.
-# On a push to main: if apps/game/package.json has a version with no tag yet, tag that commit.
+# On a push to production (a build going live): if apps/game/package.json has a version with no tag
+# yet, tag that commit. So every tag is a version that was published.
 # By hand (Run workflow): tag an older commit, e.g. version 0.1.0 at the first playable.
 on:
   push:
-    branches: [main]
+    branches: [production]
   workflow_dispatch:
     inputs:
       version:
