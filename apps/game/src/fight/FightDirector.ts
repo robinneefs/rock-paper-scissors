@@ -1,5 +1,6 @@
 import { opponentOf, type MatchState, type Side } from '@rps/core';
 import type Phaser from 'phaser';
+import { HIT_SFX, type SfxPlayer } from '../audio/sounds';
 import { palette } from '../config/palette';
 import { tuning } from '../config/tuning';
 import { flash } from '../fx/flash';
@@ -30,6 +31,7 @@ export class FightDirector {
     private readonly scene: Phaser.Scene,
     private readonly session: MatchSession,
     private readonly views: FightViews,
+    private readonly sfx: SfxPlayer,
     private readonly roundsToWin: number,
     private readonly hooks: { clearPick: () => void; matchOver: (winner: Side, state: MatchState) => void },
   ) {
@@ -60,6 +62,7 @@ export class FightDirector {
         hud.resetHealth(state.health);
         hud.setRounds(state.roundsWon, this.roundsToWin);
         hud.showPrompt(false);
+        this.sfx.play('roundStart');
         banner.show(e.finalRound ? 'FINAL ROUND' : `ROUND ${e.round}`, {
           color: palette.gold,
           holdMs: Infinity,
@@ -74,8 +77,10 @@ export class FightDirector {
           hud.setReady(side, false);
         }
         hud.showPrompt(true);
-        if (this.firstPickOfRound) banner.show('FIGHT!', { color: palette.pink, holdMs: 350 });
-        else banner.hide();
+        if (this.firstPickOfRound) {
+          this.sfx.play('fight');
+          banner.show('FIGHT!', { color: palette.pink, holdMs: 350 });
+        } else banner.hide();
         this.firstPickOfRound = false;
         break;
       }
@@ -96,6 +101,7 @@ export class FightDirector {
           icons.p1.hide();
           icons.p2.hide();
           shake(this.scene, this.scene.cameras.main, tuning.shake.koPx, tuning.shake.durationMs * 1.5);
+          this.sfx.play('ko');
           banner.show('K.O.', { color: palette.red, holdMs: Infinity });
         }
         hud.setRounds(state.roundsWon, this.roundsToWin);
@@ -114,6 +120,9 @@ export class FightDirector {
     const r = tuning.reveal;
     const at = (ms: number, fn: () => void) => this.scene.time.delayedCall(ms, fn);
     for (const side of ['p1', 'p2'] as const) icons[side].drop(e.picks[side], e.autoPicked[side]);
+    // the slam when the timer ran out on someone, then the icons whoosh in
+    if (e.autoPicked.p1 || e.autoPicked.p2) this.sfx.play('timeUp');
+    this.sfx.play('whoosh', { volume: 0.7 });
 
     const outcome = e.outcome;
     at(r.strikeAtMs, () => {
@@ -127,6 +136,7 @@ export class FightDirector {
     at(r.impactAtMs, () => {
       if (outcome.kind === 'tie') {
         shake(this.scene, this.scene.cameras.main, 1, tuning.shake.durationMs / 2);
+        this.sfx.play('clash');
         this.views.banner.show('CLASH!', { color: palette.lilac, holdMs: 300 });
         return;
       }
@@ -134,6 +144,7 @@ export class FightDirector {
       loser.pose('hurt');
       loser.setOffset(-r.lungePx / 2);
       flash(this.scene, loser.sprite, tuning.flash.frames, tuning.flash.frameMs);
+      this.sfx.play(HIT_SFX[e.picks[outcome.winner]], { detune: (Math.random() - 0.5) * 80 });
       const pause = tuning.hitPause.byDamage[outcome.damage] ?? 60;
       at(pause, () => {
         shake(

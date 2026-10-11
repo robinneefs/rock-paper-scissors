@@ -1,5 +1,6 @@
 import { defaultRules, defaultTimings } from '@rps/core';
 import Phaser from 'phaser';
+import { AudioService } from './audio/AudioService';
 import { palette } from './config/palette';
 import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
@@ -44,8 +45,9 @@ const game = new Phaser.Game({
   ],
 });
 
-const flow = new SceneFlow(game);
-setContext(game, { input: new InputRouter(), scaler, settings, flow, lights: new CabinetLights() });
+const audio = new AudioService(game, settings);
+const flow = new SceneFlow(game, audio);
+setContext(game, { input: new InputRouter(), scaler, settings, flow, lights: new CabinetLights(), audio });
 
 settings.onChange((s) => scaler.setMode(s.scaling));
 scaler.onChange((l) => {
@@ -80,5 +82,6 @@ if (import.meta.env.DEV) {
   scenes: () => game.scene.getScenes(true).map((s) => s.scene.key),
   phase: () => flow.activeSession?.snapshot().phase ?? null,
   scale: () => scaler.layout.scale,
+  music: () => audio.music,
   version: VERSION,
 };

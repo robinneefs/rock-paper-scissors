@@ -24,11 +24,12 @@ export class ResultScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { flow, input } = getContext(this);
+    const { flow, input, audio } = getContext(this);
     const { session, setup, winner, state } = this.result;
     useMonitorCamera(this);
     const cx = MONITOR.width / 2;
     const won = winner === session.me;
+    audio.play(won ? 'winJingle' : 'loseJingle');
     const them = session.me === 'p1' ? 'p2' : 'p1';
 
     // dithered darkening (a checkerboard of ink pixels), not a smooth alpha overlay
@@ -75,6 +76,7 @@ export class ResultScene extends Phaser.Scene {
       }),
       96,
       input,
+      audio,
       112,
     );
     const ended = (text: string) => {
@@ -97,6 +99,7 @@ export class ResultScene extends Phaser.Scene {
       session.on('disconnected', () => ended('CONNECTION LOST')),
       input.on('action', (a) => {
         if (a.type === 'back' && this.scene.isActive() && !leaving) {
+          audio.play('menuBack');
           leaving = true;
           menu.lock();
           flow.toHome();

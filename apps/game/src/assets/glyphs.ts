@@ -50,6 +50,7 @@ export const GLYPHS: Record<string, string> = {
   '(': '00010 00100 01000 01000 01000 00100 00010',
   ')': '01000 00100 00010 00010 00010 00100 01000',
   '*': '00000 00100 00000 00000 00000 00000 00000',
+  '|': '00100 00100 00100 00100 00100 00100 00100',
 };
 export const FONT_CHARS = Object.keys(GLYPHS).join('');
 export const GLYPH = { width: 5, height: 7, spacing: 1 } as const;

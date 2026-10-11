@@ -12,11 +12,23 @@ export type ScalingMode = 'pixelPerfect' | 'fillHeight';
 
 export const SCALING_MODES: readonly ScalingMode[] = ['pixelPerfect', 'fillHeight'];
 
+/** Volumes are steps from 0 (off) to VOLUME_MAX. */
+export const VOLUME_MAX = 10;
+
 export interface Settings {
   scaling: ScalingMode;
+  /** Sound off altogether (music and effects); the volumes are kept for when it's back on. */
+  muted: boolean;
+  musicVolume: number;
+  sfxVolume: number;
 }
 
-export const DEFAULT_SETTINGS: Settings = { scaling: 'fillHeight' };
+export const DEFAULT_SETTINGS: Settings = {
+  scaling: 'fillHeight',
+  muted: false,
+  musicVolume: 6,
+  sfxVolume: 8,
+};
 
 /** The part of the Web Storage API we use (localStorage now, Capacitor Preferences later). */
 export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem'>;
@@ -61,10 +73,26 @@ function load(store: KeyValueStore | null): Settings {
       scaling: SCALING_MODES.includes(saved.scaling as ScalingMode)
         ? (saved.scaling as ScalingMode)
         : DEFAULT_SETTINGS.scaling,
+      muted: typeof saved.muted === 'boolean' ? saved.muted : DEFAULT_SETTINGS.muted,
+      musicVolume: volume(saved.musicVolume, DEFAULT_SETTINGS.musicVolume),
+      sfxVolume: volume(saved.sfxVolume, DEFAULT_SETTINGS.sfxVolume),
     };
   } catch {
     return DEFAULT_SETTINGS;
   }
+}
+
+function volume(saved: unknown, fallback: number): number {
+  return Number.isInteger(saved) && (saved as number) >= 0 && (saved as number) <= VOLUME_MAX
+    ? (saved as number)
+    : fallback;
+}
+
+/** One volume step up or down, kept in 0..VOLUME_MAX; `wrap` goes from the top back to 0 (menu select). */
+export function stepVolume(v: number, dir: 1 | -1, wrap = false): number {
+  const next = v + dir;
+  if (wrap && next > VOLUME_MAX) return 0;
+  return Math.max(0, Math.min(VOLUME_MAX, next));
 }
 
 /** localStorage if the browser lets us use it. */
