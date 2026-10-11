@@ -80,10 +80,12 @@ export class AudioService implements SfxPlayer {
     if (!key || this.track || this.game.sound.locked) return;
     const file = musicFileKey(key);
     if (!this.game.cache.audio.exists(file)) return;
+    // the volume must go to play() too: play() with no config resets the sound to full volume,
+    // which came out as a loud burst on every screen change, even with sound off
     const sound = this.game.sound.add(file, { loop: true, volume: 0 });
-    sound.play();
+    sound.play({ loop: true, volume: 0 });
     this.track = { key, sound };
-    this.fadeTo(sound, busGain(this.settings.value, 'music'), FADE_IN_MS, false);
+    this.fadeTo(sound, busGain(this.settings.value, 'music'), FADE_IN_MS, false, 0);
   }
 
   private step(time: number): void {
@@ -101,11 +103,17 @@ export class AudioService implements SfxPlayer {
     });
   }
 
-  private fadeTo(sound: Fade['sound'], to: number, durMs: number, stopAtEnd: boolean): void {
+  private fadeTo(
+    sound: Fade['sound'],
+    to: number,
+    durMs: number,
+    stopAtEnd: boolean,
+    from = sound.volume,
+  ): void {
     this.fades = this.fades.filter((f) => f.sound !== sound);
     this.fades.push({
       sound,
-      from: sound.volume,
+      from,
       to,
       startMs: this.now,
       durMs: Math.max(1, durMs),

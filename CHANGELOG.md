@@ -9,6 +9,7 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - New tuning values for the lock-in flash and ring (`buttons` in the dev tuning panel).
 - **The control panel has depth.** Its top now looks slanted: lit at the back and darker towards you, with bevelled sides, corner bolts, button wells with a lit rim, and a raised front lip with a pink trim strip over a shadowed front face.
 - **A big, juiced timer.** The pick timer is now three times the size of normal text, outlined so it stands out against the sky. Each new second pops in one size bigger and white. It is gold at 3, then red and shaking at 2 and 1 (harder at 1), and when time runs out a big red 0 slams down. All of this can be tuned under `hud` in the dev tuning panel.
+- **Fixed: a short loud burst of music on every screen change**, even with sound off. A new music track started at full volume for a moment before fading to its real level; it now starts silent and fades in.
 - **Faster, shorter fights.** You now have 3 seconds to pick instead of 5, and each fighter starts a round with 50 health instead of 100, so a round takes about 3 or 4 exchanges. The health bars turn red below 15 health (was 30). Online, both players need this version.
 
 ## 0.8.0 (2026-10-11)
