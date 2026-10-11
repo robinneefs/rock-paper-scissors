@@ -14,6 +14,7 @@ import { FIGHTER_FRAME, paintFighter } from './fighters';
 import { BADGE, paintBadges } from './icons';
 import type { PixelBuffer } from './PixelBuffer';
 import { paintStage } from './stage';
+import { paintStreet } from './street';
 
 /**
  * Generates every placeholder texture under its real asset key. When a real sprite sheet is loaded
@@ -34,6 +35,7 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
   add(Tex.room, paintRoomTile());
   add(Tex.cabinet, paintCabinet());
   add(Tex.stage, paintStage());
+  add(Tex.street, paintStreet());
   add(Tex.joystickBall, paintJoystickBall());
   add(Tex.buttons, paintButtons(), (tex) => {
     (['rock', 'paper', 'scissors'] as const).forEach((m, row) =>

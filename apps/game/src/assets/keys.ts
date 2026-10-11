@@ -7,6 +7,7 @@ export const Tex = {
   room: 'room',
   cabinet: 'cabinet',
   stage: 'stage',
+  street: 'stage-street',
   fighterP1: 'fighter-p1',
   fighterP2: 'fighter-p2',
   badges: 'move-badges',

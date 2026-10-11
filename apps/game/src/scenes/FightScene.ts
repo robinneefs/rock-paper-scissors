@@ -32,7 +32,7 @@ export class FightScene extends Phaser.Scene {
     const { input, flow, lights, audio } = getContext(this);
     const { session, setup } = this.fight;
     useMonitorCamera(this);
-    this.add.image(0, 0, Tex.stage).setOrigin(0);
+    this.add.image(0, 0, Tex.street).setOrigin(0);
 
     const fighters = {
       p1: new FighterView(this, 'p1', STAGE.fighterX.p1, STAGE.floorY),
