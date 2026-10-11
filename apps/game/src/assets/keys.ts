@@ -11,6 +11,7 @@ export const Tex = {
   fighterP2: 'fighter-p2',
   icons: 'move-icons',
   buttons: 'cabinet-buttons',
+  buttonRings: 'cabinet-button-rings',
   joystickBall: 'joystick-ball',
   dither: 'dither',
 } as const;

@@ -1,6 +1,6 @@
 import { BUTTONS, CABINET, JOYSTICK, MARQUEE, MONITOR, PANEL } from '../../config/layout';
 import { moveColors, palette } from '../../config/palette';
-import { SYMBOLS } from './icons';
+import { drawSymbol, lighten, symbolTones } from './icons';
 import { PixelBuffer, shade } from './PixelBuffer';
 
 const BODY = 0x2c1658;
@@ -80,29 +80,68 @@ export const BUTTON_FRAME = {
   height: 44,
   topX: 26,
   topY: 16,
-  states: ['up', 'down', 'dim'] as const,
+  /** up; pressed down; lit (the locked-in move); dim (another move is locked in); flash (lock-in flash). */
+  states: ['up', 'down', 'lit', 'dim', 'flash'] as const,
 };
 export type ButtonState = (typeof BUTTON_FRAME.states)[number];
 
-/** One frame per move and state: up, pressed down, and dimmed (another move is selected). */
+/** How far the top travels when pressed, and how much side shows when it is up. */
+const TRAVEL = { upSide: 7, downSide: 1 };
+
+/** One frame per move and state, in the flat style of the round 3 mock-ups: dark rim, flat top, white icon. */
 export function paintButtons(): PixelBuffer {
   const { width: fw, height: fh, states } = BUTTON_FRAME;
   const moves = ['rock', 'paper', 'scissors'] as const;
   const b = new PixelBuffer(fw * states.length, fh * moves.length);
   moves.forEach((m, row) => {
-    const col = moveColors[m].main;
+    const { main, shade: dark } = moveColors[m];
     states.forEach((state, i) => {
       const cx = i * fw + BUTTON_FRAME.topX;
       const base = row * fh + BUTTON_FRAME.topY;
-      const press = state === 'down';
+      const pressed = state !== 'up' && state !== 'dim';
       const dim = state === 'dim';
-      const top = press ? base + 5 : base;
-      const side = press ? 2 : 7;
-      for (let s = side; s >= 0; s--) b.ell(cx, top + s, 22, 15, shade(col, dim ? 0.25 : 0.55));
-      b.ell(cx, top, 22, 15, shade(col, dim ? 0.35 : press ? 1 : 0.88));
-      b.ell(cx - 5, top - 5, 10, 5, dim ? shade(col, 0.45) : shade(col, 1.25));
-      b.bitmap(SYMBOLS[m], cx - 4, top - 3, dim ? 0x3c285a : palette.white);
+      const side = pressed ? TRAVEL.downSide : TRAVEL.upSide;
+      const top = base + TRAVEL.upSide - side;
+      const k = dim ? 0.4 : 1;
+      // dark rim, then the side, then the flat top with a thin shade ring and a highlight
+      b.ell(cx, top + side + 1, 23, 16, palette.ink);
+      for (let s = side; s >= 0; s--) b.ell(cx, top + s, 22, 15, shade(dark, 0.75 * k));
+      b.ell(cx, top, 23, 16, palette.ink);
+      if (state === 'flash') {
+        b.ell(cx, top, 22, 15, palette.white);
+        drawSymbol(b, m, cx - 11, top - 8, { white: main, outline: dark, tint: main, detail: dark });
+        return;
+      }
+      const lit = state === 'lit';
+      b.ell(cx, top, 22, 15, dim ? shade(dark, 0.45) : lit ? lighten(main, 0.7) : dark);
+      b.ell(cx, top - 1, 21, 14, dim ? shade(main, 0.4) : lit ? lighten(main, 0.12) : main);
+      if (!dim) b.ell(cx - 10, top - 9, 5, 2, lighten(main, lit ? 0.85 : 0.6));
+      drawSymbol(b, m, cx - 11, top - 9, symbolTones(m, dim));
     });
+  });
+  return b;
+}
+
+/** The ring that pops out round a button when its move is locked in: frames 0..2, growing. */
+export const BUTTON_RING = { width: 72, height: 52, cx: 36, cy: 26, frames: 3 };
+
+export function paintButtonRings(): PixelBuffer {
+  const { width: w, height: h, cx, cy, frames } = BUTTON_RING;
+  const moves = ['rock', 'paper', 'scissors'] as const;
+  const b = new PixelBuffer(w * frames, h * moves.length);
+  moves.forEach((m, row) => {
+    for (let f = 0; f < frames; f++) {
+      const ring = new PixelBuffer(w, h);
+      const rx = 26 + f * 4;
+      const ry = 18 + f * 3;
+      ring.ell(cx, cy, rx, ry, palette.white);
+      const hole = new PixelBuffer(w, h);
+      hole.ell(cx, cy, rx - (f === 0 ? 2 : 1), ry - (f === 0 ? 2 : 1), palette.white);
+      const color = f === frames - 1 ? moveColors[m].main : lighten(moveColors[m].main, 0.5);
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++)
+          if (ring.isSet(x, y) && !hole.isSet(x, y)) b.px(f * w + x, row * h + y, color);
+    }
   });
   return b;
 }

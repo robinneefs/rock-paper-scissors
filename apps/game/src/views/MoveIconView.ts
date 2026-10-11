@@ -17,7 +17,7 @@ export class MoveIconView {
     private readonly y: number,
   ) {
     this.icon = scene.add.image(x, y, Tex.icons, 'unknown').setVisible(false);
-    this.auto = new PixelText(scene, x, y - 18, 'AUTO', {
+    this.auto = new PixelText(scene, x, y - 22, 'AUTO', {
       color: palette.lilac,
       align: 'center',
       shadow: palette.ink,

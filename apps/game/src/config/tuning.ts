@@ -18,7 +18,12 @@ export const tuning = {
   shake: { byDamage: { 10: 2, 15: 3, 20: 4 } as Record<number, number>, durationMs: 280, koPx: 5 },
   flash: { frames: 2, frameMs: 33 },
   hud: { drainMs: 600, trailDelayMs: 120, lowHealth: 30, timerWarnMs: 3000 },
-  buttons: { pressDepthPx: 5, releaseMs: 80 },
+  /**
+   * Cabinet buttons. releaseMs: how long a quick tap stays down. Lock-in: the chosen button flashes
+   * white `lockFlashes` times (`lockFlashMs` per flash and gap) while a ring pops out round it,
+   * one ring frame every `ringFrameMs`.
+   */
+  buttons: { pressDepthPx: 6, releaseMs: 80, lockFlashes: 2, lockFlashMs: 45, ringFrameMs: 45 },
   joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6 },
   idle: { breatheEveryMs: 420 },
   intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },

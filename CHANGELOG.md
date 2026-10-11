@@ -2,6 +2,12 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.9.0 (2026-10-11)
+
+- **Flat white move icons.** The cabinet buttons and the move coins on the reveal now show big, clear white icons (a boulder, a sheet of paper, open scissors) with a dark outline, in the style picked from the round 3 mock-ups. The coins are a little bigger to fit them.
+- **Punchier buttons.** The buttons have a dark rim and go deeper when pressed. Locking in a move flashes its button white twice while a ring pops out round it; it then stays down and lit, and the other two dim.
+- New tuning values for the lock-in flash and ring (`buttons` in the dev tuning panel).
+
 ## 0.8.0 (2026-10-11)
 
 - **Sound and music.** 90s arcade chiptune throughout: menu blips, a tick for each of the last 3 seconds of the timer (higher each second) and a slam when it runs out, a lock-in chime when you pick, a whoosh as the icons drop, a different hit for each winning move (a heavy thud for Rock, a slap for Paper, a metal slash for Scissors, each with three variations), a clang for a tie, a big K.O., ROUND and FIGHT! stings, and win and lose jingles.

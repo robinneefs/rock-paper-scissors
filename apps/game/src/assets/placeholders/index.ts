@@ -1,7 +1,15 @@
 import type Phaser from 'phaser';
 import { css, fighterColors, palette } from '../../config/palette';
 import { FighterFrames, Tex } from '../keys';
-import { BUTTON_FRAME, paintButtons, paintCabinet, paintJoystickBall, paintRoomTile } from './cabinet';
+import {
+  BUTTON_FRAME,
+  BUTTON_RING,
+  paintButtonRings,
+  paintButtons,
+  paintCabinet,
+  paintJoystickBall,
+  paintRoomTile,
+} from './cabinet';
 import { FIGHTER_FRAME, paintFighter } from './fighters';
 import { ICON, paintIcons } from './icons';
 import type { PixelBuffer } from './PixelBuffer';
@@ -40,6 +48,19 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
         ),
       ),
     );
+  });
+  add(Tex.buttonRings, paintButtonRings(), (tex) => {
+    (['rock', 'paper', 'scissors'] as const).forEach((m, row) => {
+      for (let f = 0; f < BUTTON_RING.frames; f++)
+        tex.add(
+          `${m}-${f}`,
+          0,
+          f * BUTTON_RING.width,
+          row * BUTTON_RING.height,
+          BUTTON_RING.width,
+          BUTTON_RING.height,
+        );
+    });
   });
   add(Tex.icons, paintIcons(), (tex) =>
     ICON.frames.forEach((name, i) => tex.add(name, 0, i * ICON.size, 0, ICON.size, ICON.size)),
