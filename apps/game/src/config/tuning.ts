@@ -81,7 +81,17 @@ export const tuning = {
    * white `lockFlashes` times (`lockFlashMs` per flash and gap) while a ring pops out round it,
    * one ring frame every `ringFrameMs`.
    */
-  buttons: { pressDepthPx: 6, releaseMs: 80, lockFlashes: 2, lockFlashMs: 45, ringFrameMs: 45 },
+  /** Buttons: press and lock-in timings; a glint sweeps them every shineGapMs (frames shineFrameMs apart). */
+  buttons: {
+    pressDepthPx: 6,
+    releaseMs: 80,
+    lockFlashes: 2,
+    lockFlashMs: 45,
+    ringFrameMs: 45,
+    shineGapMs: 6000,
+    shineFrameMs: 50,
+    shineStaggerMs: 110,
+  },
   joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6 },
   idle: { breatheEveryMs: 420 },
   intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },
@@ -121,8 +131,18 @@ export const tuning = {
     bigHitWarpPx: 2,
     bigHitWarpMs: 260,
   },
-  /** The marquee light flickers (dims to dimAlpha) every minGapMs to maxGapMs, on its own. */
-  marquee: { minGapMs: 4000, maxGapMs: 11000, dimAlpha: 0.45 },
+  /**
+   * The marquee light flickers every minGapMs to maxGapMs, on its own: dips darken the art to
+   * dimAlpha, blackouts to blackoutAlpha, and it flashes surgeAlpha bright for surgeMs as it comes back.
+   */
+  marquee: {
+    minGapMs: 1500,
+    maxGapMs: 4500,
+    dimAlpha: 0.7,
+    blackoutAlpha: 0.92,
+    surgeAlpha: 0.18,
+    surgeMs: 50,
+  },
   result: { delayAfterMatchMs: 400 },
   /** Online: how long "RIVAL LEFT" and other ending messages stay up before going home; lobby text blink. */
   online: { endedHoldMs: 2500, waitBlinkMs: 500 },

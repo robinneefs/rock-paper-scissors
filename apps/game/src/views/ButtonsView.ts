@@ -1,7 +1,12 @@
 import type { Move } from '@rps/core';
 import Phaser from 'phaser';
 import { Tex } from '../assets/keys';
-import { BUTTON_FRAME, BUTTON_RING, type ButtonState } from '../assets/placeholders/cabinet';
+import {
+  BUTTON_FRAME,
+  BUTTON_RING,
+  BUTTON_SHINE_FRAMES,
+  type ButtonState,
+} from '../assets/placeholders/cabinet';
 import { BUTTONS } from '../config/layout';
 import { tuning } from '../config/tuning';
 
@@ -10,6 +15,7 @@ const MOVES: readonly Move[] = ['rock', 'paper', 'scissors'];
 /**
  * The three physical cabinet buttons. They press down when used. Locking in a move flashes its
  * button white and pops a ring out round it; it then stays down and lit while the others dim.
+ * They brighten under the mouse, and every few seconds a glint runs across them, left to right.
  */
 export class ButtonsView {
   private readonly sprites: Record<Move, Phaser.GameObjects.Image>;
@@ -17,6 +23,9 @@ export class ButtonsView {
   private readonly down = new Set<Move>();
   private selected: Move | null = null;
   private flashing = false;
+  private hovered: Move | null = null;
+  /** Which shine frame each button shows, or -1 for none. */
+  private readonly shine: Record<Move, number> = { rock: -1, paper: -1, scissors: -1 };
   private lockTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(
@@ -40,13 +49,37 @@ export class ButtonsView {
         });
       img.on('pointerdown', () => handlers.press(m));
       img.on('pointerup', () => handlers.release(m));
-      img.on('pointerout', () => this.down.has(m) && handlers.release(m));
+      img.on('pointerover', () => {
+        this.hovered = m;
+        this.refresh();
+      });
+      img.on('pointerout', () => {
+        if (this.down.has(m)) handlers.release(m);
+        if (this.hovered === m) this.hovered = null;
+        this.refresh();
+      });
       parent.add(img);
       return img;
     };
     this.sprites = { rock: make('rock'), paper: make('paper'), scissors: make('scissors') };
     this.ring = scene.add.image(0, 0, Tex.buttonRings, 'rock-0').setOrigin(0).setVisible(false);
     parent.add(this.ring);
+    this.scheduleShine();
+  }
+
+  /** Every shineGapMs a glint sweeps the three buttons in turn, shineStaggerMs apart. */
+  private scheduleShine(): void {
+    const t = tuning.buttons;
+    this.scene.time.delayedCall(t.shineGapMs, () => {
+      MOVES.forEach((m, i) => {
+        for (let f = 0; f <= BUTTON_SHINE_FRAMES; f++)
+          this.scene.time.delayedCall(i * t.shineStaggerMs + f * t.shineFrameMs, () => {
+            this.shine[m] = f < BUTTON_SHINE_FRAMES ? f : -1;
+            this.refresh();
+          });
+      });
+      this.scheduleShine();
+    });
   }
 
   setDown(move: Move, down: boolean): void {
@@ -105,6 +138,8 @@ export class ButtonsView {
       if (this.selected === m) state = this.flashing ? 'flash' : 'lit';
       else if (this.down.has(m)) state = 'down';
       else if (this.selected) state = 'dim';
+      else if (this.shine[m] >= 0) state = `shine${this.shine[m]}` as ButtonState;
+      else if (this.hovered === m) state = 'hover';
       this.sprites[m].setFrame(`${m}-${state}`);
     }
   }

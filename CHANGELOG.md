@@ -2,6 +2,11 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.11.0 (2026-10-11)
+
+- **Polished cabinet buttons.** Each button now sits in a chrome collar, has a rounded side lit from the left, a cap with a raised rim that catches the light at the back, a sharp glint, and an embossed icon. Buttons brighten when the mouse is over them, look pushed into shadow when pressed, and every few seconds a glint sweeps across all three, left to right. Tune the glint under `buttons` in the dev tuning panel.
+- **A stronger, more frequent marquee flicker.** The marquee light now flickers every 1.5 to 4.5 seconds (was 4 to 11), dips much darker, and sometimes blacks out completely. The pink neon tube round the art goes out with it, and the art flashes bright for a moment as the tube strikes back. There are six flicker patterns now (was three). Tune it under `marquee` in the dev tuning panel.
+
 ## 0.10.0 (2026-10-11)
 
 - **New fighters.** Player 1 (left) is now a strong brawler in blue jeans, brown boots and an open red shirt over a white undershirt. Player 2 (right) is a martial artist with a high ponytail, a teal wrap top with white trim, a gold sash, navy pants, white boots and wrapped hands. Both are still drawn in code at 64 px tall, with every pose (idle, rock, paper, scissors, hurt, K.O., win) redrawn; the real sprite sheets can replace them later under the same names.

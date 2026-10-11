@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Tex } from '../assets/keys';
+import { MARQUEE_NEON, NEON_OFF } from '../assets/placeholders/cabinet';
 import { MARQUEE } from '../config/layout';
 import { palette } from '../config/palette';
 import { tuning } from '../config/tuning';
@@ -9,6 +10,19 @@ import { ButtonsView } from '../views/ButtonsView';
 import { JoystickView } from '../views/JoystickView';
 import { getContext } from './context';
 import { SceneKey } from './keys';
+
+/**
+ * Marquee flicker patterns, one picked at random each time: steps of a level and how many ms it
+ * holds. Levels: d = dip (tuning.marquee.dimAlpha), h = half a dip, D = blackout, - = lit.
+ */
+const FLICKERS = [
+  'd40 -60 d30 -140',
+  'D70 -50',
+  'd30 -40 d30 -40 D30 -260',
+  'd25 -25 d25 -25 d25 -25 d25',
+  'D90 h30 D60 -40 d30',
+  'D320 d40 D50 -30 D40',
+];
 
 /** Always running, underneath everything: the arcade room, the cabinet, its buttons and joystick. */
 export class CabinetScene extends Phaser.Scene {
@@ -56,33 +70,52 @@ export class CabinetScene extends Phaser.Scene {
   }
 
   /**
-   * The marquee's backlight flickers now and then, like an old tube, whatever the game is doing:
-   * a dark veil over the art blinks on and off in one of a few patterns, then waits a while.
+   * The marquee's backlight flickers every few seconds, like a worn tube, whatever the game is
+   * doing: a dark veil over the art and the neon loop round it stutter through one of a few
+   * patterns (some only dip, some black out), and a bright surge pops as the tube strikes back.
    */
   private flickerMarquee(cabinet: Phaser.GameObjects.Container): void {
     const m = tuning.marquee;
     const { x, y, width, height } = MARQUEE.art;
     const veil = this.add
-      .rectangle(x, MARQUEE.y + y, width, height, palette.black, m.dimAlpha)
+      .rectangle(x, MARQUEE.y + y, width, height, palette.black)
       .setOrigin(0)
-      .setVisible(false);
-    cabinet.add(veil);
-    const patterns = [
-      [40, 60, 30, 140],
-      [70, 50],
-      [30, 40, 30, 40, 30, 260],
-    ];
+      .setAlpha(0);
+    // the neon loop drawn in the cabinet (see paintCabinet), switched off in its unlit colour
+    const n = MARQUEE_NEON;
+    const neonOff = this.add.graphics().setAlpha(0).fillStyle(NEON_OFF);
+    for (const [fx, fy, fw, fh] of [
+      [n.x, n.y, n.w, 2],
+      [n.x, n.y + n.h - 2, n.w, 2],
+      [n.x, n.y, 2, n.h],
+      [n.x + n.w - 2, n.y, 2, n.h],
+    ] as const)
+      neonOff.fillRect(fx, fy, fw, fh);
+    const surge = this.add
+      .rectangle(x, MARQUEE.y + y, width, height, palette.white)
+      .setOrigin(0)
+      .setAlpha(0)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    cabinet.add([veil, neonOff, surge]);
+
+    const set = (dark: number) => {
+      veil.setAlpha(dark);
+      neonOff.setAlpha(dark > 0 ? Math.min(1, dark / m.dimAlpha) : 0);
+    };
     const next = () => {
       const wait = m.minGapMs + Math.random() * (m.maxGapMs - m.minGapMs);
       this.time.delayedCall(wait, () => {
-        const steps = patterns[Math.floor(Math.random() * patterns.length)]!;
+        const dark = { '-': 0, h: m.dimAlpha / 2, d: m.dimAlpha, D: m.blackoutAlpha };
+        const steps = FLICKERS[Math.floor(Math.random() * FLICKERS.length)]!.split(' ');
         let at = 0;
-        steps.forEach((ms, i) => {
-          this.time.delayedCall(at, () => veil.setVisible(i % 2 === 0));
-          at += ms;
-        });
+        for (const step of steps) {
+          this.time.delayedCall(at, () => set(dark[step[0] as keyof typeof dark]));
+          at += Number(step.slice(1));
+        }
         this.time.delayedCall(at, () => {
-          veil.setVisible(false);
+          set(0);
+          surge.setAlpha(m.surgeAlpha);
+          this.time.delayedCall(m.surgeMs, () => surge.setAlpha(0));
           next();
         });
       });
