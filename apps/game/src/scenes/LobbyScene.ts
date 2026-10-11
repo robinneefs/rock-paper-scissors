@@ -36,7 +36,7 @@ const CREATE_TRIES = 5;
 
 /**
  * Online lobby: CREATE ROOM shows a fresh code and waits for a rival; JOIN ROOM lets you enter a
- * friend's code (stick up/down picks letters, left/right moves, or type them). When both players
+ * friend's code (type it, or stick up/down picks letters and left/right moves). When both players
  * are in, the connected session goes to the fight. Each mode is a restart of this scene.
  */
 export class LobbyScene extends Phaser.Scene {
@@ -197,7 +197,7 @@ export class LobbyScene extends Phaser.Scene {
       shadow: palette.ink,
     });
     const status = this.statusLines(132);
-    this.hint(['STICK OR KEYS PICK LETTERS', 'BUTTON JOINS - BACK DELETES']);
+    this.hint(['TAP THE BOXES TO TYPE', 'OR PICK LETTERS WITH THE STICK']);
 
     // four letter boxes; -1 = empty
     const slots: number[] = Array.from({ length: ROOM_CODE_LENGTH }, () => -1);
@@ -258,26 +258,42 @@ export class LobbyScene extends Phaser.Scene {
         joining = false;
         this.session = null;
         status(lines, palette.pink);
+        syncField();
         draw();
       };
       session.on('opponentJoined', () => this.toFight(session));
       session.on('refused', ({ error }) => fail(PROBLEM[error]));
       session.on('disconnected', () => fail(PROBLEM.offline));
+      syncField();
       draw();
     };
 
-    // tap a box to move the cursor there
-    slots.forEach((_, i) =>
-      this.add
-        .zone(left + i * (box.w + box.gap), box.y, box.w, box.h)
-        .setOrigin(0)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
-          if (joining) return;
-          cursor = i;
-          draw();
-        }),
+    // A see-through text field over the boxes: tapping them opens the phone's keyboard, and typing
+    // goes through the keyboard's own layout. The boxes stay the visible part.
+    const field = this.codeField(
+      left,
+      box.y,
+      ROOM_CODE_LENGTH * box.w + (ROOM_CODE_LENGTH - 1) * box.gap,
+      box.h,
     );
+    const syncField = () => {
+      field.value = code();
+      field.disabled = joining;
+      if (joining) field.blur();
+    };
+    field.addEventListener('input', () => {
+      const typed = [...field.value.toUpperCase()]
+        .map((ch) => ROOM_CODE_LETTERS.indexOf(ch))
+        .filter((i) => i >= 0)
+        .slice(0, ROOM_CODE_LENGTH);
+      slots.fill(-1);
+      typed.forEach((letter, i) => (slots[i] = letter));
+      cursor = Math.min(typed.length, ROOM_CODE_LENGTH - 1);
+      status(['', '']);
+      syncField();
+      blinkOn = true;
+      draw();
+    });
 
     this.listen((a) => {
       if (joining) {
@@ -307,8 +323,64 @@ export class LobbyScene extends Phaser.Scene {
         else return this.toMode('menu');
       }
       blinkOn = true;
+      syncField();
       draw();
     });
     draw();
+  }
+
+  /**
+   * A transparent HTML text field laid over a rectangle of the monitor (in monitor pixels). It
+   * follows window resizes and is removed with the scene.
+   */
+  private codeField(x: number, y: number, w: number, h: number): HTMLInputElement {
+    const { scaler } = getContext(this);
+    const field = document.createElement('input');
+    Object.assign(field, {
+      type: 'text',
+      maxLength: ROOM_CODE_LENGTH,
+      spellcheck: false,
+      autocomplete: 'off',
+      enterKeyHint: 'go',
+      inputMode: 'text',
+      ariaLabel: 'Room code',
+    });
+    field.setAttribute('autocapitalize', 'characters');
+    field.setAttribute('autocorrect', 'off');
+    Object.assign(field.style, {
+      position: 'absolute',
+      margin: '0',
+      padding: '0',
+      border: 'none',
+      outline: 'none',
+      background: 'transparent',
+      color: 'transparent',
+      caretColor: 'transparent',
+      // 16px or more, or iOS zooms the page in when the field gets focus
+      fontSize: '16px',
+      userSelect: 'text',
+      webkitUserSelect: 'text',
+      touchAction: 'manipulation',
+      cursor: 'pointer',
+    } satisfies Partial<CSSStyleDeclaration>);
+    const place = () => {
+      const l = scaler.layout;
+      const zoom = scaler.zoom;
+      const canvas = this.game.canvas.getBoundingClientRect();
+      field.style.left = `${canvas.left + window.scrollX + (l.cabinetX + MONITOR.x + x) * zoom}px`;
+      field.style.top = `${canvas.top + window.scrollY + (l.cabinetY + MONITOR.y + y) * zoom}px`;
+      field.style.width = `${w * zoom}px`;
+      field.style.height = `${h * zoom}px`;
+    };
+    place();
+    document.body.appendChild(field);
+    const off = scaler.onChange(place);
+    // on a desktop the keys type straight away; a phone opens its keyboard when the boxes are tapped
+    if (window.matchMedia('(pointer: fine)').matches) field.focus({ preventScroll: true });
+    this.events.once('shutdown', () => {
+      off();
+      field.remove();
+    });
+    return field;
   }
 }

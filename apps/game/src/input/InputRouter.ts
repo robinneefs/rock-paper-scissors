@@ -9,7 +9,7 @@ export type Action =
   | { type: 'confirm' } // Enter, Space
   | { type: 'back' } // Esc (Android back later)
   | { type: 'nav'; dir: NavDir } // joystick or arrow keys
-  | { type: 'char'; char: string }; // a letter key A to Z (typing a room code)
+  | { type: 'char'; char: string }; // a typed letter A to Z, by the keyboard's layout (room codes)
 
 export interface StickTilt {
   x: -1 | 0 | 1;
@@ -86,6 +86,8 @@ export class InputRouter {
   }
 
   private onKeyDown = (e: KeyboardEvent): void => {
+    // a focused text field (the room code box) types letters and deletes them itself
+    const typing = isTextField(e.target);
     const move = KEY_MOVES[e.code];
     const arrow = ARROWS[e.code];
     if (move) {
@@ -97,10 +99,11 @@ export class InputRouter {
       this.events.emit('action', { type: 'nav', dir: arrow });
     } else if (e.code === 'Enter' || e.code === 'Space' || e.code === 'NumpadEnter') {
       if (!e.repeat) this.events.emit('action', { type: 'confirm' });
-    } else if (e.code === 'Escape' || e.code === 'Backspace') {
+    } else if (e.code === 'Escape' || (e.code === 'Backspace' && !typing)) {
       if (!e.repeat) this.events.emit('action', { type: 'back' });
-    } else if (/^Key[A-Z]$/.test(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (!e.repeat) this.events.emit('action', { type: 'char', char: e.code.slice(3) });
+    } else if (!typing && /^[a-z]$/i.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // e.key, not e.code: the letter printed on the key, so AZERTY and other layouts type right
+      if (!e.repeat) this.events.emit('action', { type: 'char', char: e.key.toUpperCase() });
     } else return;
     e.preventDefault();
   };
@@ -136,6 +139,14 @@ export class InputRouter {
     if (this.repeatTimer) clearInterval(this.repeatTimer);
     this.repeatTimer = null;
   }
+}
+
+function isTextField(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
 }
 
 /** Menus move up and down; a mostly-sideways tilt counts as left/right. */
