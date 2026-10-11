@@ -5,20 +5,23 @@ import { tuning } from '../config/tuning';
 import type { StickTilt } from '../input/InputRouter';
 
 /**
- * The joystick: tilts in 8 directions, springs back. Drag it, or use the arrow keys. Letting go
- * clicks, and the stick wobbles past the centre and back before it settles.
+ * The joystick: tilts in 8 directions, springs back. Drag it, or use the arrow keys. It clicks
+ * every time it snaps into a new direction (spinning it round keeps clicking) and when it is let
+ * go, and then the stick wobbles past the centre and back before it settles.
  */
 export class JoystickView {
   private readonly shaft: Phaser.GameObjects.Graphics;
   private readonly ball: Phaser.GameObjects.Image;
   private tilt = { x: 0, y: 0 };
+  /** The direction it last snapped to, for the click. */
+  private dir: StickTilt = { x: 0, y: 0 };
   private wobbling: Phaser.Tweens.TweenChain | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
     parent: Phaser.GameObjects.Container,
     onDrag: (tilt: StickTilt) => void,
-    private readonly onSpringBack: () => void = () => {},
+    private readonly onClick: () => void = () => {},
   ) {
     this.shaft = scene.add.graphics();
     this.ball = scene.add
@@ -43,12 +46,14 @@ export class JoystickView {
   }
 
   setTilt(t: StickTilt): void {
+    if (t.x === this.dir.x && t.y === this.dir.y) return;
+    this.dir = { x: t.x, y: t.y };
+    this.onClick();
     this.wobbling?.stop();
     this.wobbling = null;
     this.scene.tweens.killTweensOf(this.tilt);
     if (t.x === 0 && t.y === 0) {
       if (this.tilt.x === 0 && this.tilt.y === 0) return;
-      this.onSpringBack();
       // back through the centre, a little past it the other way, a smaller step back, then still
       const { springBackMs, wobble, wobbleMs } = tuning.joystick;
       const from = { ...this.tilt };
