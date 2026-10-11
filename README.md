@@ -102,6 +102,7 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 | [`docs/tuning/TUNING-PANEL.md`](docs/tuning/TUNING-PANEL.md) | The dev tuning panel: how to use it for the game-feel pass and how it's set up |
 | [`docs/screenshots/`](docs/screenshots/) | Screenshots of the current build (browser and phone) |
 | [`docs/brand/`](docs/brand/) | Studio logo masters (Chain Shift, white and purple) |
+| [`docs/mockups/redesign/`](docs/mockups/redesign/) | Mock-ups for the planned redesign: game screens and fighter character styles |
 | [`docs/mockups/cabinet/`](docs/mockups/cabinet/) | Arcade cabinet mock-ups drawn before the build (browser and phone) |
 | [`docs/mockups/landscape-superseded/`](docs/mockups/landscape-superseded/) | Earlier landscape mock-ups, replaced by the cabinet layout |
 | [`docs/art-direction/`](docs/art-direction/) | Art direction samples: sprite sizes, character styles, body shapes |
