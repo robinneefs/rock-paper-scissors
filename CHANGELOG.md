@@ -2,6 +2,12 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.5.4 (2026-10-11)
+
+- The architecture doc is rewritten to match the code as it is now: real file names, types, events, phase timings and tuning values, the scenes and shared services, the lint rules and the tests, with planned parts marked. Its seven diagrams are redrawn with the current values, and two are new: a code map of every folder, and the free ways to host online matches.
+- New `docs/architecture/ONLINE-OPTIONS.md`: since GitHub Pages only serves files, online matches need something live in between. It compares free options (a Cloudflare Durable Object, peer-to-peer with PeerJS, Colyseus on a free host) and recommends a Cloudflare Durable Object running the game's own referee. The architecture doc also lists what the code already gets right for online play and what still has to change.
+- Nothing changes in the game itself.
+
 ## 0.5.3 (2026-10-11)
 
 - The architecture doc now spells out what the pixel-perfect setup does and doesn't do for imported images: everything is forced onto the native pixel grid and never blurs, but a smooth image is not turned into pixel art, so art has to be made at native size in palette colours first. Nothing changes in the game itself.

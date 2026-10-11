@@ -1,27 +1,27 @@
 # Architecture
 
-_Status: in use, 2026-10-10. Steps 1 and 2 of the build order are built (`packages/core`, `apps/game`); the code follows this document. Change it when a decision changes._
+_Status: describes the code as it is in v0.5.4 (2026-10-11), checked file by file. Steps 1 and 2 of the build order are built, plus the dev tuning panel from step 3. Anything not built yet is marked **(planned)**. Change this document when the code or a decision changes._
 
-How the RPS Rivals code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, Colyseus later, Capacitor later, arcade cabinet layout, pixel perfect, polish as a core goal).
+How the RPS Rivals code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, arcade cabinet layout, pixel perfect, polish as a core goal). Where online matches could be hosted for free is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md).
 
 ## Contents
 
 1. [Goals](#1-goals)
 2. [The big picture: four layers](#2-the-big-picture-four-layers)
-3. [Repository layout](#3-repository-layout)
+3. [Repository layout and code map](#3-repository-layout-and-code-map)
 4. [Core: rules and referee](#4-core-rules-and-referee)
 5. [Session: local now, online later](#5-session-local-now-online-later)
 6. [Presentation: scenes, director, views](#6-presentation-scenes-director-views)
 7. [Screen and pixel-perfect rendering](#7-screen-and-pixel-perfect-rendering)
 8. [Tuning: every feel value in one place](#8-tuning-every-feel-value-in-one-place)
-9. [Input, audio, assets, settings](#9-input-audio-assets-settings)
+9. [Input, audio, assets, settings, wiring](#9-input-audio-assets-settings-wiring)
 10. [Online play](#10-online-play)
 11. [Android](#11-android)
 12. [Keeping the code clean](#12-keeping-the-code-clean)
-13. [Testing](#13-testing)
+13. [Testing and CI](#13-testing-and-ci)
 14. [How the design grows](#14-how-the-design-grows)
 15. [Build order](#15-build-order)
-16. [Choices to confirm](#16-choices-to-confirm)
+16. [Decisions and open choices](#16-decisions-and-open-choices)
 
 ---
 
@@ -29,12 +29,12 @@ How the RPS Rivals code is organised so that it stays readable as it grows: from
 
 | Goal | What it means for the code |
 |---|---|
-| **Readable** | Small files with one job each. A newcomer can find "where does damage happen?" in seconds. |
+| **Readable** | Small files with one job each (the biggest, `fighters.ts`, is under 200 lines). A newcomer can find "where does damage happen?" in seconds: `packages/core/src/rules/exchange.ts`. |
 | **Expandable** | New moves, CPUs, fighters, modes and online play slot in without rewriting what exists. |
 | **Online ready** | The rules run identically on a server. The client never needs to know the opponent's move early. |
 | **Testable** | Everything that decides something is plain TypeScript, tested without a browser. |
-| **Pixel perfect** | One pixel grid, whole-number scaling, whole-pixel positions, enforced in one place. |
-| **Polished** | All timings and juice values are named and tunable, never buried in scene code. |
+| **Pixel perfect** | One pixel grid, whole-number scaling by default, whole-pixel positions, enforced in one place. |
+| **Polished** | All timings and juice values are named and tunable (`tuning.ts` and the dev panel), never buried in scene code. |
 
 The one rule behind all of it: **the code that decides is separate from the code that shows.**
 
@@ -42,58 +42,67 @@ The one rule behind all of it: **the code that decides is separate from the code
 
 ![Layers and dependencies](diagrams/1-layers.svg)
 
-| Layer | Job | Knows about |
-|---|---|---|
-| **Core** (`packages/core`) | The rules (who wins, damage, health, rounds) and the referee (match phases and their timing). | Nothing. Zero dependencies: no Phaser, no browser, no network. |
-| **Session** (`apps/game/src/session`) | "A match in progress" as seen by one player. Takes the player's pick, reports what happened. | Core. |
-| **Presentation** (`apps/game/src/scenes`, `views`, `fx`, ...) | Draws, animates, plays sound, reads input. | Session (through its interface), Phaser. |
-| **Platform** (`apps/game/src/platform`) | The browser page now, the Capacitor shell later. Screen scaling, storage, haptics. | The device. Exposed to the game through small adapters. |
+| Layer | Where | Job | Knows about |
+|---|---|---|---|
+| **Core** | `packages/core` (`@rps/core`) | The rules (who wins, damage, health, rounds) and the referee (match phases and their timing). | Nothing. Zero dependencies: no Phaser, no browser, no network. |
+| **Session** | `apps/game/src/session` | "A match in progress" as seen by one player. Takes the player's pick, reports what happened. | Core. |
+| **Presentation** | `apps/game/src/` `scenes`, `fight`, `views`, `menus`, `fx`, `input`, `assets` | Draws, animates, reads input. | The session (through its interface), Phaser. |
+| **Platform** | `apps/game/src/platform` | The browser page now, the Capacitor shell later: screen scaling and stored settings. | The device. Exposed to the game through small classes. |
 
-Dependencies only point **down**. Core never imports anything from the game, the session never imports Phaser, and scenes never decide a result. These rules are checked by the linter (see [section 12](#12-keeping-the-code-clean)), so they can't erode quietly.
+Dependencies only point **down**. Core never imports anything from the game, the session never imports Phaser, and scenes never decide a result. The linter checks this (see [section 12](#12-keeping-the-code-clean)), so it can't erode quietly.
 
-## 3. Repository layout
+Two small shared folders sit beside the layers: `config/` (numbers and colours: `tuning.ts`, `layout.ts`, `palette.ts`) and `util/` (`snap`, `frameRect`). `dev/` holds the tuning panel, which only dev builds load.
 
-An npm workspaces monorepo. The core is its own package from day one, so the future server can depend on it and the "no Phaser in the rules" rule is enforced physically: `packages/core` simply has no Phaser dependency to import.
+## 3. Repository layout and code map
+
+An npm workspaces monorepo. The core is its own package, so a future server can depend on it and the "no Phaser in the rules" rule is enforced physically: `packages/core` has no Phaser dependency to import.
 
 ```
-rock-paper-scissors/
+rps-rivals/
 ├── packages/
 │   └── core/                    @rps/core: rules + referee, zero dependencies
 │       ├── src/
-│       │   ├── rules/           pure functions: resolve an exchange, apply damage, rounds
-│       │   ├── referee/         match phase machine (uses an injected clock and RNG)
-│       │   ├── config.ts        RulesConfig: damage table, health, rounds, phase timings
-│       │   └── index.ts         the public API, nothing else is imported from outside
-│       └── test/
+│       │   ├── rules/           types.ts, exchange.ts (resolve, apply, rounds), sides.ts
+│       │   ├── referee/         referee.ts (phase machine), clock.ts (Clock, Rng, seededRng), emitter.ts
+│       │   ├── config.ts        defaultRules (damage, health, rounds), defaultTimings (phase lengths)
+│       │   └── index.ts         the public API; nothing else is imported from outside
+│       └── test/                rules, referee (+ a fake clock)
 ├── apps/
 │   ├── game/                    the Phaser client (Vite)
 │   │   ├── index.html
-│   │   ├── public/assets/       sprite sheets, fonts, audio (exported, not source files)
+│   │   ├── public/assets/       logo.png (the only real image so far)
+│   │   ├── e2e/                 Playwright smoke tests
+│   │   ├── test/                LocalSession, scaling + settings, tuning panel plumbing
 │   │   └── src/
-│   │       ├── main.ts          boots Phaser, picks the session, starts the scenes
-│   │       ├── config/          tuning.ts, palette.ts, phaser config
-│   │       ├── platform/        pixel scaler, storage, haptics, device info
-│   │       ├── session/         MatchSession interface, LocalSession, move sources (CPU)
-│   │       ├── input/           maps keys, taps and cabinet buttons to game actions
-│   │       ├── scenes/          Boot, Cabinet, Logo, Home, Fight, Result (thin) + flow.ts
-│   │       ├── menus/           menu definitions as data (homeMenu.ts, resultMenu.ts)
-│   │       ├── fight/           FightDirector: turns session events into choreography
-│   │       ├── views/           FighterView, HudView, MoveIconView, BannerView, ButtonsView, JoystickView, MenuView, LogoView
-│   │       ├── fx/              shake, hit-pause, flash, sparks, dust (the "juice" kit)
-│   │       ├── audio/           AudioService, sound keys, music/sfx volumes
-│   │       ├── assets/          typed asset keys and the load manifest
-│   │       └── util/            pixel snapping, typed event emitter, small helpers
-│   └── server/                  (step 5) Colyseus server using @rps/core
-├── tools/                       scripts: sprite sheet packing, palette checks
-├── docs/  sources/              design docs, mock-ups, art direction (as today)
+│   │       ├── main.ts          builds the Phaser game and the GameContext, loads dev/ in dev builds
+│   │       ├── version.ts       VERSION, injected by Vite from package.json
+│   │       ├── config/          tuning.ts (feel), layout.ts (cabinet geometry), palette.ts
+│   │       ├── platform/        PixelScaler (+ computeLayout), settings.ts (SettingsStore)
+│   │       ├── session/         MatchSession, LocalSession, MoveSource, cpu/RandomCpu, createSession, browserClock
+│   │       ├── input/           InputRouter: keys, taps, joystick → actions
+│   │       ├── scenes/          Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition + flow.ts, context.ts
+│   │       ├── menus/           MenuItem + homeMenu, optionsMenu, resultMenu (menus as data)
+│   │       ├── fight/           FightDirector: session events → choreography
+│   │       ├── views/           FighterView, HudView, MoveIconView, BannerView, ButtonsView, JoystickView, MenuView, PixelText
+│   │       ├── fx/              shake, flash
+│   │       ├── assets/          keys.ts (typed texture keys), pixel font, placeholders/ (art drawn in code)
+│   │       ├── dev/             tuning panel (Tweakpane), dev builds only
+│   │       └── util/            snap, gfx
+│   └── server/                  (planned, step 5) the online match room, using @rps/core
+├── config/                      tsconfig.base.json, vitest.config.ts
+├── tools/                       make-logo.py (builds assets/logo.png from the brand master)
+├── docs/  sources/              design docs, mock-ups, art direction, the scripts that draw them
+├── .github/workflows/           ci.yml (checks), release.yml (tags each version)
 └── package.json                 workspaces, shared lint/format/test scripts
 ```
 
-Starting folders only; a folder is added when there is something to put in it, not before.
+A folder is added when there is something to put in it. Not there yet: `audio/` (sound arrives in step 3) and `apps/server`.
+
+![Code map](diagrams/8-code-map.svg)
 
 ## 4. Core: rules and referee
 
-The core has two parts with different jobs.
+The core has two parts with different jobs. `index.ts` exports exactly what the rest of the code may use: the rule functions and types, `defaultRules` and `defaultTimings`, the `Referee`, `Clock`/`Rng`/`seededRng`/`mathRandomRng`, and the small typed `Emitter`.
 
 ### 4a. Rules: pure functions
 
@@ -103,67 +112,93 @@ Data in, data out. No time, no randomness, no side effects. This is where the da
 // packages/core/src/rules/types.ts
 export type Move = 'attack' | 'throw' | 'block';
 export type Side = 'p1' | 'p2';
+export type Picks = Record<Side, Move>;
 
 export interface RulesConfig {
   beats: Record<Move, Move>;          // attack→throw, throw→block, block→attack
-  damage: Record<Move, number>;       // damage dealt when this move wins: throw 20, attack 15, block 10
+  damage: Record<Move, number>;       // dealt when this move wins: throw 20, attack 15, block 10
   startHealth: number;                // 100
   roundsToWin: number;                // 2 (best of three)
 }
 
 export interface MatchState {
-  round: number;
+  round: number;                      // 1-based
   health: Record<Side, number>;
   roundsWon: Record<Side, number>;
   winner: Side | null;                // set when the match is over
 }
 
 export type ExchangeOutcome =
-  | { kind: 'tie'; picks: Record<Side, Move> }
-  | { kind: 'win'; picks: Record<Side, Move>; winner: Side; damage: number };
+  | { kind: 'tie'; picks: Picks }
+  | { kind: 'win'; picks: Picks; winner: Side; loser: Side; damage: number };
+
+export type RuleEvent =
+  | { type: 'damage'; side: Side; amount: number; health: number }
+  | { type: 'ko'; side: Side }
+  | { type: 'roundWon'; side: Side; round: number; roundsWon: number }
+  | { type: 'matchWon'; side: Side };
 ```
 
 ```ts
 // packages/core/src/rules/exchange.ts
-export function resolveExchange(picks: Record<Side, Move>, cfg: RulesConfig): ExchangeOutcome { … }
-
-// Returns the new state plus a list of what happened, for the presentation to play back.
-export function applyExchange(state: MatchState, picks: Record<Side, Move>, cfg: RulesConfig):
-  { state: MatchState; outcome: ExchangeOutcome; events: RuleEvent[] } { … }
-// RuleEvent = 'damage' | 'ko' | 'roundWon' | 'matchWon' (with details)
+resolveExchange(picks, cfg): ExchangeOutcome                 // who wins one exchange, for how much
+applyExchange(state, picks, cfg): { state, outcome, events } // new state + what happened, for playback
+createMatchState(cfg) · isRoundOver(state) · startNextRound(state, cfg) · isFinalRound(state, cfg)
 ```
 
-The state is never changed in place; a new state comes back. That makes every result easy to test, log and replay, and it is exactly what the server will need.
+The state is never changed in place; a new state comes back. That makes every result easy to test, log and replay, and it is exactly what a server needs. `applyExchange` refuses to play on after a K.O. or after the match is won, so a bug can't silently keep a finished round going.
 
-Moves are data (`beats` and `damage` tables), not `if` chains, so a balance change or a fourth move is a config edit, not a code rewrite.
+Moves are data (`beats` and `damage` tables), not `if` chains, so a balance change or a renamed move is a config and type edit, not a logic rewrite. (The planned Rock / Paper / Scissors naming from the rebrand maps one to one onto Attack / Block / Throw.)
 
 ### 4b. Referee: the match phases
 
-The referee runs one match: it moves through the phases, collects picks, fills in a random pick when time runs out, and calls the rules. It needs a clock and randomness, but **both are passed in**, so the referee itself stays engine-free and testable with a fake clock and a seeded RNG.
+The referee runs one match: it moves through the phases, collects picks, fills in a random pick when time runs out, and calls the rules. It needs a clock and randomness, but **both are passed in**, so the referee stays engine-free and testable with a fake clock and a seeded RNG.
 
 ![Match phases](diagrams/2-match-phases.svg)
 
 ```ts
-// packages/core/src/referee/referee.ts
+// packages/core/src/referee/clock.ts
 export interface Clock { now(): number; schedule(ms: number, fn: () => void): Cancel; }
-export interface Rng { next(): number; }                       // 0..1, seedable
+export interface Rng { next(): number; }                  // [0, 1); seededRng(seed) is mulberry32
+
+// packages/core/src/referee/referee.ts
+export type Phase = 'idle' | 'roundIntro' | 'picking' | 'reveal' | 'roundOver' | 'matchOver';
 
 export class Referee {
-  constructor(cfg: RulesConfig, timings: PhaseTimings, clock: Clock, rng: Rng) {}
-  start(): void;
-  submitPick(side: Side, move: Move): void;   // allowed (and changeable) only during Picking
-  on<E extends keyof RefereeEvents>(e: E, fn: (p: RefereeEvents[E]) => void): Unsubscribe;
+  constructor(cfg: RulesConfig, timings: PhaseTimings, clock: Clock, rng: Rng);
+  start(): void;                                  // a fresh match; calling it again is a rematch
+  submitPick(side: Side, move: Move): boolean;    // only while picking; changeable; false if refused
+  on(event, fn): Unsubscribe;
+  readonly currentPhase, phaseEndsAt, matchState; hasPicked(side); dispose();
 }
-// RefereeEvents: phase { phase, endsAt }, locked { side }, reveal { picks, outcome, state }, …
+
+export interface RefereeEvents {
+  phase:     { phase: Phase; endsAt: number | null; round: number; finalRound: boolean };
+  locked:    { side: Side };                      // once per side per exchange, never the move
+  reveal:    { picks: Picks; autoPicked: Record<Side, boolean>; outcome: ExchangeOutcome;
+               events: RuleEvent[]; state: MatchState };
+  matchOver: { winner: Side; state: MatchState };
+}
 ```
 
-The same `Referee` class runs inside the local game now and inside the Colyseus room later, with a different `Clock` adapter. That is the main reason online play won't need a rewrite.
+Picks are kept in a private field until the reveal; the only thing announced while picking is `locked { side }`. That is the property online play depends on.
 
-**Phase timings are rules, not feel.** `pickMs`, `revealMs`, `roundIntroMs` and `roundOverMs` live in the core config because the server has to agree with them. The client plays its animations *inside* those windows (see [section 6](#6-presentation-scenes-director-views)).
+The same `Referee` class runs inside the local game now and can run inside an online match room later with a different `Clock`. That is the main reason online play won't need a rewrite.
+
+**Phase timings are rules, not feel.** They live in `packages/core/src/config.ts` because a server has to use the same ones:
+
+| Phase | Value | What happens |
+|---|---|---|
+| `roundIntroMs` | 1600 | "ROUND 1" (or "FINAL ROUND") banner; "FIGHT!" as picking starts |
+| `pickMs` | 5000 | The countdown. Picks can change until it ends; nobody picks = random |
+| `revealMs` | 1800 | Icons drop, fighters act it out, the loser's bar drains |
+| `roundOverMs` | 2200 | K.O. and the winner's pose, then the next round or the result |
+
+The client plays its animations *inside* those windows (see [section 6](#6-presentation-scenes-director-views)). The dev tuning panel can change them for the next match.
 
 ## 5. Session: local now, online later
 
-The fight scene must not care whether the opponent is a CPU on the same device or a person across the world. So it talks to one interface, `MatchSession`, and never to the referee directly.
+The fight and result screens must not care whether the opponent is a CPU on the same device or a person across the world. So they talk to one interface, `MatchSession`, and never to the referee directly (a lint rule forbids importing `Referee` in scenes, views and the director).
 
 ![Local and online sessions](diagrams/3-sessions.svg)
 
@@ -171,30 +206,38 @@ The fight scene must not care whether the opponent is a CPU on the same device o
 // apps/game/src/session/MatchSession.ts
 export interface MatchSession {
   readonly me: Side;
-  ready(): void;                         // the scene is listening: local starts the match, online tells the server
+  readonly rules: RulesConfig;            // the rules this match uses (the HUD reads start health from it)
+  ready(): void;                          // the scene is listening: local starts the match, online tells the room
   submitPick(move: Move): void;
-  requestRematch(): void;
-  snapshot(): MatchView;                 // current phase, health, rounds, timer end
-  on<E extends keyof SessionEvents>(e: E, fn: (p: SessionEvents[E]) => void): Unsubscribe;
+  requestRematch(): void;                 // answered by a 'rematchAccepted' event
+  snapshot(): MatchView;                  // { phase, state, msLeft, myPick }
+  on(event, fn): Unsubscribe;             // phase, locked, reveal, matchOver, rematchAccepted
   dispose(): void;
 }
+
+export type MatchSetup = { mode: 'cpu'; cpu: CpuKind };   // step 5 adds { mode: 'online'; roomCode }
 ```
 
-| Implementation | When | How it works |
+`MatchView.msLeft` is "time left in this phase", not a clock time. The HUD timer reads it every frame, so it never needs to know whose clock the phase runs on. This matters online (section 10).
+
+| Implementation | Status | How it works |
 |---|---|---|
-| `LocalSession` | Steps 1 to 4 | Owns a `Referee` with a browser clock. Your picks go straight in; the opponent's come from a **move source**. |
-| `OnlineSession` | Step 5 | A Colyseus client. Sends your pick to the server and turns server messages into the same `SessionEvents`. |
+| `LocalSession` | Built | Owns a `Referee` on `browserClock` (`performance.now` + `setTimeout`) and `Math.random`. You are always `p1`; your picks go straight in. The opponent's picks come from a **move source**. `requestRematch()` is accepted at once. |
+| `OnlineSession` | Planned (step 5) | A WebSocket client. Sends your pick to the match room and turns room messages into the same `SessionEvents`. |
+
+`createSession(setup)` builds the session for a match. It gives each match its own copy of the rules and timings, so the dev panel's edits apply from the next match instead of halfway through one.
 
 A **move source** is anything that can produce a pick for one side:
 
 ```ts
+// apps/game/src/session/MoveSource.ts
 export interface MoveSource {
-  onPickingStarted(ctx: PickContext): void;   // ctx: health, rounds, history, deadline, rng
-  // calls back into the session with a move when it decides
+  onPickingStarted(ctx: PickContext, submit: (move: Move) => void): void;  // ctx: side, state, deadline, clock, rng
+  cancel(): void;                                                         // picking ended or the match was torn down
 }
 ```
 
-`RandomCpu` is the first one (uniform random, as decided). An equilibrium CPU (44/33/22), a pattern-reading CPU or local hot-seat play are each one new file, with no other code touched.
+`RandomCpu` is the only one so far: a uniformly random move after a 0.4 to 1.6 s "thinking" pause, always before the deadline. An equilibrium CPU (44/33/22), a pattern-reading CPU or local hot-seat play would each be one new file.
 
 ## 6. Presentation: scenes, director, views
 
@@ -202,55 +245,69 @@ Phaser code is split into three kinds of pieces, each with one job:
 
 | Piece | Job | Example |
 |---|---|---|
-| **Scene** | Wiring only: creates views, connects the session and input, starts and stops. Short. | `FightScene` |
+| **Scene** | Wiring only: creates views, connects the session and input, starts and stops. Short (the longest is 83 lines). | `FightScene` |
 | **Director** | Listens to session events and turns them into choreography over time, using tuning values. | `FightDirector` plays the reveal timeline below |
-| **View** | A dumb visual piece with a small API. Knows nothing about rules or sessions. | `FighterView.play('throw')`, `HudView.setHealth('p2', 70)` |
+| **View** | A dumb visual piece with a small API. Knows nothing about rules or sessions. | `FighterView.pose('throw')`, `HudView.setHealth('p2', 70)` |
 
-The **juice kit** (`fx/`) is a set of small reusable effects (`shake`, `hitPause`, `flash`, `sparks`, `dust`) that views and the director call. Each reads its numbers from `tuning.ts`.
+The **juice kit** (`fx/`) so far has two effects: `shake` (camera jumps between whole-pixel offsets that shrink to nothing) and `flash` (the sprite turns solid white for a few frames). Sparks, dust and impact frames join it in step 3, reading their numbers from `tuning.ts` the same way.
 
 ### The scenes
 
+Scenes are listed in `main.ts` in draw order: the cabinet at the bottom, monitor screens above it, the wipe on top.
+
 | Scene | Runs | Draws |
 |---|---|---|
-| `BootScene` | Once | Loads assets, shows a pixel loading bar |
-| `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, marquee, control panel, the three buttons and the joystick |
-| `LogoScene` | Once per launch, on the monitor | Studio logo (Chain Shift): fades in, holds, fades out. Any button or tap skips it |
-| `HomeScene` | On the monitor | Game title, idle fighters, the home menu (Start game vs CPU; Online greyed out until step 5; Options) |
-| `OptionsScene` | On the monitor, from Home | Settings menu; for now one setting, Scaling (Pixel perfect or Fill height), applied at once and saved |
-| `FightScene` | On the monitor | Fighters, HUD, move icons, banners, effects |
-| `ResultScene` | On the monitor, over the last fight frame | Winner banner, score, menu: Retry or Main menu |
+| `BootScene` | Once | Loads `logo.png` with a pixel loading bar, registers the pixel font at sizes 1 to 4, generates placeholder art, launches the cabinet and transition scenes, then the logo |
+| `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, the three buttons and the joystick |
+| `LogoScene` | Once per launch, on the monitor | The Chain Shift studio logo: fades in, holds, fades out. Any button or tap skips it |
+| `HomeScene` | On the monitor | Title (still "RPS FIGHTER" until the asset rebrand), idle fighters, the home menu, the version in the corner |
+| `OptionsScene` | On the monitor, from Home | One setting, Scaling (Fill height or Pixel perfect), applied at once and saved |
+| `FightScene` | On the monitor | Stage, fighters, HUD, move icons, banners, effects |
+| `ResultScene` | On the monitor, over the paused last fight frame | "YOU WIN!" or "CPU WINS", the round score, Retry or Main menu |
+| `TransitionScene` | Always, on top | The pixel wipe between screens (black bands close, the screen swaps, they open) |
 
-Monitor scenes use a **camera viewport** placed over the cabinet's screen, so they always draw in their own 216 × 288 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put (a small cabinet rattle on KO can be its own effect).
+Monitor scenes call `useMonitorCamera(scene)`, which places their camera over the cabinet's screen, so they always draw in their own 216 × 288 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put.
+
+**Shared services.** `main.ts` builds one `GameContext` (`scenes/context.ts`) and stores it in Phaser's registry; scenes read it with `getContext(this)`:
+
+| Service | What it is |
+|---|---|
+| `input` | The `InputRouter` |
+| `scaler` | The `PixelScaler` (current layout, change events) |
+| `settings` | The `SettingsStore` |
+| `flow` | The `SceneFlow` |
+| `lights` | `CabinetLights`: which cabinet button is lit (the player's current pick), shared by the fight and the cabinet scene |
 
 ### Screen flow and menus
 
 ![Screen flow](diagrams/7-screen-flow.svg)
 
-The game always starts the same way: Boot, then the logo intro, then the home screen. From there **Start game** begins a match against the CPU, and when the match ends the result screen offers **Retry** (a new match with the same setup) or **Main menu**. This is deliberately small, but it is the infrastructure later menus plug into.
+The game always starts the same way: Boot, the logo intro, then the home screen. **Start game** begins a match against the CPU; when it ends, the result screen offers **Retry** (a new match with the same setup) or **Main menu**. Options sits beside Home.
 
-- **Logo intro.** `LogoScene` shows one image, `assets/logo.png` (the Chain Shift logo since v0.4.0, built from the master in `docs/brand/` by `python3 tools/make-logo.py`). It fades in, holds and fades out using `tuning.intro` values. To stay pixel perfect the fade steps through a few darkened palette levels instead of a smooth alpha blend. Any button, key or tap skips it.
-- **Menus are data.** A menu is a list of items `{ id, label, tag?, enabled, onSelect }` in `menus/`. One reusable `MenuView` draws any list, moves the cursor, skips disabled items, blinks the cursor and plays the move and confirm sounds. The home menu today:
+- **One place for screen changes.** Scenes never start each other by key. `SceneFlow` (`scenes/flow.ts`) has `toLogo()`, `toHome()`, `toOptions()`, `toFight(setup, session?)` and `toResult(data)`. It plays the wipe (`tuning.transitions`), ignores new requests mid-wipe, and **owns the match session's lifetime**: it creates it in `toFight`, keeps it for a rematch, and disposes of it on the way home.
+- **`MatchSetup` describes a match.** It travels Home → Fight → Result. **Retry** is `session.requestRematch()`: the session answers `rematchAccepted` (locally at once; online once both players agree), and the flow reopens the fight with the same session, which starts again on `ready()`.
+- **Menus are data.** A menu is a list of `MenuItem { id, label, tag?, enabled, onSelect? }` in `menus/`. One `MenuView` draws any list, moves and blinks the cursor, skips disabled items, accepts taps, and shows a setting's value as the item's tag (`setTag`). The home menu today:
 
   ```ts
   // apps/game/src/menus/homeMenu.ts
   export const homeMenu = (flow: SceneFlow): MenuItem[] => [
-    { id: 'cpu',    label: 'START GAME', tag: 'VS CPU', enabled: true,  onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }) },
-    { id: 'online', label: 'ONLINE',     tag: 'SOON',   enabled: false },   // step 5: opens LobbyScene
-    { id: 'options', label: 'OPTIONS',                      enabled: true,  onSelect: () => flow.toOptions() },
+    { id: 'cpu', label: 'START GAME', tag: 'VS CPU', enabled: true, onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }) },
+    { id: 'online', label: 'ONLINE', tag: 'SOON', enabled: false }, // step 5: opens the lobby
+    { id: 'options', label: 'OPTIONS', enabled: true, onSelect: () => flow.toOptions() },
   ];
   ```
 
-  Adding online play, settings or a how-to-play screen is a new item here plus its scene; no other scene changes. Options was added this way (2026-10-10): `menus/optionsMenu.ts` + `OptionsScene`. A setting's current value shows as the item's tag (`MenuView.setTag`); confirm, or left / right on the stick, flips it.
-- **One place for transitions.** Scenes never start each other by key. A small `SceneFlow` (`scenes/flow.ts`) has `toHome()`, `toOptions()`, `toFight(setup)`, `toResult(outcome)` and plays the transition (a short pixel wipe, timed by `tuning.transitions`). 
-- **`MatchSetup` describes a match.** `toFight(setup)` builds the session from the setup (`createSession(setup)` in `session/`): `{ mode: 'cpu', cpu: 'random' }` now, `{ mode: 'online', roomCode }` later. The setup travels to the result screen, so **Retry** is `session.requestRematch()`: the session answers with a `rematchAccepted` event (locally at once; online once both players agree), and the flow reopens the fight with the same session, which starts again on `ready()`.
-- **Menu input.** The `InputRouter` adds menu actions: `nav:up` / `nav:down` (joystick, arrow keys), `confirm` (any of the three cabinet buttons, Enter, Space) and `back` (Esc, Android back). Menu items on the monitor can also be tapped or clicked. In menus the joystick finally does something; in a fight it stays decoration.
-- **Music.** The menu loop plays on Home and Result; the fight loop in `FightScene`. `SceneFlow` asks `AudioService` to cross-fade on each transition.
+  Adding online play or a how-to-play screen is a new item here plus its scene. Options was added this way.
+- **Menu input.** `InputRouter` actions: `nav` (joystick, arrow keys), `confirm` (Enter, Space), `back` (Esc, Backspace), and `pick` from the three cabinet buttons, which menus treat as confirm.
+- **Music (planned).** A menu loop on Home and Result and a fight loop in the fight, cross-faded by `SceneFlow` once an audio service exists.
 
 ### One reveal, as the director plays it
 
 ![Reveal choreography timeline](diagrams/4-reveal-timeline.svg)
 
-The director receives a single `reveal` event (both picks, the outcome, the new state) and plays it as a timeline. Every duration and strength is a named value in `tuning.ts`. The whole show must fit inside `timings.revealMs`, which the referee (and later the server) uses as the length of the reveal phase. A dev-mode check warns if the timeline runs longer than the window.
+The director receives a single `reveal` event (both picks, whether each was auto-picked, the outcome, the new state) and plays it as a timeline with `scene.time.delayedCall`, using the values in `tuning.reveal`, `hitPause`, `shake`, `flash` and `hud`. The show ends at `recoverAtMs` (1400 ms), inside the 1800 ms `revealMs` window, which leaves 400 ms of slack. Online, that slack absorbs network delay.
+
+The director also handles the other phases: on `roundIntro` it resets poses, icons, health and pips and shows the round banner; on `picking` it shows the prompt and "FIGHT!" on the first exchange of a round; on `roundOver` it plays the K.O. (poses, a 5 px shake, the banner); on `matchOver` it waits `tuning.result.delayAfterMatchMs` and asks the flow for the result screen.
 
 Views animate toward the state the session reports; they never compute it. If the health bar and the rules ever disagree, the rules win, by design.
 
@@ -258,14 +315,14 @@ Views animate toward the state the session reports; they never compute it. If th
 
 The pixel-perfect rules from the project context are enforced in one place, the **pixel scaler** in `platform/`, plus a few habits in the views.
 
-![Screen layout and integer scaling](diagrams/5-screen-and-scaling.svg)
+![Screen layout and scaling](diagrams/5-screen-and-scaling.svg)
 
-1. **One native canvas, one pixel size.** The cabinet, monitor, HUD, backdrop and effects all draw into one Phaser canvas at native resolution. No HTML or CSS overlays for game visuals.
-2. **Whole-number zoom.** The scaler picks the largest whole scale at which the cabinet fits the window, measured in *device* pixels (so it is crisp on high-DPI phones too), and sets Phaser's zoom to it. Re-run on resize and rotation. This is the default **Pixel perfect** scaling mode.
-3. **The canvas fills the window; the leftover is arcade room.** The canvas is sized to the window divided by the scale, the cabinet is centred, and the space around it is backdrop drawn at the same pixel size. Nothing is ever stretched.
-4. **Phaser settings:** `pixelArt: true`, `roundPixels: true`, `antialias: false`, `Scale.NONE` with the computed zoom.
-5. **Whole pixels only.** Positions go through `snap()`; tweens and shake round to whole pixels; no `setScale` or `setRotation` on sprites (turns, squash and zoom are drawn as frames).
-6. **Pixel text.** A bitmap pixel font at native size. No browser fonts on the canvas.
+1. **One native canvas, one pixel size.** The cabinet, monitor, HUD, backdrop and effects all draw into one Phaser canvas at native resolution. No HTML or CSS overlays for game visuals (the dev panel is the one HTML overlay, and only in dev builds).
+2. **Whole-number zoom.** In **Pixel perfect** mode, `computeLayout` picks the largest whole scale at which the 270 × 472 cabinet fits the window, measured in *device* pixels (so it is crisp on high-DPI phones too). It re-runs on resize and rotation.
+3. **The canvas fills the window; the leftover is arcade room.** The canvas is the window divided by the scale, the cabinet is centred, and the space around it is a tiled backdrop at the same pixel size. Nothing is stretched.
+4. **Phaser settings:** `pixelArt: true`, `roundPixels: true`, `antialias: false`, `Scale.NONE` with `zoom = scale / devicePixelRatio`.
+5. **Whole pixels only.** Positions are whole numbers (`util/snap.ts`), shake uses whole-pixel offsets, and sprites are never scaled or rotated (turns and squash are drawn as frames).
+6. **Pixel text.** A 5 × 7 bitmap font (`assets/glyphs.ts`, `pixelFont.ts`) at whole sizes 1 to 4, drawn by `PixelText`. No browser fonts on the canvas.
 
 **What this does and doesn't guarantee for imported images (checked 2026-10-11).** Because the canvas itself is native size, anything drawn lands on the native grid: no image, however smooth, can show detail finer than one game pixel, and nothing blurs. But the engine does **not** turn a non-pixel-art image into pixel art. It does no colour reduction to the palette, no outline cleanup and no averaging when shrinking:
 
@@ -274,33 +331,34 @@ The pixel-perfect rules from the project context are enforced in one place, the 
 
 So every image must be made at its final native size, in palette colours, before it goes into `public/assets/`. The Chain Shift logo was converted this way offline with `tools/make-logo.py`; any future import helper (resize, reduce to the palette, outline) belongs in `tools/`, not in the game.
 
-**Fill height (player option, 2026-10-10).** Whole-number scaling can leave the cabinet small (a 1280 × 800 window only fits 1×). Options → Scaling offers **Fill height**: the scaler uses the exact fit scale instead (`computeLayout(..., 'fillHeight')`: the cabinet fills the window height on a desktop, or its width on a narrow phone, never smaller than the pixel-perfect scale). This is a deliberate, player-chosen exception to rule 2:
+**Fill height (player option, the default since v0.3.0).** Whole-number scaling can leave the cabinet small (a 1280 × 800 window only fits 1×). Options → Scaling → **Fill height** uses the exact fit scale instead: the cabinet fills the window height on a desktop, or its width on a narrow phone, never smaller than the pixel-perfect scale. This is a deliberate, player-chosen exception to rule 2:
 
-- Sampling stays nearest-neighbour (`pixelArt`, `image-rendering: pixelated`), so nothing blurs, and everything inside the game still sits on one native grid (rules 1, 3 to 6 are unchanged).
-- But at a fractional scale some rows and columns of native pixels come out one device pixel wider than their neighbours (at 1.7×, pixels are 1 or 2 device pixels wide). Thin lines and text can look slightly uneven, and a moving sprite can shimmer by a device pixel.
-- Fill height is the default for a first visit (the user's call, 2026-10-10); players who want every pixel even pick Pixel perfect. The choice is kept in `SettingsStore` (`platform/settings.ts`), saved to localStorage and read before the game starts, so the first frame is already at the chosen scale. The pixel-perfect screenshot check (section 13) sets Pixel perfect first.
+- Sampling stays nearest-neighbour (`pixelArt`, `image-rendering: pixelated`), so nothing blurs, and everything inside the game still sits on one native grid.
+- At a fractional scale some rows and columns of native pixels come out one device pixel wider than their neighbours (at 1.7×, pixels are 1 or 2 device pixels wide). Thin lines and text can look slightly uneven.
+- The choice is kept in `SettingsStore` and read before the game starts, so the first frame is already at the chosen scale. Changing it in Options re-runs the scaler, and `main.ts` resizes and re-zooms the game.
 
-**Cabinet size (decided 2026-10-10): 270 × 472 native** (marquee 32, bezels 12, monitor 216 × 288, control panel 128). The earlier 270 × 502 frame only fit a typical 1080p browser window (about 950 px tall inside the browser) at 1×; at 472 it shows at 2× there, and at 4× on most phones. The cabinet mock-ups are redrawn at this size.
+**Geometry** lives in `config/layout.ts`: cabinet 270 × 472, marquee 32, monitor 216 × 288 at (27, 44), control panel 128 from y 344, button and joystick positions, and the stage (floor at y 232, fighters at x 84 and 132). The square-screen layout from the rebrand mock-ups (216 × 216 monitor, taller marquee) would be a change to this file plus redrawn art.
 
 ## 8. Tuning: every feel value in one place
 
-Polish is a core goal, so every number that changes how the game *feels* lives in one typed file, `apps/game/src/config/tuning.ts`. Scenes, views and effects import from it; a magic number in a view is a review comment.
+Every number that changes how the game *feels* lives in one typed file, `apps/game/src/config/tuning.ts`. Scenes, views and effects import from it. Current values:
 
 ```ts
-// apps/game/src/config/tuning.ts  (starting values, to tune)
+// apps/game/src/config/tuning.ts
 export const tuning = {
-  reveal:   { iconDropMs: 320, iconBouncePx: 4, strikeAtMs: 560, impactAtMs: 600 },
-  hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } },          // ms the action freezes
-  shake:    { byDamage: { 10: 2, 15: 3, 20: 4 }, durationMs: 280, falloff: 'linear' },
-  flash:    { frames: 2, color: 'white' },
-  hud:      { drainMs: 600, trailDelayMs: 120 },
-  buttons:  { pressDepthPx: 2, releaseMs: 80 },
-  joystick: { springBackMs: 90 },
-  idle:     { breatheEveryMs: 900 },
-  intro:    { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },   // logo intro
-  transitions: { wipeMs: 240 },
-  menu:     { cursorBlinkMs: 400, repeatDelayMs: 300 },
-  audio:    { sfxVolume: 0.8, musicVolume: 0.5 },
+  reveal: { iconDropMs: 320, iconDropFromPx: 28, iconBouncePx: 4, strikeAtMs: 420, impactAtMs: 620, recoverAtMs: 1400, lungePx: 4 },
+  hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } },              // ms before shake and drain start
+  shake: { byDamage: { 10: 2, 15: 3, 20: 4 }, durationMs: 280, koPx: 5 },
+  flash: { frames: 2, frameMs: 33 },
+  hud: { drainMs: 600, trailDelayMs: 120, lowHealth: 30, timerWarnMs: 3000 },
+  buttons: { pressDepthPx: 5, releaseMs: 80 },
+  joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6 },
+  idle: { breatheEveryMs: 420 },
+  intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },   // logo intro
+  transitions: { wipeMs: 240, bandPx: 8 },
+  menu: { cursorBlinkMs: 400, repeatDelayMs: 300 },
+  banner: { slamMs: 180, holdMs: 900 },
+  result: { delayAfterMatchMs: 400 },
 } as const;
 ```
 
@@ -308,101 +366,132 @@ There are two homes for numbers, on purpose:
 
 | File | Holds | Why separate |
 |---|---|---|
-| `packages/core/src/config.ts` | Damage, health, rounds, phase timings (`pickMs`, `revealMs`, ...) | The server must use the same values. Changing them changes the game's rules. |
+| `packages/core/src/config.ts` | `defaultRules` (damage, health, rounds) and `defaultTimings` (phase lengths) | A server must use the same values. Changing them changes the game's rules. |
 | `apps/game/src/config/tuning.ts` | Everything about look and feel | Client only. Changing them never changes who wins. |
 
-**Dev tuning panel:** in development builds only, a small panel (Tweakpane) lists both files' values with sliders, edits them live while you play, and has a "copy changes" button that lists every changed value and its file, to paste the result back. Feel values apply live; rules and phase timings apply from the next match (each session gets its own copy), with a restart button. Edits are remembered in localStorage while tuning; the backquote key hides it. It is stripped from release builds (`main.ts` loads it behind `import.meta.env.DEV`, and a lint rule keeps the rest of the game from importing `dev/`). This makes the planned game-feel pass fast. User guide and setup details: [`docs/tuning/TUNING-PANEL.md`](../tuning/TUNING-PANEL.md).
+**Dev tuning panel** (`apps/game/src/dev/`, since v0.5.0). In `npm run dev` only, a Tweakpane panel lists both files' numbers with sliders. Feel values apply live; rules and phase timings apply from the next match, with a Restart match button. Edits are remembered in localStorage, Copy changes lists what changed per file to paste back, Reset all goes back to the defaults, and the backquote key hides it. `main.ts` loads it behind `import.meta.env.DEV`, and a lint rule stops the rest of the game importing `dev/`, so release builds don't contain it. The panel's plumbing (`tunables.ts`) has no Tweakpane or DOM in it, so it is unit tested. Guide: [`docs/tuning/TUNING-PANEL.md`](../tuning/TUNING-PANEL.md).
 
-## 9. Input, audio, assets, settings
+## 9. Input, audio, assets, settings, wiring
 
-**Input.** One `InputRouter` turns every source into game actions: keys 1/2/3, taps or clicks on the cabinet buttons, arrow keys and drag for the joystick, and later a gamepad. Scenes only hear actions like `pick:attack`, `stick:upLeft`, or in menus `nav:down`, `confirm` and `back`. Rebinding or adding a gamepad touches only `input/`.
+**Input.** One `InputRouter` turns every source into game actions: keys 1/2/3 (and the numpad), taps on the cabinet buttons, arrow keys and drag for the joystick. Scenes only hear `action` events (`pick`, `confirm`, `back`, `nav`); the cabinet also hears `button` (pressed or released) and `stick` (tilt) to animate. Two arrow keys at once tilt the stick diagonally; holding the stick repeats `nav` every `tuning.menu.repeatDelayMs`. Releasing the window releases everything. A gamepad or rebinding touches only `input/`.
 
-**Audio.** An `AudioService` wraps Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds are referred to by typed keys (`Sfx.HitThrow`), and a key can map to several variations that are picked at random so hits don't repeat. Generated music (Tone.js) later plugs in as another music source.
+**Audio (planned, step 3).** An `AudioService` in `audio/` wrapping Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds referred to by typed keys, with random variations so hits don't repeat. It will join the `GameContext`. Nothing plays sound yet.
 
-**Assets.** Until the real art exists, `assets/placeholders/` draws every texture in code at boot (fighters, icons, cabinet, stage) under the real asset keys. Loading a real sprite sheet under the same key in `BootScene` makes its placeholder step aside; no view changes. Art comes out of Aseprite (or PixelLab) as sprite sheets with JSON frame data. A typed manifest (`assets/keys.ts`) lists every key, so a typo is a compile error instead of a missing sprite at runtime. One shared palette (`config/palette.ts`, plus a `tools/` script that checks exported images only use palette colours).
+**Assets.** Until the real art exists, `assets/placeholders/` paints every texture in code at boot (room tile, cabinet, buttons, joystick ball, stage, fighters, move icons) under the real keys from `assets/keys.ts`. `generatePlaceholders` skips any key that is already loaded, so loading a real sprite sheet under the same key in `BootScene` replaces its placeholder without touching a view. The only real image so far is `logo.png`. Each fighter sheet provides the frames `idle0, idle1, attack, throw, block, hurt, ko, win` (64 px tall). The palette is in `config/palette.ts`.
 
-**Settings.** A `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON through a small key-value adapter (localStorage in the browser, Capacitor Preferences on Android later). Broken or missing storage (private mode, blocked site data) falls back to the defaults and never stops the game. Today it holds the scaling mode; volumes, mute and key bindings join it later. It is part of the `GameContext`.
+**Settings.** `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON under the localStorage key `rps-fighter.settings` (kept on purpose so saved settings survive the rename). Broken or missing storage falls back to the defaults and never stops the game. Today it holds only the scaling mode; volumes and mute join it later. Behind it is a small key-value type (`getItem`/`setItem`), so Capacitor Preferences can replace localStorage on Android.
 
-**Version.** The build's version is set once, in `apps/game/package.json`; `vite.config.ts` injects it and `src/version.ts` exports it as `VERSION`, which the home screen shows small in the corner. Every published build bumps it and adds a `CHANGELOG.md` entry, and the Release workflow tags it `vX.Y.Z` with a GitHub release when it reaches main.
+**Version.** Set once, in `apps/game/package.json`; `vite.config.ts` injects it and `src/version.ts` exports `VERSION`, which the home screen shows in the corner. Every build bumps it and adds a `CHANGELOG.md` entry, and the Release workflow tags it `vX.Y.Z` with a GitHub release when it reaches main.
 
-**Wiring.** No global singletons. `main.ts` builds the services once and passes them to scenes through one small `GameContext` object. Tests can hand in fakes.
+**Wiring.** No global singletons. `main.ts` builds the services once and hands them to scenes through the `GameContext`. It also exposes a small read-only `window.__rps` (running scenes, match phase, scale, version) for the Playwright tests.
 
 ## 10. Online play
 
-Step 5 adds `apps/server`: a Node + Colyseus server whose `MatchRoom` wraps the same `Referee` from `@rps/core`, with a server clock. The server is the only place both picks exist before the reveal.
+Online play is step 5 and not built. This section says what the code already gets right for it, what still has to change, and how the online part is meant to work. **Where** the match room runs (it can't be GitHub Pages, which only serves files) is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md). The recommendation there is a free Cloudflare Durable Object running the same `Referee`; the choice is still open.
 
 ![Online exchange sequence](diagrams/6-online-exchange.svg)
 
-- **Hidden picks.** Picks are kept in server memory, not in the shared room state. The only thing broadcast during Picking is "this side has locked in". The opponent's move first leaves the server inside the `reveal` message.
-- **Server clock.** The server decides when time is up and makes the random fallback pick. Clients show a countdown from the `endsAt` the server sends, so slow connections can't buy extra time.
-- **Same events.** `OnlineSession` translates server messages into the same `SessionEvents` the local game uses. The fight scene, director and views don't change.
-- **Latency.** The client animates the reveal while the server waits out `revealMs`, so small delays are invisible. Rooms are joined by a short room code.
-- **Disconnects.** If a player drops, the room waits a short grace period, then auto-picks for them or ends the match. Exact behaviour is a step 5 decision.
+**How it works.** A match room on a server (one per room code) wraps the same `Referee` from `@rps/core` with a server clock. It is the only place both picks exist before the reveal.
+
+- **Hidden picks.** The referee keeps picks private and only announces `locked { side }`. The room forwards exactly the referee's events, so the opponent's move first leaves the server inside `reveal`.
+- **Server clock.** The room decides when time is up and makes the random fallback pick. It sends the time *left* in each phase (`msLeft`) instead of its own clock time; each client adds that to its own clock. Clocks never have to match, and a slow connection can't buy extra time (late picks are refused by the referee).
+- **Same events.** `OnlineSession` turns room messages into the same `SessionEvents` the local game uses. The fight scene, director and views don't change.
+- **Latency.** The client starts the reveal when the message arrives; the 400 ms slack in the reveal window absorbs the delay before the next phase message.
+
+**Already online-ready in the code:**
+
+| What | Where |
+|---|---|
+| Rules and referee have no engine, browser or network code; clock and RNG are injected | `packages/core` |
+| The referee never announces a move before the reveal | `RefereeEvents.locked` |
+| Scenes see only `MatchSession`; the referee is lint-banned from scenes, views and the director | `session/MatchSession.ts`, `eslint.config.js` |
+| The HUD timer reads `msLeft`, not a clock time | `MatchView`, `FightScene.update` |
+| `ready()` and `requestRematch()` → `rematchAccepted` already model "wait for the other side" | `MatchSession` |
+| A match is described by `MatchSetup`, and sessions are built in one place | `createSession(setup)` |
+| An ONLINE slot already sits on the home menu | `menus/homeMenu.ts` |
+
+**Still to change for online play:**
+
+| Gap | Today | Change |
+|---|---|---|
+| Opponent's name | `FightScene` labels the HUD `YOU` / `CPU`; `ResultScene` says `CPU WINS` | Add the opponent's display name to the session; use it in both scenes |
+| Which side I am | `LocalSession.me` is always `p1`, shown on the left | Online you may be `p2`. Decide: mirror so you are always on the left (recommended), or show real sides |
+| Leaving and disconnects | No event for it | New session events (e.g. `opponentLeft`, `connection`), a grace period in the room, then auto-picks or a forfeit |
+| Rematch waiting | Accepted at once | Result screen shows "waiting for opponent"; a decline or leave goes back to the menu |
+| Lobby | None | `LobbyScene` (create a room, join with a code), the ONLINE item enabled, `MatchSetup { mode: 'online'; roomCode }` |
+| Input checks on the server | `Referee.submitPick` trusts its types | The room checks every message (a real `Move`, the sender's own side) before calling the referee |
+| Version match | None | Clients send `VERSION` when joining; the room refuses a mismatch so both run the same rules |
+| Server randomness | `mathRandomRng` | Fine for a hobby game; `crypto.getRandomValues` if it ever matters |
+| Server package | None | `apps/server` (planned) importing `@rps/core`, with its own tests |
 
 ## 11. Android
 
-Step 6 wraps the built `apps/game` in Capacitor. Nothing in the game changes; device-specific things sit behind `platform/` adapters:
+Step 6 wraps the built `apps/game` in Capacitor. Nothing in the game changes; device-specific things sit behind `platform/`:
 
-| Need | Browser | Android |
+| Need | Browser (today) | Android (planned) |
 |---|---|---|
-| Storage | localStorage | Capacitor Preferences |
-| Haptics on hits and button presses | no-op (or Vibration API) | Capacitor Haptics |
-| Back button | n/a | `back` action: Result goes to the main menu, Home exits the app; in a fight it opens the pause menu (once that exists) |
-| Orientation | n/a | Locked to portrait |
-| Safe areas (notch, gesture bar) | n/a | Scaler leaves room; the extra space is backdrop |
+| Storage | localStorage through `SettingsStore` | Capacitor Preferences behind the same key-value type |
+| Haptics on hits and button presses | none | Capacitor Haptics |
+| Back button | Esc / Backspace → `back` | `back` action: Result goes to the main menu, Home exits the app, in a fight it opens a pause menu (once that exists) |
+| Orientation | portrait layout in any window | Locked to portrait |
+| Safe areas (notch, gesture bar) | n/a | The scaler leaves room; the extra space is backdrop |
 
 ## 12. Keeping the code clean
 
-**Import rules, checked by ESLint** (`import/no-restricted-paths`), so a wrong import fails the build:
+**Import rules, checked by ESLint** (`eslint.config.js`), so a wrong import fails CI:
 
-| Folder | May import | Must not import |
+| Folder | Must not import | Rule |
 |---|---|---|
-| `packages/core` | nothing outside itself | Phaser, DOM, network, anything in `apps/` |
-| `session/` | `@rps/core`, `util/` | Phaser, `scenes/`, `views/` |
-| `views/`, `fx/` | Phaser, `config/`, `assets/`, `util/` | `session/`, `@rps/core` internals (types are fine) |
-| `fight/` | session types, `views/`, `fx/`, `audio/`, `config/` | the `Referee` directly |
-| `scenes/` | anything in the game | (keep them thin: wiring only) |
-| `platform/` | the device APIs | game logic |
+| `packages/core` | anything in `apps/`, Phaser | `import/no-restricted-paths`, `no-restricted-imports` |
+| `session/` | `scenes`, `views`, `fight`, `fx`, `input`, `platform`; Phaser | both |
+| `views/`, `fx/` | `session`, `scenes`, `fight` | `import/no-restricted-paths` |
+| `fight/` | `scenes` | `import/no-restricted-paths` |
+| `fight/`, `scenes/`, `views/` | the `Referee` (talk to a `MatchSession`) | `no-restricted-imports` |
+| `platform/` | `session`, `scenes`, `views`, `fight` | `import/no-restricted-paths` |
+| everything except `main.ts` | `dev/` | `import/no-restricted-paths` |
+
+Views may use types from `@rps/core` (like `Move` and `Side`) and the `InputRouter`'s types; that is allowed on purpose.
 
 **Conventions.**
-- TypeScript `strict`, no `any`. Prettier for formatting, ESLint for rules.
+- TypeScript `strict`, no `any` (lint error), type-only imports marked `import type`. Prettier for formatting (single quotes, 110 columns), checked in CI.
 - One class or one concern per file; a file growing past about 200 lines is a hint to split it.
 - Names say what things are: `FighterView`, `RandomCpu`, `resolveExchange`. No `Manager`/`Helper` grab bags.
-- No magic numbers outside `config/` (and the core config).
-- Events are typed (`on('reveal', …)` knows its payload).
+- No magic numbers outside `config/` and the core config.
+- Events are typed with the shared `Emitter` (`on('reveal', …)` knows its payload).
 - Comments explain *why*; the code says *what*.
 
-**CI** (GitHub Actions, on every push and PR): lint, typecheck, tests, build. Later also the screenshot tests and a GitHub Pages deploy of `main`.
+## 13. Testing and CI
 
-## 13. Testing
-
-| Level | Tool | What | How much |
+| Level | Tool | File | What |
 |---|---|---|---|
-| Rules | Vitest | Every pairing, damage, ties, KO, rounds, match end | Exhaustive: it is the heart of the game |
-| Referee | Vitest + fake clock + seeded RNG | Phase order, timer expiry, random fallback, changing a pick, rematch | All phase transitions |
-| Session and CPUs | Vitest | `LocalSession` emits the right events; CPU mixes match their target odds | Main paths |
-| Settings and scaler | Vitest | `computeLayout` in both scaling modes; settings saved, reloaded, broken values ignored | Main paths |
-| Presentation | Playwright | Game boots, a full match can be played with keys, Options switches scaling and remembers it after a reload, no console errors | A few smoke tests |
-| Pixel perfect | Playwright screenshots | At 3× every 3 × 3 block of the screenshot is one colour (catches blur and sub-pixel drift) | One or two checks |
-| Server (step 5) | Vitest + Colyseus test client | Picks stay hidden, timer, disconnects | Main paths |
+| Rules | Vitest | `packages/core/test/rules.test.ts` | Every pairing, damage, ties, health floor, K.O., rounds, match end, refusing to play on |
+| Referee | Vitest + fake clock + seeded RNG | `packages/core/test/referee.test.ts` | Phase order and end times, pick windows, changing picks, random fallback, a whole match, rematch, dispose |
+| Session and CPU | Vitest | `apps/game/test/LocalSession.test.ts` | `ready()`, time left, picks per side, a full match and rematch, dispose; `RandomCpu` odds and deadline |
+| Scaler and settings | Vitest | `apps/game/test/scaling.test.ts` | `computeLayout` in both modes, settings saved, reloaded, broken values ignored |
+| Tuning panel plumbing | Vitest | `apps/game/test/tunables.test.ts` | Flatten, assign, change notes, remembered edits, broken storage |
+| Game in a browser | Playwright | `apps/game/e2e/smoke.spec.ts` | Boots to the logo and home, plays an exchange, shows the right version, skips the logo, Options switches scaling and remembers it |
 
-Views and the director are kept thin enough that they rarely need unit tests; what they show is checked by playing and by screenshots.
+That is 57 unit tests and 4 browser tests today. **Planned:** a pixel-perfect screenshot check (at 3× every 3 × 3 block is one colour), and server tests (picks stay hidden, timer, disconnects) in step 5.
+
+**CI** (`.github/workflows/ci.yml`, on every push to main and every PR): `npm ci`, lint, format check, typecheck, unit tests, build, then the Playwright tests in Chromium. **Release** (`release.yml`): on a push to main, tags a new version from `apps/game/package.json` and makes a GitHub release from its changelog entry. Publishing to GitHub Pages is still done by hand (copying `apps/game/dist` into the site repo).
 
 ## 14. How the design grows
 
-What a typical future change touches, to show the structure holds up:
+What a typical future change touches:
 
 | Change | Files touched |
 |---|---|
-| Rebalance damage or health | `packages/core/src/config.ts` |
+| Rebalance damage or health | `packages/core/src/config.ts` (try it first in the dev panel) |
 | Make the reveal snappier | `config/tuning.ts` (or live in the dev panel) |
-| Smarter CPU | new `session/cpu/EquilibriumCpu.ts`, one line where the session is built |
-| A fourth move | core config (`beats`, `damage`), one new icon, fighter animations, one button |
-| New fighter skin | new sprite sheet + an entry in `assets/keys.ts` |
+| Smarter CPU | new `session/cpu/EquilibriumCpu.ts`, a new `CpuKind`, one line in `createSession` |
+| Rename moves to Rock / Paper / Scissors | the `Move` type and core config, `assets/keys.ts` frames, input key map, labels |
+| A fourth move | core config (`beats`, `damage`), one new icon, fighter frames, one button in `layout.ts` |
+| New fighter art | a sprite sheet loaded in `BootScene` under the existing `Tex` key; no view changes |
+| Square monitor (rebrand) | `config/layout.ts` and redrawn cabinet and stage art |
+| Sound and music | new `audio/` service in the `GameContext`; calls from the director, `MenuView` and `SceneFlow` |
 | Local two-player (hot-seat) | new `HotSeatSource` move source, input bindings for player 2 |
-| Online play | new `apps/server`, new `session/OnlineSession.ts`, a `LobbyScene` and enabling the Online item in `menus/homeMenu.ts`; fight and result scenes unchanged |
-| Another menu (settings, how to play, pause) | one scene + one menu file; add an item to an existing menu |
-| Real company logo | done in v0.4.0: master in `docs/brand/`, rebuild `assets/logo.png` with `tools/make-logo.py` |
+| Online play | new `apps/server`, `session/OnlineSession.ts`, a `LobbyScene`, enabling the ONLINE item, plus the gaps in section 10; fight and result scenes barely change |
+| Another menu (more options, how to play, pause) | one scene + one menu file + an item in an existing menu |
 | Android | Capacitor config + `platform/` adapters; game unchanged |
 | Gamepad | `input/` only |
 
@@ -410,19 +499,29 @@ What a typical future change touches, to show the structure holds up:
 
 Matches the roadmap in the project context:
 
-1. **Rules core with tests.** Set up the monorepo, lint rules and CI. Write `@rps/core` rules and referee, fully tested. Console only.
-2. **Playable prototype.** _(Built together with step 1, 2026-10-10.)_ `apps/game` with the pixel scaler, `CabinetScene`, `FightScene` with placeholder fighters, `LocalSession` with `RandomCpu`, the HUD, timer and best of three, and the menu flow from the start: `LogoScene` (placeholder logo), `HomeScene` with Start game, `ResultScene` with Retry and Main menu. `tuning.ts` exists from the start, even with few values.
-3. **Art and juice.** Real sprite sheets, the reveal timeline, the `fx/` kit, audio, the dev tuning panel.
-4. **Polish and web release.** The game-feel pass, screenshot tests, GitHub Pages deploy.
-5. **Online.** `apps/server`, `OnlineSession`, room codes.
+1. **Rules core with tests.** Monorepo, lint rules, CI, `@rps/core`. _Done 2026-10-10._
+2. **Playable prototype.** Scaler, cabinet, menus, fight vs `RandomCpu` with placeholder art, result screen. _Done 2026-10-10 (v0.1.0), Options and scaling modes since v0.2.0 / v0.3.0._
+3. **Art and juice.** Dev tuning panel _(done, v0.5.0)_; then the asset rebrand, more `fx/` (sparks, dust, impact frames), audio, final fighter art.
+4. **Polish and web release.** The game-feel pass, screenshot tests, an automatic GitHub Pages deploy, the move to a game-named GitHub organization.
+5. **Online.** Pick the host ([`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md)), `apps/server`, `OnlineSession`, lobby with room codes, the gaps in section 10.
 6. **Android.** Capacitor and the platform adapters.
 
-## 16. Choices to confirm
+## 16. Decisions and open choices
 
-Defaults picked in this document that are easy to change now and harder later (the cabinet size is already decided: 270 × 472):
+Built as decided:
 
-| Choice | Default | Alternative |
+| Choice | Decision |
+|---|---|
+| Repo shape | npm workspaces monorepo: `packages/core`, `apps/game`, later `apps/server` |
+| Dev tuning panel | Tweakpane, dev builds only (`apps/game/src/dev/`) |
+| Lint for import rules | `eslint-plugin-import` `no-restricted-paths` plus `no-restricted-imports` for Phaser and the `Referee` |
+| Cabinet size | 270 × 472 native, monitor 216 × 288 |
+| Default scaling | Fill height (Pixel perfect in Options) |
+
+Open:
+
+| Choice | Options | Recommendation |
 |---|---|---|
-| Repo shape | npm workspaces monorepo (`packages/core`, `apps/game`, later `apps/server`) (built this way) | One app with a `core/` folder, split later |
-| Dev tuning panel | Tweakpane, dev builds only (built in v0.5.0: `apps/game/src/dev/`) | lil-gui, or no panel |
-| Lint for import rules | `eslint-plugin-import` `no-restricted-paths` plus `no-restricted-imports` for Phaser and the `Referee` (built this way, `eslint.config.js`) | `dependency-cruiser` |
+| Where online matches run | Cloudflare Durable Object, peer-to-peer (PeerJS), Colyseus on a free host | Cloudflare Durable Object: free, server-decided, no sleeping server. Details in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md) |
+| Online seat display | Always show yourself on the left, or real sides | Always on the left |
+| Square or tall monitor | From the rebrand mock-ups | The user's pick in the rebrand thread |
