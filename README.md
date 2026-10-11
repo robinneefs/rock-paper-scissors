@@ -93,6 +93,7 @@ The game rules live in a plain TypeScript module with no engine, timers or netwo
 |---|---|
 | [`packages/core/`](packages/core/) | `@rps/core`: the rules and the referee, plain TypeScript with zero dependencies |
 | [`apps/game/`](apps/game/) | The Phaser game: scenes, views, session, input, pixel scaler, tuning |
+| [`config/`](config/) | Shared TypeScript settings (`tsconfig.base.json`) and the unit test setup (`vitest.config.ts`) |
 | [`tools/`](tools/) | Small scripts (building the in-game logo from `docs/brand/`) |
 | [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Full project context: rules, decisions, open questions and the decision log |
 | [`docs/idea/`](docs/idea/) | The original idea brief |
