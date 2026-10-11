@@ -1,5 +1,6 @@
 import { defaultRules, defaultTimings, type ServerMessage } from '@rps/core';
 import { describe, expect, it } from 'vitest';
+import type { SessionEvents } from '../src/session/MatchSession';
 import { OnlineSession } from '../src/session/OnlineSession';
 import type { SocketHandlers } from '../src/session/socket';
 
@@ -41,12 +42,13 @@ describe('OnlineSession', () => {
     expect(sent).toEqual([{ type: 'hello', protocol: 1, version: '0.6.0', intent: 'join' }]);
   });
 
-  it('as p2, shows you on the left: sides, health and picks are mirrored', () => {
+  it("as the guest, plays p2 on the right: sides, health and picks are the room's own", () => {
     const { session, room } = setup();
     const seen: unknown[] = [];
     session.on('locked', (e) => seen.push(e));
     session.on('reveal', (e) => seen.push(e));
     room({ type: 'welcome', side: 'p2', rules: defaultRules, timings: defaultTimings });
+    expect(session.me).toBe('p2');
     room({
       type: 'phase',
       phase: 'picking',
@@ -55,25 +57,25 @@ describe('OnlineSession', () => {
       finalRound: false,
       state: state(100, 80),
     });
-    expect(session.snapshot().state.health).toEqual({ p1: 80, p2: 100 });
+    expect(session.snapshot().state.health).toEqual({ p1: 100, p2: 80 });
 
     room({ type: 'locked', side: 'p1' });
-    room({
-      type: 'reveal',
+    const reveal: SessionEvents['reveal'] = {
       picks: { p1: 'rock', p2: 'paper' },
       autoPicked: { p1: false, p2: true },
       outcome: { kind: 'win', picks: { p1: 'rock', p2: 'paper' }, winner: 'p2', loser: 'p1', damage: 10 },
       events: [{ type: 'damage', side: 'p1', amount: 10, health: 90 }],
       state: state(90, 80),
-    });
-    expect(seen[0]).toEqual({ side: 'p2' }); // the opponent locked in, on the right
-    expect(seen[1]).toMatchObject({
-      picks: { p1: 'paper', p2: 'rock' },
-      autoPicked: { p1: true, p2: false },
-      outcome: { winner: 'p1', loser: 'p2', picks: { p1: 'paper', p2: 'rock' } },
-      events: [{ side: 'p2', health: 90 }],
-      state: { health: { p1: 80, p2: 90 } },
-    });
+    };
+    room({ type: 'reveal', ...reveal });
+    expect(seen[0]).toEqual({ side: 'p1' }); // the host locked in, on the left
+    expect(seen[1]).toEqual(reveal);
+  });
+
+  it('as the host, plays p1 on the left', () => {
+    const { session, room } = setup();
+    room({ type: 'welcome', side: 'p1', rules: defaultRules, timings: defaultTimings });
+    expect(session.me).toBe('p1');
   });
 
   it('turns time left into a local countdown', () => {

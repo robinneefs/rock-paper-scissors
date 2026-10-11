@@ -419,7 +419,6 @@ Online play is step 5; its first version is built (v0.6.0). This section says wh
 | Worker | `apps/server/src/index.ts` | `GET /room/CODE` (WebSocket) goes to the Durable Object named after the code; `RoomObject` holds the two sockets and feeds `MatchRoom` |
 | Deploy | `.github/workflows/deploy-server.yml` | Wrangler deploy on pushes to main that touch the server or core; skipped until the Cloudflare secrets exist |
 | `OnlineSession` | `apps/game/src/session/OnlineSession.ts` | WebSocket client implementing `MatchSession`; turns `msLeft` into a local deadline; reports `opponentJoined`, `refused`, `rematchRequested`, `opponentLeft`, `disconnected` |
-| Seat mirror | `apps/game/src/session/mirror.ts` | You are always shown as p1 on the left: the room's real sides are swapped for the p2 player, so scenes, director and HUD are unchanged |
 | Lobby | `apps/game/src/scenes/LobbyScene.ts`, `menus/lobbyMenu.ts` | CREATE ROOM (shows the code, waits) and JOIN ROOM (four letter boxes; stick or typed letters); hands the connected session to `flow.toFight({ mode: 'online', roomCode }, session)` |
 | Server address | `apps/game/src/config/online.ts` | `VITE_SERVER_URL`, else `ws://localhost:8787` in dev, else the deployed Worker; null keeps ONLINE greyed out |
 
@@ -428,7 +427,7 @@ How the gaps from the earlier list were closed:
 | Gap | Now |
 |---|---|
 | Opponent's name | `MatchSession.opponentName` (`CPU` or `RIVAL`) on the HUD and the result screen. Typed player names are a later step |
-| Which side I am | Always on the left (mirrored in the session) |
+| Which side I am | The room's real side on both screens (since v0.9.1): host = p1 on the left, guest = p2 on the right; `OnlineSession.me` comes from the room's welcome and the HUD tags say "P1 YOU" / "P2 RIVAL" |
 | Leaving and disconnects | The room tells the other player and closes; the fight and result screens show RIVAL LEFT or OFFLINE and go home. No reconnect grace period yet |
 | Rematch waiting | RETRY shows WAITING FOR RIVAL; the other player sees RIVAL WANTS A REMATCH; MAIN MENU stays available |
 | Lobby | Built (above) |
@@ -537,5 +536,5 @@ Open:
 | Choice | Options | Recommendation |
 |---|---|---|
 | Where online matches run | Cloudflare Durable Object, peer-to-peer (PeerJS), Colyseus on a free host | Cloudflare Durable Object: free, server-decided, no sleeping server. Details in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md) |
-| Online seat display | Always show yourself on the left, or real sides | Always on the left |
+| Online seat display | Always show yourself on the left, or real sides | Real sides (user's choice, v0.9.1) |
 | Square or tall monitor | From the rebrand mock-ups | The user's pick in the rebrand thread |

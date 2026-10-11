@@ -52,7 +52,7 @@ export type JoinError =
   /** The message could not be understood. */
   | 'bad';
 
-/** Room → game. Sides are the room's real sides; the game mirrors them so you are always on the left. */
+/** Room → game. Sides are the room's real sides: the host is p1 (left), the guest p2 (right), on both screens. */
 export type ServerMessage =
   | { type: 'welcome'; side: Side; rules: RulesConfig; timings: PhaseTimings }
   | { type: 'error'; error: JoinError }

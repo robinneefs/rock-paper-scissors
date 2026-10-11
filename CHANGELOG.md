@@ -2,6 +2,10 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.9.1 (2026-10-11)
+
+- **Online: fixed sides for both players.** The player who creates the room (the host) is always Player 1 on the left, and the player who joins is always Player 2 on the right, the same on both screens. Before, each player saw themselves on the left. The name tags now read "P1 YOU" and "P2 RIVAL" (or the other way round for the guest), and the result screen shows the score as P1's rounds - P2's rounds. Both players need this version.
+
 ## 0.9.0 (2026-10-11)
 
 - **Flat white move icons.** The cabinet buttons and the move badges on the reveal now show big, clear white icons (a boulder, a sheet of paper, open scissors) with a dark outline, in the style picked from the round 3 mock-ups.
