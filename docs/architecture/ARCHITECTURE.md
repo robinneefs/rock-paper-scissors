@@ -267,6 +267,13 @@ The pixel-perfect rules from the project context are enforced in one place, the 
 5. **Whole pixels only.** Positions go through `snap()`; tweens and shake round to whole pixels; no `setScale` or `setRotation` on sprites (turns, squash and zoom are drawn as frames).
 6. **Pixel text.** A bitmap pixel font at native size. No browser fonts on the canvas.
 
+**What this does and doesn't guarantee for imported images (checked 2026-10-11).** Because the canvas itself is native size, anything drawn lands on the native grid: no image, however smooth, can show detail finer than one game pixel, and nothing blurs. But the engine does **not** turn a non-pixel-art image into pixel art. It does no colour reduction to the palette, no outline cleanup and no averaging when shrinking:
+
+- A smooth image drawn at 1:1 keeps its gradients, soft anti-aliased edges and thousands of colours, so it reads as a blocky blurred picture, not as pixel art.
+- A large image shrunk in the game is sampled nearest-neighbour, which drops pixels instead of averaging them; it looks crunchy and shimmers when it moves (and breaks rule 5 anyway).
+
+So every image must be made at its final native size, in palette colours, before it goes into `public/assets/`. The Chain Shift logo was converted this way offline with `tools/make-logo.py`; any future import helper (resize, reduce to the palette, outline) belongs in `tools/`, not in the game.
+
 **Fill height (player option, 2026-10-10).** Whole-number scaling can leave the cabinet small (a 1280 × 800 window only fits 1×). Options → Scaling offers **Fill height**: the scaler uses the exact fit scale instead (`computeLayout(..., 'fillHeight')`: the cabinet fills the window height on a desktop, or its width on a narrow phone, never smaller than the pixel-perfect scale). This is a deliberate, player-chosen exception to rule 2:
 
 - Sampling stays nearest-neighbour (`pixelArt`, `image-rendering: pixelated`), so nothing blurs, and everything inside the game still sits on one native grid (rules 1, 3 to 6 are unchanged).
