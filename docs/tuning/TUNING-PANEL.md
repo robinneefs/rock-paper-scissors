@@ -13,7 +13,7 @@ npm install        # once, or after pulling (installs Tweakpane)
 npm run dev        # http://localhost:5173
 ```
 
-The panel appears in the top-right corner. The backquote key (`` ` ``, left of 1) hides and shows it. Typing in the panel's number fields never reaches the game, so typing a 1 there doesn't pick Attack.
+The panel appears in the top-right corner. The backquote key (`` ` ``, left of 1) hides and shows it. Typing in the panel's number fields never reaches the game, so typing a 1 there doesn't pick Rock.
 
 ### What is in it
 

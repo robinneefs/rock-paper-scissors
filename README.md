@@ -18,7 +18,7 @@
 
 A pixel-art fighting game built on rock paper scissors, played in the browser.
 
-Two fighters face off inside an arcade cabinet. Each exchange, both players secretly pick **Attack**, **Throw** or **Block** before a 5 second countdown runs out. The picks are revealed together, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds.
+Two fighters face off inside an arcade cabinet. Each exchange, both players secretly pick **Rock**, **Paper** or **Scissors** before a 5 second countdown runs out. The picks are revealed together, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds.
 
 ![The game in a desktop browser: picking a move with 3 seconds left](docs/screenshots/browser-pick.png)
 
@@ -26,7 +26,7 @@ Two fighters face off inside an arcade cabinet. Each exchange, both players secr
 
 | Logo intro | Home | Fight | Result |
 |---|---|---|---|
-| ![Logo intro](docs/screenshots/phone-logo.png) | ![Home menu](docs/screenshots/phone-home.png) | ![A throw beats a block](docs/screenshots/phone-reveal.png) | ![Result screen](docs/screenshots/phone-result.png) |
+| ![Logo intro](docs/screenshots/phone-logo.png) | ![Home menu](docs/screenshots/phone-home.png) | ![Scissors beat paper](docs/screenshots/phone-reveal.png) | ![Result screen](docs/screenshots/phone-result.png) |
 
 Screenshots of the current build on a phone. Recapture them with `node sources/screenshots/capture.mjs`.
 
@@ -41,7 +41,7 @@ npm run dev        # opens the game at http://localhost:5173
 
 In `npm run dev` a **tuning panel** in the top-right corner lets you change every feel value, the rules and the phase timings while you play, then copy the changes back into the code. The backquote key (`) hides it. How to use it and how it's built: [docs/tuning/TUNING-PANEL.md](docs/tuning/TUNING-PANEL.md).
 
-Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Attack / Throw / Block. In menus the arrow keys (or dragging the joystick) move the cursor and any cabinet button, Enter or Space selects. Esc goes back.
+Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Rock / Paper / Scissors. In menus the arrow keys (or dragging the joystick) move the cursor and any cabinet button, Enter or Space selects. Esc goes back.
 
 | Command | What it does |
 |---|---|
@@ -55,9 +55,9 @@ Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Attack / Throw / 
 
 | Winning move    | Beats  | Damage to loser |
 |-----------------|--------|-----------------|
-| Throw           | Block  | 20              |
-| Attack          | Throw  | 15              |
-| Block (counter) | Attack | 10              |
+| Scissors        | Paper    | 20              |
+| Rock            | Scissors | 15              |
+| Paper (counter) | Rock     | 10              |
 
 - Ties deal no damage, and only the loser of an exchange gets hurt.
 - Each fighter has 100 health per round. Health resets every round.
@@ -66,18 +66,18 @@ Controls: keys **1 / 2 / 3** (or tap the cabinet buttons) pick Attack / Throw / 
 
 ### The mind game
 
-Because the damage is uneven, this is not classic rock paper scissors. Throw is the tempting big hit, but Attack punishes it. The balanced mix works out to roughly **Attack 44%, Block 33%, Throw 22%**: the biggest hit is the one you should pick least. At low health the stakes shift again, since a 10 damage block counter may not finish the round while a 15 or 20 hit will.
+Because the damage is uneven, this is not classic rock paper scissors. Scissors is the tempting big hit, but Rock punishes it. The balanced mix works out to roughly **Rock 44%, Paper 33%, Scissors 22%**: the biggest hit is the one you should pick least. At low health the stakes shift again, since a 10 damage paper counter may not finish the round while a 15 or 20 hit will.
 
 ## Look and feel
 
-- **Arcade cabinet layout.** The whole game is drawn as an upright arcade machine: the fight on the monitor, three physical buttons (Attack, Throw, Block) on the control panel, and a joystick just for fun. The vertical layout works the same in a desktop browser and on a phone held upright.
+- **Arcade cabinet layout.** The whole game is drawn as an upright arcade machine: the fight on the monitor, three physical buttons (Rock, Paper, Scissors) on the control panel, and a joystick just for fun. The vertical layout works the same in a desktop browser and on a phone held upright.
 - **Pixel perfect.** One pixel size everywhere, whole-number scaling only, no blur or sub-pixel drift, pixel fonts and a shared palette.
 - **Cute fighters, neon '80s arcade.** Short, wide chibi martial artists (64 px tall) in a synthwave arcade setting. The overall style is still being refined.
 - **Game feel matters.** Punchy screen shake, hit flashes, sparks, hit-pause, lively animations and sound for every action.
 
 | Browser | Phone |
 |---|---|
-| ![Reveal in the browser: a throw beats a block](docs/screenshots/browser-reveal.png) | ![Picking on a phone](docs/screenshots/phone-pick.png) |
+| ![Reveal in the browser: scissors beat paper](docs/screenshots/browser-reveal.png) | ![Picking on a phone](docs/screenshots/phone-pick.png) |
 
 ## Technology
 

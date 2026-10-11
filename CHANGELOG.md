@@ -2,6 +2,12 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.7.0 (2026-10-11)
+
+- **The moves are Rock, Paper and Scissors again.** Rock (was Attack) beats Scissors for 15 damage, Scissors (was Throw) beats Paper for 20, and Paper (was Block) beats Rock for 10. The damage and balance are unchanged. Keys 1, 2 and 3 pick Rock, Paper and Scissors, and the cabinet buttons are red, yellow and cyan with new boulder, paper sheet and scissors icons.
+- **RPS Rivals branding.** The screen is now square (216 x 216), and the space above it holds a taller marquee with the RPS Rivals logo art inside a bezel. The old "RPS FIGHTER" title on the home screen is gone, and the browser tab says RPS Rivals. Saved settings carry over.
+- Online: both players need this version, since the moves have new names.
+
 ## 0.6.2 (2026-10-11)
 
 - NEW ROOM can now be cancelled without a keyboard: a CANCEL button on the screen (tap or click it), and any cabinet button or Enter cancels too. Before, only Esc worked, so on a phone there was no way back.
