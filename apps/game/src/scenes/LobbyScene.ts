@@ -146,6 +146,7 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   private toMode(mode: Mode): void {
+    if (mode === 'menu') getContext(this).audio.play('menuBack');
     this.scene.restart({ mode } satisfies LobbyData);
   }
 
@@ -155,7 +156,7 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   private showMenu(): void {
-    const { flow, input } = getContext(this);
+    const { flow, input, audio } = getContext(this);
     this.title('ONLINE');
     let leaving = false;
     const home = () => {
@@ -169,9 +170,14 @@ export class LobbyScene extends Phaser.Scene {
       lobbyMenu({ create: () => this.toMode('create'), join: () => this.toMode('join'), back: home }),
       72,
       input,
+      audio,
     );
     this.hint(['PLAY A FRIEND ON ANOTHER DEVICE:', 'ONE CREATES A ROOM, THE', 'OTHER JOINS WITH ITS CODE']);
-    this.listen((a) => a.type === 'back' && home());
+    this.listen((a) => {
+      if (a.type !== 'back' || leaving) return;
+      audio.play('menuBack');
+      home();
+    });
   }
 
   private showCreate(): void {
@@ -341,6 +347,7 @@ export class LobbyScene extends Phaser.Scene {
         return;
       }
       const cur = slots[cursor] ?? -1;
+      if (a.type === 'nav' || a.type === 'char') getContext(this).audio.play('menuMove');
       if (a.type === 'nav' && a.dir === 'up') setLetter(cur < 0 ? 0 : (cur + 1) % n);
       else if (a.type === 'nav' && a.dir === 'down') setLetter(cur < 0 ? n - 1 : (cur - 1 + n) % n);
       else if (a.type === 'nav' && a.dir === 'left') cursor = Math.max(0, cursor - 1);
@@ -350,8 +357,10 @@ export class LobbyScene extends Phaser.Scene {
         if (i < 0) return;
         setLetter(i);
         cursor = Math.min(ROOM_CODE_LENGTH - 1, cursor + 1);
-      } else if (a.type === 'confirm' || a.type === 'pick') join();
-      else if (a.type === 'back') {
+      } else if (a.type === 'confirm' || a.type === 'pick') {
+        getContext(this).audio.play('menuSelect');
+        join();
+      } else if (a.type === 'back') {
         if (cur >= 0) slots[cursor] = -1;
         else if (cursor > 0) slots[--cursor] = -1;
         else return this.toMode('menu');

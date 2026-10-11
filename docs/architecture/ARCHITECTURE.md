@@ -96,7 +96,7 @@ rps-rivals/
 └── package.json                 workspaces, shared lint/format/test scripts
 ```
 
-A folder is added when there is something to put in it. Not there yet: `audio/` (sound arrives in step 3) and `apps/server`.
+A folder is added when there is something to put in it.
 
 ![Code map](diagrams/8-code-map.svg)
 
@@ -299,7 +299,7 @@ The game always starts the same way: Boot, the logo intro, then the home screen.
 
   Adding online play or a how-to-play screen is a new item here plus its scene. Options was added this way.
 - **Menu input.** `InputRouter` actions: `nav` (joystick, arrow keys), `confirm` (Enter, Space), `back` (Esc, Backspace), and `pick` from the three cabinet buttons, which menus treat as confirm.
-- **Music (planned).** A menu loop on Home and Result and a fight loop in the fight, cross-faded by `SceneFlow` once an audio service exists.
+- **Music (since v0.8.0).** `SceneFlow` picks the track for each screen (`SCENE_MUSIC` in `scenes/flow.ts`): the menu loop on Home, Options and the lobby, the fight loop in the fight. On the result screen the fight music fades out for the win or lose jingle, and the menu loop comes back after it.
 
 ### One reveal, as the director plays it
 
@@ -375,11 +375,11 @@ There are two homes for numbers, on purpose:
 
 **Input.** One `InputRouter` turns every source into game actions: keys 1/2/3 (and the numpad), taps on the cabinet buttons, arrow keys and drag for the joystick. Scenes only hear `action` events (`pick`, `confirm`, `back`, `nav`); the cabinet also hears `button` (pressed or released) and `stick` (tilt) to animate. Two arrow keys at once tilt the stick diagonally; holding the stick repeats `nav` every `tuning.menu.repeatDelayMs`. Releasing the window releases everything. A gamepad or rebinding touches only `input/`.
 
-**Audio (planned, step 3).** An `AudioService` in `audio/` wrapping Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds referred to by typed keys, with random variations so hits don't repeat. It will join the `GameContext`. Nothing plays sound yet.
+**Audio (since v0.8.0).** `AudioService` in `audio/` wraps Phaser sound with two buses (music, sfx), mute and saved volumes, and is in the `GameContext` as `audio`. Sounds are typed keys (`audio/sounds.ts`); a key with variations plays one at random. Music cross-fades and waits for the browser to allow sound (the first tap or key). Views and the director only see the small `SfxPlayer` interface (`play(key)`); a lint rule keeps game logic out of `audio/`. Every sound is synthesised by `tools/audio/make-audio.mjs`. Guide and licences: [`docs/audio/AUDIO.md`](../audio/AUDIO.md).
 
 **Assets.** Until the real art exists, `assets/placeholders/` paints every texture in code at boot (room tile, cabinet, buttons, joystick ball, stage, fighters, move icons) under the real keys from `assets/keys.ts`. `generatePlaceholders` skips any key that is already loaded, so loading a real sprite sheet under the same key in `BootScene` replaces its placeholder without touching a view. The only real images so far are `logo.png` and `marquee.png` (the marquee art, cut from a mock-up by `tools/make-marquee.py`). Each fighter sheet provides the frames `idle0, idle1, rock, paper, scissors, hurt, ko, win` (64 px tall). The palette is in `config/palette.ts`.
 
-**Settings.** `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON under the localStorage key `rps-fighter.settings` (kept on purpose so saved settings survive the rename). Broken or missing storage falls back to the defaults and never stops the game. Today it holds only the scaling mode; volumes and mute join it later. Behind it is a small key-value type (`getItem`/`setItem`), so Capacitor Preferences can replace localStorage on Android.
+**Settings.** `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON under the localStorage key `rps-fighter.settings` (kept on purpose so saved settings survive the rename). Broken or missing storage falls back to the defaults and never stops the game. It holds the scaling mode, mute and the music and effects volumes (0 to 10). Behind it is a small key-value type (`getItem`/`setItem`), so Capacitor Preferences can replace localStorage on Android.
 
 **Version.** Set once, in `apps/game/package.json`; `vite.config.ts` injects it and `src/version.ts` exports `VERSION`, which the home screen shows in the corner. Every build bumps it and adds a `CHANGELOG.md` entry, and the Release workflow tags it `vX.Y.Z` with a GitHub release when it reaches main.
 

@@ -2,6 +2,13 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.8.0 (2026-10-11)
+
+- **Sound and music.** 90s arcade chiptune throughout: menu blips, a tick for each of the last 3 seconds of the timer (higher each second) and a slam when it runs out, a lock-in chime when you pick, a whoosh as the icons drop, a different hit for each winning move (a heavy thud for Rock, a slap for Paper, a metal slash for Scissors, each with three variations), a clang for a tie, a big K.O., ROUND and FIGHT! stings, and win and lose jingles.
+- **Music.** A menu loop on the home, options and lobby screens (and the result screen after the jingle), and a faster fight loop during matches. Browsers only allow sound after your first tap or key press, so the music starts then.
+- **Options: SOUND, MUSIC and EFFECTS.** Turn all sound off, or set the music and effects volumes separately (stick left and right, from OFF to 10). They are remembered.
+- Every sound is made from scratch by `tools/audio/make-audio.mjs` (`npm run audio`), so the game owns all of it. Sound list, licences and how to change a sound: `docs/audio/AUDIO.md`.
+
 ## 0.7.0 (2026-10-11)
 
 - **The moves are Rock, Paper and Scissors again.** Rock (was Attack) beats Scissors for 15 damage, Scissors (was Throw) beats Paper for 20, and Paper (was Block) beats Rock for 10. The damage and balance are unchanged. Keys 1, 2 and 3 pick Rock, Paper and Scissors, and the cabinet buttons are red, yellow and cyan with new boulder, paper sheet and scissors icons.

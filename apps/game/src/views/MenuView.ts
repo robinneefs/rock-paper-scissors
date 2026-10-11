@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { MONITOR } from '../config/layout';
 import { palette } from '../config/palette';
 import { tuning } from '../config/tuning';
+import type { SfxPlayer } from '../audio/sounds';
 import type { Action, InputRouter } from '../input/InputRouter';
 import type { MenuItem } from '../menus/MenuItem';
 import { frameRect } from '../util/gfx';
@@ -34,6 +35,7 @@ export class MenuView {
     private readonly items: MenuItem[],
     private readonly y: number,
     input: InputRouter,
+    private readonly sfx: SfxPlayer,
     width = 136,
   ) {
     this.x = Math.round((MONITOR.width - width) / 2);
@@ -118,6 +120,7 @@ export class MenuView {
     for (let i = 1; i <= n; i++) {
       const next = (this.selected + step * i + n * n) % n;
       if (this.items[next]?.enabled) {
+        if (next !== this.selected) this.sfx.play('menuMove');
         this.selected = next;
         break;
       }
@@ -130,6 +133,7 @@ export class MenuView {
     if (this.locked) return;
     const item = this.items[this.selected];
     if (!item?.enabled) return;
+    this.sfx.play(item.id === 'back' ? 'menuBack' : 'menuSelect');
     item.onSelect?.();
   }
 

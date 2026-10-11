@@ -22,7 +22,7 @@ Two fighters face off inside an arcade cabinet. Each exchange, both players secr
 
 ![The game in a desktop browser: picking a move with 3 seconds left](docs/screenshots/browser-pick.png)
 
-> **Status: first playable (v0.5.4).** Logo intro, home menu with Options, a full best-of-three match against a random CPU and the Retry / Main menu screen work, with placeholder art. Final fighter art, effects and sound come next.
+> **Status: v0.8.0.** Logo intro, home menu with Options, a full best-of-three match against a random CPU or a friend online, the Retry / Main menu screen, and chiptune sound effects and music ([docs/audio/AUDIO.md](docs/audio/AUDIO.md)). The art is still placeholder; final fighter art and more effects come next.
 
 | Logo intro | Home | Fight | Result |
 |---|---|---|---|

@@ -3,7 +3,13 @@ import pkg from '../package.json' with { type: 'json' };
 
 declare global {
   interface Window {
-    __rps: { scenes: () => string[]; phase: () => string | null; scale: () => number; version: string };
+    __rps: {
+      scenes: () => string[];
+      phase: () => string | null;
+      scale: () => number;
+      music: () => string | null;
+      version: string;
+    };
   }
 }
 
@@ -99,6 +105,24 @@ test('scaling fills the height by default; options switches it and remembers', a
   expect(await scale(page)).toBeCloseTo(1000 / 472, 3);
   await page.keyboard.press('Escape');
   await untilScene(page, 'Home');
+});
+
+test('music: the menu loop on home and the fight loop in a match', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.clock.install();
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1'); // skip the logo (also lets the browser play sound)
+  await untilScene(page, 'Home');
+  await run(page, 300);
+  expect(await page.evaluate(() => window.__rps.music())).toBe('menu');
+
+  await page.keyboard.press('Enter'); // START GAME
+  await untilScene(page, 'Fight');
+  await run(page, 300);
+  expect(await page.evaluate(() => window.__rps.music())).toBe('fight');
+  expect(errors).toEqual([]);
 });
 
 test('ONLINE opens the lobby, and BACK returns home', async ({ page }) => {

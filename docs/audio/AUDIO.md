@@ -1,0 +1,50 @@
+# Sound and music
+
+Everything you hear in RPS Rivals is made by one script in this repository, `tools/audio/make-audio.mjs`. It synthesises 90s arcade chiptune sounds from scratch (pulse, triangle and noise voices, like an old console sound chip), so the game owns all of it outright. No outside samples or tracks are used.
+
+## Sources and licences
+
+| What | Files | Source | Licence |
+| --- | --- | --- | --- |
+| All sound effects | `apps/game/public/assets/audio/sfx/*.wav` | Made by `tools/audio/make-audio.mjs` (original) | This repository's licence (`LICENSE`) |
+| Menu and fight music loops | `apps/game/public/assets/audio/music/*.ogg`, `*.mp3` | Composed and made by `tools/audio/make-audio.mjs` (original) | This repository's licence (`LICENSE`) |
+
+When an outside sound or track is added later, add a row here with its author, link and licence (only licences that allow use in a game, such as CC0 or CC-BY with credit).
+
+## What plays when
+
+| Sound | When |
+| --- | --- |
+| `menuMove`, `menuSelect`, `menuBack` | Moving the menu cursor, choosing an item, going back (also the lobby's code entry) |
+| `roundStart` | The ROUND / FINAL ROUND banner |
+| `fight` | The FIGHT! banner at the start of each round |
+| `tick` | Each of the last 3 seconds of the pick timer, a bit higher each second (silent once you've picked) |
+| `lockIn` | Your pick locks in |
+| `timeUp` | The timer ran out and a move was picked for someone (the slam) |
+| `whoosh` | The move icons drop in at the reveal |
+| `hitRock`, `hitPaper`, `hitScissors` | The winning move lands: a heavy thud, a slap, a metal slash. Three variations each, picked at random and slightly detuned, so repeated hits don't sound the same |
+| `clash` | A tie |
+| `ko` | K.O. |
+| `winJingle`, `loseJingle` | The result screen |
+| Music `menu` | Home, Options and the lobby, and the result screen once the jingle is done |
+| Music `fight` | During a match |
+
+## Settings
+
+Options has SOUND (on or off), MUSIC and EFFECTS. The stick left and right change a volume in steps from OFF to 10, and the button steps it up (wrapping round to OFF). The settings are saved with the others in the browser. Browsers only allow sound after the first tap or key press, so the menu music starts then.
+
+## Changing or adding a sound
+
+1. Edit or add the sound in `tools/audio/make-audio.mjs` (each effect is a few `voice()` calls; the music is written as note steps per bar).
+2. If it is new, add its key to `SFX` in `apps/game/src/audio/sounds.ts` (with the number of variations), and call `audio.play('key')` where it should play.
+3. Run `npm run audio` (needs `ffmpeg` installed for the music files). It rewrites the files in `apps/game/public/assets/audio/`.
+4. `npm test` checks that every sound the game loads has a file.
+
+To use a real recorded sound instead, drop the file in `public/assets/audio/sfx/` under the same name (WAV, or change the extension in `sounds.ts`) and add its row to the licence table above.
+
+## How it is built
+
+- `apps/game/src/audio/sounds.ts`: the list of sound keys, how many variations each has, and the file list `BootScene` loads.
+- `apps/game/src/audio/AudioService.ts`: plays effects and music on two buses (music, effects) with mute and saved volumes. Music cross-fades between tracks and waits for the browser to allow sound. It is in the `GameContext` as `audio`.
+- `SceneFlow` picks the music for each screen. The fight director, the fight scene, the menus, Options, the lobby and the result screen fire the effects.
+- Music is loaded as OGG with an MP3 fallback (Safari); the browser takes the first one it can play.

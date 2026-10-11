@@ -18,7 +18,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { flow, input, lights } = getContext(this);
+    const { flow, input, lights, audio } = getContext(this);
     useMonitorCamera(this);
     lights.select(null);
     const cx = MONITOR.width / 2;
@@ -26,7 +26,7 @@ export class HomeScene extends Phaser.Scene {
     new FighterView(this, 'p1', 46, 206);
     new FighterView(this, 'p2', 170, 206);
 
-    const menu = new MenuView(this, homeMenu(flow), 14, input);
+    const menu = new MenuView(this, homeMenu(flow), 14, input, audio);
     this.add.rectangle(0, menu.bottom + 5, MONITOR.width, 13, palette.panel).setOrigin(0);
     new PixelText(this, cx, menu.bottom + 8, 'STICK MOVES - BUTTON SELECTS', {
       color: palette.lilac,
