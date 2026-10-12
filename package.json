@@ -11,6 +11,8 @@
     "dev:server": "npm run dev -w @rps/server",
     "build": "npm run build -w @rps/game",
     "preview": "npm run preview -w @rps/game",
+    "android": "npm run build -w @rps/android && npm run open -w @rps/android",
+    "android:build": "npm run build -w @rps/android",
     "test": "vitest run --config config/vitest.config.ts",
     "test:watch": "vitest --config config/vitest.config.ts",
     "test:e2e": "npm run test:e2e -w @rps/game",

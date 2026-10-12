@@ -31,7 +31,7 @@ export class FightScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { input, flow, lights, audio, cabinetShake } = getContext(this);
+    const { input, flow, lights, audio, cabinetShake, haptics } = getContext(this);
     const { session, setup } = this.fight;
     useMonitorCamera(this);
     // ?stage=<id> in the address forces a stage, for trying one out
@@ -55,6 +55,7 @@ export class FightScene extends Phaser.Scene {
         if (!endedEarly) flow.toResult({ setup, session, winner, state });
       },
       shakeCabinet: (px, ms) => cabinetShake.kick(px, ms),
+      vibrate: (px) => (px === 'ko' ? haptics.ko() : haptics.shake(px)),
     });
 
     // online only: the match ends early if the other player leaves or the connection drops

@@ -1,7 +1,5 @@
 # RPS Rivals
 
-**[▶ Play it in your browser](https://robinneefs.github.io/rps-rivals/)** on desktop or on a phone held upright, no install needed. ([Staging copy](https://robinneefs.github.io/rps-rivals/staging/) with the newest changes, for testing.)
-
 <div align="center">
 
 [![Built by Claude](https://img.shields.io/badge/built_by-Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](https://claude.ai/code)
@@ -11,8 +9,6 @@
 ### 🤖✨ This is a Claude-run operation ✨🤖
 
 ***Coded on only the purest of vibes.***
-
-<sub>RPS Rivals is an AI-developed project: the code, docs and placeholder art are written by Claude, with a human calling the shots.</sub>
 
 </div>
 
@@ -25,8 +21,6 @@
 **Free · No install · Desktop and phone**
 
 vs the CPU, or vs a friend online with a 4-letter room code
-
-<sub>Online: one player picks **ONLINE → CREATE ROOM** and reads out the code, the other picks **JOIN ROOM** and types it in.</sub>
 
 </div>
 

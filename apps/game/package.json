@@ -1,15 +1,19 @@
 {
   "name": "@rps/game",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:android": "tsc --noEmit && vite build --mode android"
   },
   "dependencies": {
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/haptics": "8.0.2",
     "@rps/core": "0.1.0",
     "phaser": "3.90.0"
   },

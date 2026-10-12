@@ -9,10 +9,12 @@ import {
   SCALING_HINT,
   SCALING_LABEL,
   SOUND_HINT,
+  VIBRATION_HINT,
   soundTag,
   volumeTag,
   type VolumeId,
 } from '../menus/optionsMenu';
+import { isNativeApp } from '../platform/native';
 import { nextScalingMode, stepVolume } from '../platform/settings';
 import { MenuView } from '../views/MenuView';
 import { PixelText } from '../views/PixelText';
@@ -22,20 +24,28 @@ import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
 
 const VOLUME_KEY = { music: 'musicVolume', sfx: 'sfxVolume' } as const;
+const NO_HINT: [string, string] = ['', ''];
 
-/** Options: how the cabinet scales to the window, and sound (on/off, music and effects volume). Changes apply at once. */
+/**
+ * Options: how the cabinet scales to the window, the CRT look, vibration (phones only) and sound
+ * (on/off, music and effects volume). Changes apply at once.
+ */
 export class OptionsScene extends Phaser.Scene {
   constructor() {
     super(SceneKey.options);
   }
 
   create(): void {
-    const { flow, input, settings, audio } = getContext(this);
+    const { flow, input, settings, audio, haptics } = getContext(this);
     useMonitorCamera(this);
     const cx = MONITOR.width / 2;
     addMenuBackdrop(this);
     this.add.tileSprite(0, 0, MONITOR.width, MONITOR.height, Tex.dither).setOrigin(0);
-    new PixelText(this, cx, 20, 'OPTIONS', {
+    // SCALING only in the browser (the Android app always fills the screen), VIBRATION only on phones
+    const listed = { scaling: !isNativeApp(), vibration: haptics.supported };
+    // with all seven items listed they sit closer together so the hint still fits underneath
+    const tight = listed.scaling && listed.vibration;
+    new PixelText(this, cx, tight ? 15 : 20, 'OPTIONS', {
       size: 3,
       color: palette.cyan,
       align: 'center',
@@ -53,6 +63,10 @@ export class OptionsScene extends Phaser.Scene {
     const cycleScaling = () => settings.set('scaling', nextScalingMode(settings.value.scaling));
     const toggleSound = () => settings.set('muted', !settings.value.muted);
     const toggleCrt = () => settings.set('crt', !settings.value.crt);
+    const toggleVibration = () => {
+      settings.set('vibration', !settings.value.vibration);
+      haptics.preview();
+    };
     /** Select steps the volume up and wraps to OFF; the stick steps it either way. */
     const changeVolume = (id: VolumeId, dir: 1 | -1, wrap: boolean) => {
       const key = VOLUME_KEY[id];
@@ -62,23 +76,26 @@ export class OptionsScene extends Phaser.Scene {
     };
     const menu = new MenuView(
       this,
-      optionsMenu(settings.value, {
+      optionsMenu(settings.value, listed, {
         cycleScaling,
         toggleCrt,
+        toggleVibration,
         toggleSound,
         stepVolume: (id) => changeVolume(id, 1, true),
         back,
       }),
-      44,
+      tight ? 40 : 44,
       input,
       audio,
       196,
+      tight ? 2 : undefined,
     );
 
-    this.add.rectangle(0, menu.bottom + 7, MONITOR.width, 25, palette.panel).setOrigin(0);
+    const hintY = menu.bottom + (tight ? 4 : 7);
+    this.add.rectangle(0, hintY, MONITOR.width, 25, palette.panel).setOrigin(0);
     const hint = [0, 1].map(
       (i) =>
-        new PixelText(this, cx, menu.bottom + 12 + i * 10, '', {
+        new PixelText(this, cx, hintY + 5 + i * 10, '', {
           color: palette.lilac,
           align: 'center',
           shadow: palette.ink,
@@ -88,6 +105,7 @@ export class OptionsScene extends Phaser.Scene {
       const s = settings.value;
       menu.setTag('scaling', SCALING_LABEL[s.scaling]);
       menu.setTag('crt', onOffTag(s.crt));
+      menu.setTag('vibration', onOffTag(s.vibration));
       menu.setTag('sound', soundTag(s.muted));
       menu.setTag('music', volumeTag(s.musicVolume));
       menu.setTag('sfx', volumeTag(s.sfxVolume));
@@ -97,7 +115,11 @@ export class OptionsScene extends Phaser.Scene {
           ? SOUND_HINT
           : id === 'crt'
             ? CRT_HINT
-            : SCALING_HINT[s.scaling];
+            : id === 'vibration'
+              ? VIBRATION_HINT
+              : listed.scaling
+                ? SCALING_HINT[s.scaling]
+                : NO_HINT;
       lines.forEach((line, i) => hint[i]?.setText(line));
     };
     show();
@@ -115,6 +137,7 @@ export class OptionsScene extends Phaser.Scene {
           const id = menu.selectedId;
           if (id === 'scaling') cycleScaling();
           else if (id === 'crt') toggleCrt();
+          else if (id === 'vibration') toggleVibration();
           else if (id === 'sound') toggleSound();
           else if (id === 'music' || id === 'sfx') changeVolume(id, dir, false);
         }

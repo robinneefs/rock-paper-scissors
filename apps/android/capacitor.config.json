@@ -1,0 +1,9 @@
+{
+  "appId": "com.chainshift.rpsrivals",
+  "appName": "RPS Rivals",
+  "webDir": "../game/dist",
+  "backgroundColor": "#0b0716",
+  "android": {
+    "backgroundColor": "#0b0716"
+  }
+}

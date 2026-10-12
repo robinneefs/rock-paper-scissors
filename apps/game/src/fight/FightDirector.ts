@@ -42,6 +42,8 @@ export class FightDirector {
       matchOver: (winner: Side, state: MatchState) => void;
       /** Rattles the whole cabinet against the room. */
       shakeCabinet: (px: number, ms: number) => void;
+      /** Buzzes the phone along with a shake of this many px, or with the K.O. rumble. */
+      vibrate: (shakePx: number | 'ko') => void;
     },
   ) {
     this.offs.push(
@@ -110,6 +112,7 @@ export class FightDirector {
           clash.hide();
           shake(this.scene, this.scene.cameras.main, tuning.shake.koPx, tuning.shake.durationMs * 1.5);
           this.hooks.shakeCabinet(tuning.cabinet.koPx, tuning.cabinet.koMs);
+          this.hooks.vibrate('ko');
           this.sfx.play('ko');
           banner.showKo();
         }
@@ -134,6 +137,7 @@ export class FightDirector {
       this.sfx.play('timeUp');
       hud.slamTimer();
       this.hooks.shakeCabinet(tuning.cabinet.timeUpPx, tuning.cabinet.timeUpMs);
+      this.hooks.vibrate(tuning.cabinet.timeUpPx);
     }
     at(r.flyAtMs, () => {
       clash.fly(r.impactAtMs - r.flyAtMs);
@@ -154,6 +158,7 @@ export class FightDirector {
       clash.collide(outcome);
       if (outcome.kind === 'tie') {
         shake(this.scene, this.scene.cameras.main, 1, tuning.shake.durationMs / 2);
+        this.hooks.vibrate(1);
         this.sfx.play('clash');
         return;
       }
@@ -173,12 +178,9 @@ export class FightDirector {
       }
       const pause = tuning.hitPause.byDamage[outcome.damage] ?? 60;
       at(pause, () => {
-        shake(
-          this.scene,
-          this.scene.cameras.main,
-          tuning.shake.byDamage[outcome.damage] ?? 2,
-          tuning.shake.durationMs,
-        );
+        const shakePx = tuning.shake.byDamage[outcome.damage] ?? 2;
+        shake(this.scene, this.scene.cameras.main, shakePx, tuning.shake.durationMs);
+        this.hooks.vibrate(shakePx);
         hud.setHealth(outcome.loser, e.state.health[outcome.loser]);
         const hit = e.events.find((ev) => ev.type === 'damage' && ev.side === outcome.loser);
         const amount = hit?.type === 'damage' ? hit.amount : outcome.damage;
