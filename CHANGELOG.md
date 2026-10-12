@@ -1,6 +1,16 @@
 # Changelog
 
-Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
+Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Version numbers follow semver: a new feature bumps the middle number (1.0.0 → 1.1.0), a fix-only build bumps the last (1.0.0 → 1.0.1). Each version that goes live is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches the `production` branch.
+
+## 1.0.0 (2026-10-12)
+
+The first public release, live at https://robinneefs.github.io/rps-rivals/. Everything since 0.5.4 (the build that was live until now) is listed in the entries below; in short:
+
+- **Play a friend online.** One player creates a room and reads out its 4-letter code, the other joins with it. Matches run on a server, so neither player can see the other's pick early. Rematch from the result screen.
+- **The full arcade look.** A wood-grain cabinet with a flickering marquee, shaded buttons that glint, a clicking joystick, a CRT screen with off/on transitions between screens, three stages picked at random, and new fighters.
+- **A punchier fight.** Picks clash in the middle of the screen, then hit pause, sparks, shake, a K.O. slow motion with big K.O. letters, and chiptune music and sound.
+- **How to Play.** A short card on the home menu with the rules and each move's damage.
+- **Steady for release.** The fixes from the 0.11.1 bug hunt, a proper browser tab and link preview, and a new README.
 
 ## 0.11.1 (2026-10-12)
 
