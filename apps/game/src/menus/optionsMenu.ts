@@ -32,10 +32,13 @@ export const VIBRATION_HINT: [string, string] = ['THE PHONE BUZZES WITH', 'EVERY
 
 export type VolumeId = 'music' | 'sfx';
 
-/** VIBRATION is only listed on a device that can vibrate. */
+/**
+ * SCALING is left out of the Android app (it always fills the screen); VIBRATION is only listed on
+ * a device that can vibrate.
+ */
 export const optionsMenu = (
   settings: Settings,
-  canVibrate: boolean,
+  show: { scaling: boolean; vibration: boolean },
   actions: {
     cycleScaling: () => void;
     toggleCrt: () => void;
@@ -45,13 +48,17 @@ export const optionsMenu = (
     back: () => void;
   },
 ): MenuItem[] => [
-  {
-    id: 'scaling',
-    label: 'SCALING',
-    tag: SCALING_LABEL[settings.scaling],
-    enabled: true,
-    onSelect: actions.cycleScaling,
-  },
+  ...(show.scaling
+    ? [
+        {
+          id: 'scaling',
+          label: 'SCALING',
+          tag: SCALING_LABEL[settings.scaling],
+          enabled: true,
+          onSelect: actions.cycleScaling,
+        },
+      ]
+    : []),
   {
     id: 'crt',
     label: 'CRT SCREEN',
@@ -59,7 +66,7 @@ export const optionsMenu = (
     enabled: true,
     onSelect: actions.toggleCrt,
   },
-  ...(canVibrate
+  ...(show.vibration
     ? [
         {
           id: 'vibration',

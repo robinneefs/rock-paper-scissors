@@ -2,7 +2,8 @@ import { SERVER_URL } from '../config/online';
 import type { SceneFlow } from '../scenes/flow';
 import type { MenuItem } from './MenuItem';
 
-export const homeMenu = (flow: SceneFlow): MenuItem[] => [
+/** `quit` adds QUIT at the bottom (the Android app; a browser tab can't close itself). */
+export const homeMenu = (flow: SceneFlow, quit?: () => void): MenuItem[] => [
   {
     id: 'cpu',
     label: 'START GAME',
@@ -16,4 +17,5 @@ export const homeMenu = (flow: SceneFlow): MenuItem[] => [
     : { id: 'online', label: 'ONLINE', tag: 'SOON', enabled: false },
   { id: 'howto', label: 'HOW TO PLAY', enabled: true, onSelect: () => flow.toHowTo() },
   { id: 'options', label: 'OPTIONS', enabled: true, onSelect: () => flow.toOptions() },
+  ...(quit ? [{ id: 'quit', label: 'QUIT', enabled: true, onSelect: quit }] : []),
 ];

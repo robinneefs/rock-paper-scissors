@@ -14,6 +14,7 @@ import {
   volumeTag,
   type VolumeId,
 } from '../menus/optionsMenu';
+import { isNativeApp } from '../platform/native';
 import { nextScalingMode, stepVolume } from '../platform/settings';
 import { MenuView } from '../views/MenuView';
 import { PixelText } from '../views/PixelText';
@@ -23,6 +24,7 @@ import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
 
 const VOLUME_KEY = { music: 'musicVolume', sfx: 'sfxVolume' } as const;
+const NO_HINT: [string, string] = ['', ''];
 
 /**
  * Options: how the cabinet scales to the window, the CRT look, vibration (phones only) and sound
@@ -39,7 +41,10 @@ export class OptionsScene extends Phaser.Scene {
     const cx = MONITOR.width / 2;
     addMenuBackdrop(this);
     this.add.tileSprite(0, 0, MONITOR.width, MONITOR.height, Tex.dither).setOrigin(0);
-    const tight = haptics.supported;
+    // SCALING only in the browser (the Android app always fills the screen), VIBRATION only on phones
+    const listed = { scaling: !isNativeApp(), vibration: haptics.supported };
+    // with all seven items listed they sit closer together so the hint still fits underneath
+    const tight = listed.scaling && listed.vibration;
     new PixelText(this, cx, tight ? 15 : 20, 'OPTIONS', {
       size: 3,
       color: palette.cyan,
@@ -71,7 +76,7 @@ export class OptionsScene extends Phaser.Scene {
     };
     const menu = new MenuView(
       this,
-      optionsMenu(settings.value, haptics.supported, {
+      optionsMenu(settings.value, listed, {
         cycleScaling,
         toggleCrt,
         toggleVibration,
@@ -79,7 +84,6 @@ export class OptionsScene extends Phaser.Scene {
         stepVolume: (id) => changeVolume(id, 1, true),
         back,
       }),
-      // with VIBRATION listed the items sit closer together so the hint still fits underneath
       tight ? 40 : 44,
       input,
       audio,
@@ -113,7 +117,9 @@ export class OptionsScene extends Phaser.Scene {
             ? CRT_HINT
             : id === 'vibration'
               ? VIBRATION_HINT
-              : SCALING_HINT[s.scaling];
+              : listed.scaling
+                ? SCALING_HINT[s.scaling]
+                : NO_HINT;
       lines.forEach((line, i) => hint[i]?.setText(line));
     };
     show();

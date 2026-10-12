@@ -5,9 +5,9 @@ import { palette } from './config/palette';
 import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
 import { deviceHaptics, Haptics } from './platform/haptics';
-import { hookBackButton } from './platform/native';
+import { hookBackButton, isNativeApp, onAppActive } from './platform/native';
 import { PixelScaler } from './platform/PixelScaler';
-import { browserStore, SettingsStore } from './platform/settings';
+import { browserStore, SettingsStore, type ScalingMode, type Settings } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
 import { CabinetScene } from './scenes/CabinetScene';
 import { CabinetShake } from './fx/cabinetShake';
@@ -27,7 +27,9 @@ import { TransitionScene } from './scenes/TransitionScene';
 import { VERSION } from './version';
 
 const settings = new SettingsStore(browserStore());
-const scaler = new PixelScaler(settings.value.scaling);
+// the Android app always fills the screen (Options has no SCALING there)
+const scalingOf = (s: Settings): ScalingMode => (isNativeApp() ? 'fillHeight' : s.scaling);
+const scaler = new PixelScaler(scalingOf(settings.value));
 const { width, height } = scaler.layout;
 
 const game = new Phaser.Game({
@@ -87,7 +89,14 @@ hookBackButton(
   () => input.back(),
 );
 
-settings.onChange((s) => scaler.setMode(s.scaling));
+// the Android app in the background (home button, another app): the same as a hidden browser tab,
+// so the game loop and a CPU match wait, and all sound stops until it comes back
+onAppActive((active) => {
+  game.events.emit(active ? Phaser.Core.Events.VISIBLE : Phaser.Core.Events.HIDDEN);
+  game.events.emit(active ? Phaser.Core.Events.FOCUS : Phaser.Core.Events.BLUR);
+});
+
+settings.onChange((s) => scaler.setMode(scalingOf(s)));
 scaler.onChange((l) => {
   game.scale.resize(l.width, l.height);
   game.scale.setZoom(scaler.zoom);
