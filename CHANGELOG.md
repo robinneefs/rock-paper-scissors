@@ -2,6 +2,11 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Version numbers follow semver: a new feature bumps the middle number (1.0.0 → 1.1.0), a fix-only build bumps the last (1.0.0 → 1.0.1). Each version that goes live is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches the `production` branch.
 
+## 1.1.0 (2026-10-12)
+
+- **Vibration on phones.** The phone now buzzes along with every screen shake: a short tap on a clash, a firmer buzz the harder the hit (paper, rock, scissors), a double rumble on a K.O., and a tap when the timer runs out. Buzzes are kept short (40 ms at most) so they never get harsh. Works in phone browsers that support vibration (Android Chrome and Firefox; iPhone Safari does not) and is ready for the Android app, where it can also buzz softer or harder. Tune it under `haptics` in the dev tuning panel.
+- **VIBRATION in Options.** On by default; select it to turn it off (turning it back on gives a short buzz so you feel it). It is only listed on a device that can vibrate.
+
 ## 1.0.0 (2026-10-12)
 
 The first public release, live at https://robinneefs.github.io/rps-rivals/. Everything since 0.5.4 (the build that was live until now) is listed in the entries below; in short:

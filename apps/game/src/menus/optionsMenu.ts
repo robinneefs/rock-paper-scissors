@@ -27,13 +27,19 @@ export const onOffTag = (on: boolean): string => (on ? 'ON' : 'OFF');
 /** Under the menu while the cursor is on CRT SCREEN. */
 export const CRT_HINT: [string, string] = ['SCANLINES AND A SOFT GLOW', 'LIKE AN OLD ARCADE TUBE'];
 
+/** Under the menu while the cursor is on VIBRATION. */
+export const VIBRATION_HINT: [string, string] = ['THE PHONE BUZZES WITH', 'EVERY SCREEN SHAKE'];
+
 export type VolumeId = 'music' | 'sfx';
 
+/** VIBRATION is only listed on a device that can vibrate. */
 export const optionsMenu = (
   settings: Settings,
+  canVibrate: boolean,
   actions: {
     cycleScaling: () => void;
     toggleCrt: () => void;
+    toggleVibration: () => void;
     toggleSound: () => void;
     stepVolume: (id: VolumeId) => void;
     back: () => void;
@@ -53,6 +59,17 @@ export const optionsMenu = (
     enabled: true,
     onSelect: actions.toggleCrt,
   },
+  ...(canVibrate
+    ? [
+        {
+          id: 'vibration',
+          label: 'VIBRATION',
+          tag: onOffTag(settings.vibration),
+          enabled: true,
+          onSelect: actions.toggleVibration,
+        },
+      ]
+    : []),
   {
     id: 'sound',
     label: 'SOUND',

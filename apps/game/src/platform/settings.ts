@@ -23,6 +23,8 @@ export interface Settings {
   sfxVolume: number;
   /** The CRT screen look: scanlines, glow and rounded corners on the monitor (WebGL only). */
   crt: boolean;
+  /** The phone buzzes along with the screen shake (only on phones that can vibrate). */
+  vibration: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,6 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   musicVolume: 6,
   sfxVolume: 8,
   crt: true,
+  vibration: true,
 };
 
 /** The part of the Web Storage API we use (localStorage now, Capacitor Preferences later). */
@@ -80,6 +83,7 @@ function load(store: KeyValueStore | null): Settings {
       musicVolume: volume(saved.musicVolume, DEFAULT_SETTINGS.musicVolume),
       sfxVolume: volume(saved.sfxVolume, DEFAULT_SETTINGS.sfxVolume),
       crt: typeof saved.crt === 'boolean' ? saved.crt : DEFAULT_SETTINGS.crt,
+      vibration: typeof saved.vibration === 'boolean' ? saved.vibration : DEFAULT_SETTINGS.vibration,
     };
   } catch {
     return DEFAULT_SETTINGS;

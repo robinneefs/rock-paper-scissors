@@ -4,6 +4,7 @@ import { AudioService } from './audio/AudioService';
 import { palette } from './config/palette';
 import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
+import { deviceHaptics, Haptics } from './platform/haptics';
 import { PixelScaler } from './platform/PixelScaler';
 import { browserStore, SettingsStore } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
@@ -53,6 +54,7 @@ const game = new Phaser.Game({
 const audio = new AudioService(game, settings);
 const flow = new SceneFlow(game, audio);
 const cabinetShake = new CabinetShake();
+const haptics = new Haptics(deviceHaptics(), () => settings.value.vibration, tuning.haptics);
 setContext(game, {
   input: new InputRouter(),
   scaler,
@@ -61,6 +63,7 @@ setContext(game, {
   lights: new CabinetLights(),
   audio,
   cabinetShake,
+  haptics,
 });
 
 // the CRT screen: a shader on the monitor cameras (WebGL) plus the scanline overlay in the page
