@@ -36,6 +36,22 @@ export const tuning = {
   },
   hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } as Record<number, number> },
   shake: { byDamage: { 10: 2, 15: 3, 20: 4 } as Record<number, number>, durationMs: 280, koPx: 5 },
+  /**
+   * Phone vibration (Options > VIBRATION) on every screen shake, scaled to it: msPerPx of buzz per
+   * pixel of shake, kept between minMs and maxMs so it is felt but never harsh. Shakes up to
+   * lightUpToPx are a light buzz, up to mediumUpToPx medium, bigger heavy (strength only in the
+   * Android app; browsers just buzz longer). A K.O. is koPattern (buzz, pause, buzz). A weaker buzz
+   * within quietAfterMs of a stronger one is dropped.
+   */
+  haptics: {
+    msPerPx: 8,
+    minMs: 12,
+    maxMs: 40,
+    lightUpToPx: 1,
+    mediumUpToPx: 3,
+    quietAfterMs: 120,
+    koPattern: [40, 70, 20],
+  },
   flash: { frames: 2, frameMs: 33 },
   /** The K.O. hit freezes on a white frame for freezeMs, then plays at slowScale speed for slowMs (real time). */
   ko: { freezeMs: 110, flashAlpha: 0.85, slowScale: 0.3, slowMs: 650 },

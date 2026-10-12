@@ -7,7 +7,7 @@ export type NavDir = 'up' | 'down' | 'left' | 'right';
 export type Action =
   | { type: 'pick'; move: Move } // a cabinet button (keys 1/2/3 or a tap); menus treat it as confirm
   | { type: 'confirm' } // Enter, Space
-  | { type: 'back' } // Esc (Android back later)
+  | { type: 'back' } // Esc, or the phone's back button in the Android app
   | { type: 'nav'; dir: NavDir } // joystick or arrow keys
   | { type: 'char'; char: string }; // a typed letter A to Z, by the keyboard's layout (room codes)
 
@@ -57,6 +57,11 @@ export class InputRouter {
 
   on<E extends keyof InputEvents>(event: E, fn: (payload: InputEvents[E]) => void): () => void {
     return this.events.on(event, fn);
+  }
+
+  /** Back out, like Esc (the phone's back button in the Android app). */
+  back(): void {
+    this.events.emit('action', { type: 'back' });
   }
 
   /** Cabinet button pressed (key or tap). */

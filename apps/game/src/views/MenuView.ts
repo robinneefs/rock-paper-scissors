@@ -37,10 +37,11 @@ export class MenuView {
     input: InputRouter,
     private readonly sfx: SfxPlayer,
     width = 136,
+    private readonly gap = GAP,
   ) {
     this.x = Math.round((MONITOR.width - width) / 2);
     this.itemW = width - PAD * 2;
-    const h = PAD * 2 + items.length * ITEM_H + (items.length - 1) * GAP;
+    const h = PAD * 2 + items.length * ITEM_H + (items.length - 1) * gap;
     this.bottom = y + h;
     this.selected = Math.max(
       0,
@@ -138,7 +139,7 @@ export class MenuView {
   }
 
   private itemY(i: number): number {
-    return this.y + PAD + i * (ITEM_H + GAP);
+    return this.y + PAD + i * (ITEM_H + this.gap);
   }
 
   private draw(): void {

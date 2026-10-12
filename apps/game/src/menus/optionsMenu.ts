@@ -27,25 +27,38 @@ export const onOffTag = (on: boolean): string => (on ? 'ON' : 'OFF');
 /** Under the menu while the cursor is on CRT SCREEN. */
 export const CRT_HINT: [string, string] = ['SCANLINES AND A SOFT GLOW', 'LIKE AN OLD ARCADE TUBE'];
 
+/** Under the menu while the cursor is on VIBRATION. */
+export const VIBRATION_HINT: [string, string] = ['THE PHONE BUZZES WITH', 'EVERY SCREEN SHAKE'];
+
 export type VolumeId = 'music' | 'sfx';
 
+/**
+ * SCALING is left out of the Android app (it always fills the screen); VIBRATION is only listed on
+ * a device that can vibrate.
+ */
 export const optionsMenu = (
   settings: Settings,
+  show: { scaling: boolean; vibration: boolean },
   actions: {
     cycleScaling: () => void;
     toggleCrt: () => void;
+    toggleVibration: () => void;
     toggleSound: () => void;
     stepVolume: (id: VolumeId) => void;
     back: () => void;
   },
 ): MenuItem[] => [
-  {
-    id: 'scaling',
-    label: 'SCALING',
-    tag: SCALING_LABEL[settings.scaling],
-    enabled: true,
-    onSelect: actions.cycleScaling,
-  },
+  ...(show.scaling
+    ? [
+        {
+          id: 'scaling',
+          label: 'SCALING',
+          tag: SCALING_LABEL[settings.scaling],
+          enabled: true,
+          onSelect: actions.cycleScaling,
+        },
+      ]
+    : []),
   {
     id: 'crt',
     label: 'CRT SCREEN',
@@ -53,6 +66,17 @@ export const optionsMenu = (
     enabled: true,
     onSelect: actions.toggleCrt,
   },
+  ...(show.vibration
+    ? [
+        {
+          id: 'vibration',
+          label: 'VIBRATION',
+          tag: onOffTag(settings.vibration),
+          enabled: true,
+          onSelect: actions.toggleVibration,
+        },
+      ]
+    : []),
   {
     id: 'sound',
     label: 'SOUND',

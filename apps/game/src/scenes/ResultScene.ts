@@ -11,7 +11,7 @@ import type { ResultData } from './flow';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
 
-/** Over the last fight frame: who won, the round score, and RETRY / MAIN MENU. */
+/** Over the last fight frame: who won, the round score, and REMATCH / MAIN MENU. */
 export class ResultScene extends Phaser.Scene {
   private result!: ResultData;
 

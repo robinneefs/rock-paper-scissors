@@ -2,6 +2,14 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Version numbers follow semver: a new feature bumps the middle number (1.0.0 → 1.1.0), a fix-only build bumps the last (1.0.0 → 1.0.1). Each version that goes live is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches the `production` branch.
 
+## 1.1.0 (2026-10-12)
+
+- **Vibration on phones.** The phone now buzzes along with every screen shake: a short tap on a clash, a firmer buzz the harder the hit (paper, rock, scissors), a double rumble on a K.O., and a tap when the timer runs out. Buzzes are kept short (40 ms at most) so they never get harsh. Works in phone browsers that support vibration (Android Chrome and Firefox; iPhone Safari does not) and is ready for the Android app, where it can also buzz softer or harder. Tune it under `haptics` in the dev tuning panel.
+- **VIBRATION in Options.** On by default; select it to turn it off (turning it back on gives a short buzz so you feel it). It is only listed on a device that can vibrate.
+- **An Android app (first build, not on Google Play yet).** The game now also comes as an Android app, built with Capacitor from the same code: run `npm run android` to open it in Android Studio and play it on a phone. It fills the whole screen in portrait, plays online against the live server, buzzes through the phone's own haptics, and the phone's back button backs out of menus (and leaves the app from the home screen). Launcher icon (the Rock button), splash screen and Play Store art are made from the game's art. How to build, sign and upload: `apps/android/README.md`.
+- **App only: no SCALING, a QUIT button, and a pause in the background.** The app always fills the screen, so Options leaves SCALING out. The home menu has QUIT at the bottom. When you switch to another app or go to the home screen, the game pauses: the music and sounds stop, and a match against the CPU waits for you (an online match can't wait, since your rival plays on).
+- **REMATCH.** The button after a match now says REMATCH instead of RETRY.
+
 ## 1.0.0 (2026-10-12)
 
 The first public release, live at https://robinneefs.github.io/rps-rivals/. Everything since 0.5.4 (the build that was live until now) is listed in the entries below; in short:

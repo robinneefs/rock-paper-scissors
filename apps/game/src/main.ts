@@ -4,8 +4,10 @@ import { AudioService } from './audio/AudioService';
 import { palette } from './config/palette';
 import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
+import { deviceHaptics, Haptics } from './platform/haptics';
+import { hookBackButton, isNativeApp, onAppActive } from './platform/native';
 import { PixelScaler } from './platform/PixelScaler';
-import { browserStore, SettingsStore } from './platform/settings';
+import { browserStore, SettingsStore, type ScalingMode, type Settings } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
 import { CabinetScene } from './scenes/CabinetScene';
 import { CabinetShake } from './fx/cabinetShake';
@@ -20,11 +22,14 @@ import { LogoScene } from './scenes/LogoScene';
 import { HowToScene } from './scenes/HowToScene';
 import { OptionsScene } from './scenes/OptionsScene';
 import { ResultScene } from './scenes/ResultScene';
+import { SceneKey } from './scenes/keys';
 import { TransitionScene } from './scenes/TransitionScene';
 import { VERSION } from './version';
 
 const settings = new SettingsStore(browserStore());
-const scaler = new PixelScaler(settings.value.scaling);
+// the Android app always fills the screen (Options has no SCALING there)
+const scalingOf = (s: Settings): ScalingMode => (isNativeApp() ? 'fillHeight' : s.scaling);
+const scaler = new PixelScaler(scalingOf(settings.value));
 const { width, height } = scaler.layout;
 
 const game = new Phaser.Game({
@@ -53,14 +58,17 @@ const game = new Phaser.Game({
 const audio = new AudioService(game, settings);
 const flow = new SceneFlow(game, audio);
 const cabinetShake = new CabinetShake();
+const haptics = new Haptics(deviceHaptics(), () => settings.value.vibration, tuning.haptics);
+const input = new InputRouter();
 setContext(game, {
-  input: new InputRouter(),
+  input,
   scaler,
   settings,
   flow,
   lights: new CabinetLights(),
   audio,
   cabinetShake,
+  haptics,
 });
 
 // the CRT screen: a shader on the monitor cameras (WebGL) plus the scanline overlay in the page
@@ -75,7 +83,20 @@ game.events.once(Phaser.Core.Events.READY, () => {
   settings.onChange((s) => apply(s.crt));
 });
 
-settings.onChange((s) => scaler.setMode(s.scaling));
+// the Android app: the phone's back button backs out of menus, and leaves the app from home
+hookBackButton(
+  () => game.scene.isActive(SceneKey.home),
+  () => input.back(),
+);
+
+// the Android app in the background (home button, another app): the same as a hidden browser tab,
+// so the game loop and a CPU match wait, and all sound stops until it comes back
+onAppActive((active) => {
+  game.events.emit(active ? Phaser.Core.Events.VISIBLE : Phaser.Core.Events.HIDDEN);
+  game.events.emit(active ? Phaser.Core.Events.FOCUS : Phaser.Core.Events.BLUR);
+});
+
+settings.onChange((s) => scaler.setMode(scalingOf(s)));
 scaler.onChange((l) => {
   game.scale.resize(l.width, l.height);
   game.scale.setZoom(scaler.zoom);

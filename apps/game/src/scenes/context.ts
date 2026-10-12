@@ -3,6 +3,7 @@ import type Phaser from 'phaser';
 import type { AudioService } from '../audio/AudioService';
 import type { CabinetShake } from '../fx/cabinetShake';
 import type { InputRouter } from '../input/InputRouter';
+import type { Haptics } from '../platform/haptics';
 import type { PixelScaler } from '../platform/PixelScaler';
 import type { SettingsStore } from '../platform/settings';
 import type { SceneFlow } from './flow';
@@ -36,6 +37,7 @@ export interface GameContext {
   lights: CabinetLights;
   audio: AudioService;
   cabinetShake: CabinetShake;
+  haptics: Haptics;
 }
 
 const KEY = 'gameContext';
