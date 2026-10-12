@@ -24,8 +24,6 @@
 
 vs the CPU, or vs a friend online with a 4-letter room code
 
-<sub>Online: one player picks **ONLINE → CREATE ROOM** and reads out the code, the other picks **JOIN ROOM** and types it in.</sub>
-
 </div>
 
 ---
