@@ -1,7 +1,5 @@
 # RPS Rivals
 
-**[▶ Play it in your browser](https://robinneefs.github.io/rps-rivals/)** on desktop or on a phone held upright, no install needed. ([Staging copy](https://robinneefs.github.io/rps-rivals/staging/) with the newest changes, for testing.)
-
 <div align="center">
 
 [![Built by Claude](https://img.shields.io/badge/built_by-Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](https://claude.ai/code)
