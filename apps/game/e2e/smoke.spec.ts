@@ -84,6 +84,20 @@ test('the logo can be skipped with any button', async ({ page }) => {
   expect(await scenes(page)).toContain('Home');
 });
 
+test('buttons mashed while the game is still loading never freeze it', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('http://localhost:5174/', { waitUntil: 'commit' });
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press('Digit1');
+    await page.waitForTimeout(50);
+  }
+  await expect
+    .poll(() => page.evaluate(() => window.__rps?.scenes() ?? []), { timeout: 10_000 })
+    .not.toContain('Logo');
+  expect(errors).toEqual([]);
+});
+
 test('scaling fills the height by default; options switches it and remembers', async ({ page }) => {
   await pausedClock(page);
   await page.goto('http://localhost:5174/');

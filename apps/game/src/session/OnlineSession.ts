@@ -80,6 +80,9 @@ export class OnlineSession implements MatchSession {
     this.send({ type: 'rematch' });
   }
 
+  /** The room keeps time for both players, so a hidden tab can't stop it. */
+  setPaused(): void {}
+
   /** The room code's hash plus the rematch count: the same on both machines, never random. */
   stageSeed(): number {
     let h = 0;

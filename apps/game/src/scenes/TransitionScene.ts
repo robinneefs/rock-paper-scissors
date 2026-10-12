@@ -11,7 +11,7 @@ import { useMonitorCamera } from './monitor';
  * screen swaps, then it all plays backwards to switch back on. Steps in whole pixels.
  */
 export class TransitionScene extends Phaser.Scene {
-  private gfx!: Phaser.GameObjects.Graphics;
+  private gfx: Phaser.GameObjects.Graphics | null = null;
 
   constructor() {
     super(SceneKey.transition);
@@ -23,6 +23,13 @@ export class TransitionScene extends Phaser.Scene {
   }
 
   wipe(swap: () => void, done: () => void): void {
+    // a key pressed while the game is still starting up can ask for a wipe before this scene exists
+    const gfx = this.gfx;
+    if (!gfx) {
+      swap();
+      done();
+      return;
+    }
     const { closeMs, lineMs, offMs, stepMs } = tuning.transitions;
     const W = MONITOR.width;
     const H = MONITOR.height;
@@ -30,23 +37,23 @@ export class TransitionScene extends Phaser.Scene {
     // one frame of the switch-off: t runs 0..1 over closing, then 0..1 over the line shrinking
     const closing = (t: number) => {
       const open = Math.max(2, Math.round((H / 2) * (1 - t)));
-      this.gfx
+      gfx
         .clear()
         .fillStyle(palette.black)
         .fillRect(0, 0, W, mid - open)
         .fillRect(0, mid + open, W, H - mid - open);
-      if (t > 0.6) this.gfx.fillStyle(palette.white, (t - 0.6) / 0.4).fillRect(0, mid - open, W, open * 2);
+      if (t > 0.6) gfx.fillStyle(palette.white, (t - 0.6) / 0.4).fillRect(0, mid - open, W, open * 2);
     };
     const shrinking = (t: number) => {
       const half = Math.max(1, Math.round((W / 2) * (1 - t) ** 2));
-      this.gfx
+      gfx
         .clear()
         .fillStyle(palette.black)
         .fillRect(0, 0, W, H)
         .fillStyle(palette.white)
         .fillRect(Math.floor(W / 2) - half, mid - 1, half * 2, 2);
     };
-    const black = () => this.gfx.clear().fillStyle(palette.black).fillRect(0, 0, W, H);
+    const black = () => gfx.clear().fillStyle(palette.black).fillRect(0, 0, W, H);
 
     // the whole sequence as frames: [draw, duration of its part]
     const frames: (() => void)[] = [];
@@ -71,7 +78,7 @@ export class TransitionScene extends Phaser.Scene {
         if (i === swapAt) swap();
         if (i < frames.length) frames[i]!();
         else {
-          this.gfx.clear();
+          gfx.clear();
           done();
         }
         i++;

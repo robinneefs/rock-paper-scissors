@@ -2,6 +2,15 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Versions stay under 1.0 while the game is early: a new feature bumps the middle number (0.2.0 → 0.3.0), a fix-only build bumps the last (0.2.0 → 0.2.1). Each version is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches main.
 
+## 0.11.1 (2026-10-12)
+
+Fixes from a bug hunt before 1.0.
+
+- **No more freeze when keys are pressed while the game loads.** Pressing a button or a key before the studio logo had finished starting up could leave the screen black for good. Now the game just skips ahead.
+- **Online: no more dead RETRY when the rival leaves at the K.O.** If the other player left in the moment between the final K.O. and the result screen, the result screen still opened and RETRY waited for a rival who was gone. Now you see RIVAL LEFT and go back to the menu, as at any other moment. The RIVAL LEFT banner also no longer shows through behind the result screen.
+- **A CPU match waits while the tab is hidden.** Switching to another tab or app mid-match used to let the match play on unseen, with picks made for you, so you came back to a lost round. Now the timer and the CPU wait until you're back. Online matches can't wait, since your rival is still playing.
+- **Lobby buttons no longer cover the hint text.** The BACK and CANCEL buttons on the join and new-room screens sat on top of the hint at the bottom; they're moved up.
+
 ## 0.11.0 (2026-10-11)
 
 - **Polished cabinet buttons.** Each button now sits in a chrome collar, has a rounded side lit from the left, a cap with a raised rim that catches the light at the back, a sharp glint, and an embossed icon. Buttons brighten when the mouse is over them, look pushed into shadow when pressed, and every few seconds a glint sweeps across all three, left to right. Tune the glint under `buttons` in the dev tuning panel.
@@ -11,7 +20,6 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 - **CRT screen transitions.** Changing screens now switches the monitor off and on like an old tube: the picture closes to a bright line, shrinks to a dot and goes black, then opens back up on the new screen. Tune it under `transitions`.
 - **How to Play.** A new HOW TO PLAY item on the home menu opens a short card: rock beats scissors, scissors beats paper, paper beats rock, how much damage a winning hit does with each (rock 15, scissors 20, paper 10), and the few rules (pick with buttons 1 2 3 before the timer runs out, a pick is made for you if you don't, the same move is a clash, win 2 rounds). Any button goes back.
 - **A wood-grain cabinet.** The cabinet body has a subtle wood grain (down the sides, along the front face), and a bit of wear: light scratches on the front of the control panel and the sides, and the pink trim on the front lip rubbed paler where hands rest.
-
 - **A proper browser tab and link preview.** The tab now reads "RPS Rivals: Rock Paper Scissors Fighter" with a pixel-art Rock button as its icon (also used when the game is added to a phone's home screen), and links shared on social sites and chat apps show the marquee and the three buttons with "PLAY FREE IN YOUR BROWSER". Made from the game's own art by `tools/make-icons.mjs`.
 - **New README and screenshots.** A big PLAY button, a description of the game, fresh screenshots of every screen (including How to Play and the K.O.), the technologies used, an architecture diagram, and a full list of where every asset comes from.
 

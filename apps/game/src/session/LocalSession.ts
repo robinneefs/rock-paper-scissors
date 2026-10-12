@@ -12,6 +12,7 @@ import {
 } from '@rps/core';
 import type { MatchSession, MatchView, SessionEvents } from './MatchSession';
 import type { MoveSource } from './MoveSource';
+import { PausableClock } from './PausableClock';
 
 /** A match on this device: owns the referee; the opponent's picks come from a move source. */
 export class LocalSession implements MatchSession {
@@ -24,14 +25,18 @@ export class LocalSession implements MatchSession {
   /** Picks the first stage; its own Math.random so the referee's rng sequence is untouched. */
   private readonly stageBase = Math.floor(Math.random() * 1000);
   private rematches = 0;
+  /** The match's own time, so it can stop while nobody is watching. */
+  private readonly clock: PausableClock;
 
   constructor(
     readonly rules: RulesConfig,
     timings: PhaseTimings,
-    private readonly clock: Clock,
+    baseClock: Clock,
     private readonly rng: Rng,
     private readonly opponent: MoveSource,
   ) {
+    this.clock = new PausableClock(baseClock);
+    const clock = this.clock;
     this.referee = new Referee(rules, timings, clock, rng);
     const them = opponentOf(this.me);
     this.unsubs.push(
@@ -60,6 +65,12 @@ export class LocalSession implements MatchSession {
 
   submitPick(move: Move): void {
     if (this.referee.submitPick(this.me, move)) this.myPick = move;
+  }
+
+  /** The whole match waits, timers and the CPU included. */
+  setPaused(paused: boolean): void {
+    if (paused) this.clock.pause();
+    else this.clock.resume();
   }
 
   /** Locally the CPU always agrees; the next ready() starts the new match. */

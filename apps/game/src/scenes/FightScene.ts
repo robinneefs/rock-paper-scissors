@@ -45,15 +45,23 @@ export class FightScene extends Phaser.Scene {
     const hud = new HudView(this, hudNames(session, setup), session.rules.startHealth);
     const clash = new ClashView(this);
     const banner = new BannerView(this, 64);
+    /** Online, the rival left or the connection dropped: the match is over without a result. */
+    let endedEarly = false;
 
     new FightDirector(this, session, { fighters, clash, hud, banner }, audio, session.rules.roundsToWin, {
       clearPick: () => lights.select(null),
-      matchOver: (winner, state) => flow.toResult({ setup, session, winner, state }),
+      // online, the rival can leave in the moment between the K.O. and the result screen
+      matchOver: (winner, state) => {
+        if (!endedEarly) flow.toResult({ setup, session, winner, state });
+      },
       shakeCabinet: (px, ms) => cabinetShake.kick(px, ms),
     });
 
     // online only: the match ends early if the other player leaves or the connection drops
+    // (once the result screen is up, it says so itself)
     const endEarly = (text: string) => {
+      if (endedEarly || !this.scene.isActive()) return;
+      endedEarly = true;
       banner.show(text, { color: palette.pink, holdMs: Infinity });
       this.time.delayedCall(tuning.online.endedHoldMs, () => flow.toHome());
     };
@@ -69,8 +77,16 @@ export class FightScene extends Phaser.Scene {
       session.on('opponentLeft', () => endEarly('RIVAL LEFT')),
       session.on('disconnected', () => endEarly('OFFLINE')),
     ];
+    // a hidden tab stops drawing, so a CPU match waits for the player to come back
+    const hide = () => session.setPaused(true);
+    const show = () => session.setPaused(false);
+    this.game.events.on(Phaser.Core.Events.HIDDEN, hide);
+    this.game.events.on(Phaser.Core.Events.VISIBLE, show);
     this.events.once('shutdown', () => {
       offs.forEach((off) => off());
+      this.game.events.off(Phaser.Core.Events.HIDDEN, hide);
+      this.game.events.off(Phaser.Core.Events.VISIBLE, show);
+      session.setPaused(false);
       lights.select(null);
     });
     this.hud = hud;
