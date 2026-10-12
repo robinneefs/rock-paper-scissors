@@ -10,6 +10,8 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       '**/.wrangler/**',
+      // the Android native project (Capacitor copies the built game into it)
+      'apps/android/android/**',
       '**/node_modules/**',
       'docs/**',
       'sources/**',

@@ -5,6 +5,7 @@ import { palette } from './config/palette';
 import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
 import { deviceHaptics, Haptics } from './platform/haptics';
+import { hookBackButton } from './platform/native';
 import { PixelScaler } from './platform/PixelScaler';
 import { browserStore, SettingsStore } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
@@ -21,6 +22,7 @@ import { LogoScene } from './scenes/LogoScene';
 import { HowToScene } from './scenes/HowToScene';
 import { OptionsScene } from './scenes/OptionsScene';
 import { ResultScene } from './scenes/ResultScene';
+import { SceneKey } from './scenes/keys';
 import { TransitionScene } from './scenes/TransitionScene';
 import { VERSION } from './version';
 
@@ -55,8 +57,9 @@ const audio = new AudioService(game, settings);
 const flow = new SceneFlow(game, audio);
 const cabinetShake = new CabinetShake();
 const haptics = new Haptics(deviceHaptics(), () => settings.value.vibration, tuning.haptics);
+const input = new InputRouter();
 setContext(game, {
-  input: new InputRouter(),
+  input,
   scaler,
   settings,
   flow,
@@ -77,6 +80,12 @@ game.events.once(Phaser.Core.Events.READY, () => {
   apply(settings.value.crt);
   settings.onChange((s) => apply(s.crt));
 });
+
+// the Android app: the phone's back button backs out of menus, and leaves the app from home
+hookBackButton(
+  () => game.scene.isActive(SceneKey.home),
+  () => input.back(),
+);
 
 settings.onChange((s) => scaler.setMode(s.scaling));
 scaler.onChange((l) => {

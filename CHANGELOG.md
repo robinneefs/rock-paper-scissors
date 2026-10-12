@@ -6,6 +6,7 @@ Every build that goes online gets a new version number (in `apps/game/package.js
 
 - **Vibration on phones.** The phone now buzzes along with every screen shake: a short tap on a clash, a firmer buzz the harder the hit (paper, rock, scissors), a double rumble on a K.O., and a tap when the timer runs out. Buzzes are kept short (40 ms at most) so they never get harsh. Works in phone browsers that support vibration (Android Chrome and Firefox; iPhone Safari does not) and is ready for the Android app, where it can also buzz softer or harder. Tune it under `haptics` in the dev tuning panel.
 - **VIBRATION in Options.** On by default; select it to turn it off (turning it back on gives a short buzz so you feel it). It is only listed on a device that can vibrate.
+- **An Android app (first build, not on Google Play yet).** The game now also comes as an Android app, built with Capacitor from the same code: run `npm run android` to open it in Android Studio and play it on a phone. It fills the whole screen in portrait, plays online against the live server, buzzes through the phone's own haptics, and the phone's back button backs out of menus (and leaves the app from the home screen). Launcher icon (the Rock button), splash screen and Play Store art are made from the game's art. How to build, sign and upload: `apps/android/README.md`.
 
 ## 1.0.0 (2026-10-12)
 

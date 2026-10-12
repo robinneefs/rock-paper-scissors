@@ -1,3 +1,5 @@
+import { isNativeApp, nativeImpact } from './native';
+
 /** How hard a buzz feels where the phone can tell (Android app); the web only has on/off and length. */
 export type HapticLevel = 'light' | 'medium' | 'heavy';
 
@@ -89,16 +91,6 @@ function level(px: number, t: HapticTuning): HapticLevel {
   return px <= t.lightUpToPx ? 'light' : px <= t.mediumUpToPx ? 'medium' : 'heavy';
 }
 
-/** The Capacitor Haptics plugin as the Android app exposes it (no import: the web build doesn't ship it). */
-interface CapacitorHaptics {
-  impact(options: { style: 'LIGHT' | 'MEDIUM' | 'HEAVY' }): Promise<void>;
-}
-
-interface CapacitorGlobal {
-  isNativePlatform?: () => boolean;
-  Plugins?: { Haptics?: CapacitorHaptics };
-}
-
 /**
  * The best way this device has to vibrate: inside the Android app the Capacitor Haptics plugin
  * (which can buzz softer or harder), in a phone browser the Vibration API (Android Chrome, Firefox;
@@ -106,19 +98,13 @@ interface CapacitorGlobal {
  */
 export function deviceHaptics(): HapticBackend | null {
   if (typeof window === 'undefined') return null;
-  const cap = (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
-  const native = cap?.isNativePlatform?.() ? cap.Plugins?.Haptics : undefined;
-  if (native) {
-    const style = { light: 'LIGHT', medium: 'MEDIUM', heavy: 'HEAVY' } as const;
+  if (isNativeApp()) {
     return {
       play(pattern, lvl) {
         // one impact per buzz; the pauses set when each one lands
         let at = 0;
         pattern.forEach((ms, i) => {
-          if (i % 2 === 0) {
-            const s = i === 0 ? style[lvl] : style.light;
-            setTimeout(() => void native.impact({ style: s }).catch(() => undefined), at);
-          }
+          if (i % 2 === 0) setTimeout(() => nativeImpact(i === 0 ? lvl : 'light'), at);
           at += ms;
         });
       },
