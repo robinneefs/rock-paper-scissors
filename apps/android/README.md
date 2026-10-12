@@ -11,7 +11,7 @@ The native Android Studio project is in `android/`. App id: `com.chainshift.rpsr
 
 After changing the game, run `npm run android:build` and press Run again.
 
-The app plays online against the live server (`apps/game/.env.android`). It is locked to portrait, hides the phone's status and navigation bars, buzzes with the screen shake (Options > VIBRATION) and the phone's back button backs out of menus and leaves the app from the home screen.
+The app plays online against the live server (`apps/game/src/config/online.ts`). It is locked to portrait, hides the phone's status and navigation bars, buzzes with the screen shake (Options > VIBRATION) and the phone's back button backs out of menus and leaves the app from the home screen.
 
 ## Version
 
