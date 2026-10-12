@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { defaultRules, Referee, seededRng, type PhaseTimings, type RefereeEvents } from '../src';
+import { defaultRules as gameRules, Referee, seededRng, type PhaseTimings, type RefereeEvents } from '../src';
 import { FakeClock } from './fakeClock';
 
 const timings: PhaseTimings = { roundIntroMs: 1000, pickMs: 5000, revealMs: 2000, roundOverMs: 3000 };
+
+// These tests count damage from a fixed 100 health, whatever the game's default is.
+const defaultRules = { ...gameRules, startHealth: 100 };
 
 function setup(rules = defaultRules, seed = 1) {
   const clock = new FakeClock();
@@ -28,7 +31,7 @@ describe('Referee', () => {
 
   it('starts idle and does nothing until started', () => {
     expect(t.referee.currentPhase).toBe('idle');
-    expect(t.referee.submitPick('p1', 'attack')).toBe(false);
+    expect(t.referee.submitPick('p1', 'rock')).toBe(false);
   });
 
   it('goes round intro, then picking, with end times on its clock', () => {
@@ -40,26 +43,26 @@ describe('Referee', () => {
 
   it('only accepts picks while picking', () => {
     t.referee.start();
-    expect(t.referee.submitPick('p1', 'attack')).toBe(false);
+    expect(t.referee.submitPick('p1', 'rock')).toBe(false);
     t.clock.advance(1000);
-    expect(t.referee.submitPick('p1', 'attack')).toBe(true);
+    expect(t.referee.submitPick('p1', 'rock')).toBe(true);
     t.clock.advance(5000);
     expect(t.referee.currentPhase).toBe('reveal');
-    expect(t.referee.submitPick('p1', 'block')).toBe(false);
+    expect(t.referee.submitPick('p1', 'paper')).toBe(false);
   });
 
   it('a pick can change until time is up; the last one counts; locked is sent once', () => {
     t.referee.start();
     t.clock.advance(1000);
-    t.referee.submitPick('p1', 'attack');
-    t.referee.submitPick('p1', 'block');
-    t.referee.submitPick('p2', 'attack');
+    t.referee.submitPick('p1', 'rock');
+    t.referee.submitPick('p1', 'paper');
+    t.referee.submitPick('p2', 'rock');
     t.clock.advance(4999);
     expect(t.log.reveal).toHaveLength(0);
     t.clock.advance(1);
     expect(t.log.locked).toEqual([{ side: 'p1' }, { side: 'p2' }]);
     expect(t.log.reveal[0]).toMatchObject({
-      picks: { p1: 'block', p2: 'attack' },
+      picks: { p1: 'paper', p2: 'rock' },
       autoPicked: { p1: false, p2: false },
       outcome: { kind: 'win', winner: 'p1', damage: 10 },
       state: { health: { p1: 100, p2: 90 } },
@@ -69,8 +72,8 @@ describe('Referee', () => {
   it('waits for the timer even when both have picked (picks stay changeable)', () => {
     t.referee.start();
     t.clock.advance(1000);
-    t.referee.submitPick('p1', 'attack');
-    t.referee.submitPick('p2', 'attack');
+    t.referee.submitPick('p1', 'rock');
+    t.referee.submitPick('p2', 'rock');
     t.clock.advance(100);
     expect(t.referee.currentPhase).toBe('picking');
   });
@@ -78,12 +81,12 @@ describe('Referee', () => {
   it('gives a random move to anyone without a pick when time is up', () => {
     t.referee.start();
     t.clock.advance(1000);
-    t.referee.submitPick('p2', 'throw');
+    t.referee.submitPick('p2', 'scissors');
     t.clock.advance(5000);
     const reveal = t.log.reveal[0]!;
     expect(reveal.autoPicked).toEqual({ p1: true, p2: false });
-    expect(['attack', 'throw', 'block']).toContain(reveal.picks.p1);
-    expect(reveal.picks.p2).toBe('throw');
+    expect(['rock', 'paper', 'scissors']).toContain(reveal.picks.p1);
+    expect(reveal.picks.p2).toBe('scissors');
   });
 
   it('random fallback picks are repeatable with the same seed and cover all moves', () => {
@@ -107,16 +110,16 @@ describe('Referee', () => {
       new Set(
         picksFor(7)
           .join('')
-          .match(/attack|throw|block/g),
+          .match(/rock|scissors|paper/g),
       ),
-    ).toEqual(new Set(['attack', 'throw', 'block']));
+    ).toEqual(new Set(['rock', 'paper', 'scissors']));
   });
 
   it('after the reveal window, picking starts again with fresh picks', () => {
     t.referee.start();
     t.clock.advance(1000);
-    t.referee.submitPick('p1', 'attack');
-    t.referee.submitPick('p2', 'attack');
+    t.referee.submitPick('p1', 'rock');
+    t.referee.submitPick('p2', 'rock');
     t.clock.advance(5000 + 2000);
     expect(t.referee.currentPhase).toBe('picking');
     expect(t.referee.hasPicked('p1')).toBe(false);
@@ -124,7 +127,7 @@ describe('Referee', () => {
 
   it('plays a whole best-of-three match through every phase', () => {
     t.referee.start();
-    const playExchange = (p1: 'attack' | 'throw' | 'block', p2: 'attack' | 'throw' | 'block') => {
+    const playExchange = (p1: 'rock' | 'scissors' | 'paper', p2: 'rock' | 'scissors' | 'paper') => {
       t.referee.submitPick('p1', p1);
       t.referee.submitPick('p2', p2);
       t.clock.advance(timings.pickMs);
@@ -132,7 +135,7 @@ describe('Referee', () => {
     // Round 1: p1 throws through blocks (5 x 20).
     t.clock.advance(timings.roundIntroMs);
     for (let i = 0; i < 5; i++) {
-      playExchange('throw', 'block');
+      playExchange('scissors', 'paper');
       if (i < 4) t.clock.advance(timings.revealMs);
     }
     t.clock.advance(timings.revealMs);
@@ -144,7 +147,7 @@ describe('Referee', () => {
     // Round 2: p2 counters attacks (10 x 10).
     t.clock.advance(timings.roundIntroMs);
     for (let i = 0; i < 10; i++) {
-      playExchange('attack', 'block');
+      playExchange('rock', 'paper');
       t.clock.advance(timings.revealMs);
     }
     t.clock.advance(timings.roundOverMs);
@@ -153,7 +156,7 @@ describe('Referee', () => {
     // Round 3: p2 attacks through throws (7 x 15).
     t.clock.advance(timings.roundIntroMs);
     for (let i = 0; i < 7; i++) {
-      playExchange('throw', 'attack');
+      playExchange('scissors', 'rock');
       t.clock.advance(timings.revealMs);
     }
     expect(t.log.matchOver).toHaveLength(0);
@@ -176,8 +179,8 @@ describe('Referee', () => {
   it('start() again is a rematch: fresh state, old timers cancelled', () => {
     t.referee.start();
     t.clock.advance(1000);
-    t.referee.submitPick('p1', 'throw');
-    t.referee.submitPick('p2', 'block');
+    t.referee.submitPick('p1', 'scissors');
+    t.referee.submitPick('p2', 'paper');
     t.clock.advance(5000);
     t.referee.start();
     expect(t.referee.matchState.health).toEqual({ p1: 100, p2: 100 });

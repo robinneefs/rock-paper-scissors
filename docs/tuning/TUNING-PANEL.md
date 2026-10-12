@@ -13,13 +13,13 @@ npm install        # once, or after pulling (installs Tweakpane)
 npm run dev        # http://localhost:5173
 ```
 
-The panel appears in the top-right corner. The backquote key (`` ` ``, left of 1) hides and shows it. Typing in the panel's number fields never reaches the game, so typing a 1 there doesn't pick Attack.
+The panel appears in the top-right corner. The backquote key (`` ` ``, left of 1) hides and shows it. Typing in the panel's number fields never reaches the game, so typing a 1 there doesn't pick Rock.
 
 ### What is in it
 
 | Section | What it holds | When a change applies |
 |---|---|---|
-| **Feel (live)** | Everything in `apps/game/src/config/tuning.ts`: reveal timing, hit pause, shake, flash, health bar drain, cabinet buttons, joystick, idle breathing, logo intro, screen wipes, menu cursor, banners, result delay | At once, while you play (a few values that set up an animation, like idle breathing, apply when the screen is next opened) |
+| **Feel (live)** | Everything in `apps/game/src/config/tuning.ts`: reveal timing, hit pause, shake, flash, K.O. slow motion, particles, health bar drain and timer, cabinet buttons and their glint, joystick and its wobble, cabinet rattle, idle breathing, logo intro, CRT screen transitions, menu cursor, banners, CRT shader, marquee flicker, result delay | At once, while you play (a few values that set up an animation, like idle breathing, apply when the screen is next opened) |
 | **Rules (next match)** | Start health, damage per move, rounds to win (`defaultRules` in `packages/core/src/config.ts`) | From the next match |
 | **Phase timings (next match)** | How long each phase lasts: round intro, picking countdown (`pickMs`), reveal, round over (`defaultTimings` in the same file) | From the next match |
 
@@ -55,7 +55,7 @@ pickMs: 3000 (was 5000)
    - **The hit:** `reveal.strikeAtMs`, `reveal.impactAtMs`, `hitPause`, `shake` and `flash`. They all fire on the same hit, so tune them together.
    - **The health bar:** `hud.drainMs` and `hud.trailDelayMs`.
    - **Pacing:** `pickMs`, `startHealth` and the other phase timings, pressing Restart match after each change.
-   - **Menus and transitions:** buttons, joystick, wipes, banners, intro.
+   - **Menus and transitions:** buttons, joystick, transitions, banners, intro, marquee.
 5. Hide the panel for the final check, and try it again a little later with fresh eyes.
 6. When it feels right, press **Copy changes** and paste the note into the project thread. Claude writes the values into the code as the new defaults in the next version. You don't need to edit files yourself.
 

@@ -12,7 +12,7 @@ import {
 const sample = () => ({
   reveal: { strikeAtMs: 420, lungePx: 4 },
   shake: { byDamage: { 10: 2, 20: 4 } },
-  beats: { attack: 'throw' },
+  beats: { rock: 'scissors' },
 });
 
 const group = (tree = sample()): TunableGroup => ({ file: 'tuning.ts', tree, defaults: flatten(tree) });
@@ -39,10 +39,10 @@ describe('dev tuning values', () => {
 
   it('assigns by path in place, ignoring unknown paths and non-numbers', () => {
     const tree = sample();
-    assign(tree, { 'reveal.strikeAtMs': 380, 'shake.byDamage.20': 6, 'nope.x': 1, 'beats.attack': 3 });
+    assign(tree, { 'reveal.strikeAtMs': 380, 'shake.byDamage.20': 6, 'nope.x': 1, 'beats.rock': 3 });
     expect(tree.reveal.strikeAtMs).toBe(380);
     expect(tree.shake.byDamage[20]).toBe(6);
-    expect(tree.beats.attack).toBe('throw');
+    expect(tree.beats.rock).toBe('scissors');
   });
 
   it('notes only the changed values, per file, with what they were', () => {
@@ -75,7 +75,7 @@ describe('dev tuning values', () => {
     expect(rangeFor('reveal.strikeAtMs', 420)).toEqual({ min: 0, max: 1260, step: 10 });
     expect(rangeFor('pickMs', 5000).max).toBe(15000);
     expect(rangeFor('startHealth', 100)).toEqual({ min: 10, max: 300, step: 5 });
-    expect(rangeFor('damage.throw', 20)).toEqual({ min: 1, max: 60, step: 1 });
+    expect(rangeFor('damage.scissors', 20)).toEqual({ min: 1, max: 60, step: 1 });
     expect(rangeFor('reveal.lungePx', 4)).toEqual({ min: 0, max: 20, step: 1 });
   });
 });

@@ -1,0 +1,67 @@
+name: Publish game
+
+# Publishes the game to GitHub Pages for this repo (robinneefs.github.io/rps-rivals/):
+#   production branch -> robinneefs.github.io/rps-rivals/          (the live game)
+#   main branch       -> robinneefs.github.io/rps-rivals/staging/  (the test copy)
+# Every run builds both, since Pages holds one site per repo. Each copy talks to its own match server
+# when the repository variable CLOUDFLARE_WORKERS_SUBDOMAIN is set; without it ONLINE stays greyed out.
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SUBDOMAIN: ${{ vars.CLOUDFLARE_WORKERS_SUBDOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: production
+          path: production
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build production
+        working-directory: production
+        run: |
+          npm ci
+          VITE_SERVER_URL="${SUBDOMAIN:+wss://rps-rivals-server.$SUBDOMAIN.workers.dev}" npm run build
+      - name: Build staging
+        working-directory: main
+        run: |
+          npm ci
+          VITE_SERVER_URL="${SUBDOMAIN:+wss://rps-rivals-server-staging.$SUBDOMAIN.workers.dev}" npm run build
+      - name: Put both in one site
+        run: |
+          mkdir -p site
+          cp -r production/apps/game/dist/. site/
+          mkdir -p site/staging
+          cp -r main/apps/game/dist/. site/staging/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,11 +1,11 @@
-export type Move = 'attack' | 'throw' | 'block';
+export type Move = 'rock' | 'paper' | 'scissors';
 export type Side = 'p1' | 'p2';
 
-export const MOVES: readonly Move[] = ['attack', 'throw', 'block'];
+export const MOVES: readonly Move[] = ['rock', 'paper', 'scissors'];
 export const SIDES: readonly Side[] = ['p1', 'p2'];
 
 export interface RulesConfig {
-  /** Which move each move beats: attack beats throw, throw beats block, block beats attack. */
+  /** Which move each move beats: rock beats scissors, scissors beats paper, paper beats rock. */
   beats: Record<Move, Move>;
   /** Damage dealt to the loser when this move wins the exchange. */
   damage: Record<Move, number>;

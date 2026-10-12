@@ -14,3 +14,14 @@ export { defaultRules, defaultTimings, type PhaseTimings } from './config';
 export { Referee, type Phase, type RefereeEvents } from './referee/referee';
 export { mathRandomRng, seededRng, type Cancel, type Clock, type Rng } from './referee/clock';
 export { Emitter, type Unsubscribe } from './referee/emitter';
+export {
+  isRoomCode,
+  parseClientMessage,
+  PROTOCOL_VERSION,
+  randomRoomCode,
+  ROOM_CODE_LENGTH,
+  ROOM_CODE_LETTERS,
+  type ClientMessage,
+  type JoinError,
+  type ServerMessage,
+} from './online/protocol';

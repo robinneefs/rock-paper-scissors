@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { Tex } from '../assets/keys';
+import { audioFiles } from '../audio/sounds';
+import { FONT_SIZES, Tex } from '../assets/keys';
 import { generatePlaceholders } from '../assets/placeholders';
 import { registerPixelFont } from '../assets/pixelFont';
 import { palette } from '../config/palette';
@@ -27,10 +28,13 @@ export class BootScene extends Phaser.Scene {
     });
     // Real art: load sprite sheets here under the keys in assets/keys.ts; their placeholders are then skipped.
     this.load.image(Tex.logo, 'assets/logo.png');
+    this.load.image(Tex.marquee, 'assets/marquee.png');
+    // sound effects and music (made by tools/audio/make-audio.mjs)
+    for (const { key, urls } of audioFiles()) this.load.audio(key, urls);
   }
 
   create(): void {
-    for (const size of [1, 2, 3, 4] as const) registerPixelFont(this, size);
+    for (const size of FONT_SIZES) registerPixelFont(this, size);
     generatePlaceholders(this);
     this.scene.launch(SceneKey.cabinet);
     this.scene.launch(SceneKey.transition);

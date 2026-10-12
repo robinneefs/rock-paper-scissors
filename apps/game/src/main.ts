@@ -1,5 +1,6 @@
 import { defaultRules, defaultTimings } from '@rps/core';
 import Phaser from 'phaser';
+import { AudioService } from './audio/AudioService';
 import { palette } from './config/palette';
 import { tuning } from './config/tuning';
 import { InputRouter } from './input/InputRouter';
@@ -7,11 +8,16 @@ import { PixelScaler } from './platform/PixelScaler';
 import { browserStore, SettingsStore } from './platform/settings';
 import { BootScene } from './scenes/BootScene';
 import { CabinetScene } from './scenes/CabinetScene';
+import { CabinetShake } from './fx/cabinetShake';
+import { registerCrt, screenFx } from './fx/crt';
+import { CrtOverlay } from './fx/crtOverlay';
 import { CabinetLights, setContext } from './scenes/context';
 import { FightScene } from './scenes/FightScene';
 import { SceneFlow } from './scenes/flow';
 import { HomeScene } from './scenes/HomeScene';
+import { LobbyScene } from './scenes/LobbyScene';
 import { LogoScene } from './scenes/LogoScene';
+import { HowToScene } from './scenes/HowToScene';
 import { OptionsScene } from './scenes/OptionsScene';
 import { ResultScene } from './scenes/ResultScene';
 import { TransitionScene } from './scenes/TransitionScene';
@@ -36,14 +42,38 @@ const game = new Phaser.Game({
     LogoScene,
     HomeScene,
     OptionsScene,
+    HowToScene,
+    LobbyScene,
     FightScene,
     ResultScene,
     TransitionScene,
   ],
 });
 
-const flow = new SceneFlow(game);
-setContext(game, { input: new InputRouter(), scaler, settings, flow, lights: new CabinetLights() });
+const audio = new AudioService(game, settings);
+const flow = new SceneFlow(game, audio);
+const cabinetShake = new CabinetShake();
+setContext(game, {
+  input: new InputRouter(),
+  scaler,
+  settings,
+  flow,
+  lights: new CabinetLights(),
+  audio,
+  cabinetShake,
+});
+
+// the CRT screen: a shader on the monitor cameras (WebGL) plus the scanline overlay in the page
+const crtOverlay = new CrtOverlay(game.canvas, scaler, cabinetShake);
+game.events.once(Phaser.Core.Events.READY, () => {
+  const webgl = registerCrt(game);
+  const apply = (on: boolean) => {
+    screenFx.crt = on;
+    crtOverlay.setVisible(webgl && on);
+  };
+  apply(settings.value.crt);
+  settings.onChange((s) => apply(s.crt));
+});
 
 settings.onChange((s) => scaler.setMode(s.scaling));
 scaler.onChange((l) => {
@@ -78,5 +108,6 @@ if (import.meta.env.DEV) {
   scenes: () => game.scene.getScenes(true).map((s) => s.scene.key),
   phase: () => flow.activeSession?.snapshot().phase ?? null,
   scale: () => scaler.layout.scale,
+  music: () => audio.music,
   version: VERSION,
 };

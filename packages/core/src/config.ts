@@ -5,9 +5,9 @@ import type { RulesConfig } from './rules/types';
  * Look-and-feel numbers live in apps/game/src/config/tuning.ts instead.
  */
 export const defaultRules: RulesConfig = {
-  beats: { attack: 'throw', throw: 'block', block: 'attack' },
-  damage: { throw: 20, attack: 15, block: 10 },
-  startHealth: 100,
+  beats: { rock: 'scissors', scissors: 'paper', paper: 'rock' },
+  damage: { rock: 15, paper: 10, scissors: 20 },
+  startHealth: 50,
   roundsToWin: 2,
 };
 
@@ -28,7 +28,7 @@ export interface PhaseTimings {
 
 export const defaultTimings: PhaseTimings = {
   roundIntroMs: 1600,
-  pickMs: 5000,
+  pickMs: 3000,
   revealMs: 1800,
   roundOverMs: 2200,
 };

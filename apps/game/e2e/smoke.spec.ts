@@ -3,13 +3,29 @@ import pkg from '../package.json' with { type: 'json' };
 
 declare global {
   interface Window {
-    __rps: { scenes: () => string[]; phase: () => string | null; scale: () => number; version: string };
+    __rps: {
+      scenes: () => string[];
+      phase: () => string | null;
+      scale: () => number;
+      music: () => string | null;
+      version: string;
+    };
   }
 }
 
 const scenes = (page: Page) => page.evaluate(() => window.__rps.scenes());
 const phase = (page: Page) => page.evaluate(() => window.__rps.phase());
 const scale = (page: Page) => page.evaluate(() => window.__rps.scale());
+
+/**
+ * A fake clock that only moves when the test runs it. A plain install() also lets real time flow,
+ * so on a slow machine (CI's software renderer drawing the screen shader) whole phases slip by
+ * while the test is talking to the page, and the phase checks below land in the wrong phase.
+ */
+async function pausedClock(page: Page): Promise<void> {
+  await page.clock.install({ time: 0 });
+  await page.clock.pauseAt(1000);
+}
 
 /**
  * Advances the fake clock in small steps. One big runFor() lets the browser run the game's frames
@@ -31,7 +47,7 @@ test('boots to the logo, the home menu, and plays an exchange against the CPU', 
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await run(page, 300);
   expect(await scenes(page)).toContain('Logo');
@@ -45,8 +61,8 @@ test('boots to the logo, the home menu, and plays an exchange against the CPU', 
 
   await run(page, 1800);
   expect(await phase(page)).toBe('picking');
-  await page.keyboard.press('Digit2'); // Throw
-  await run(page, 5000);
+  await page.keyboard.press('Digit2'); // Scissors
+  await run(page, 3000); // the pick countdown
   expect(await phase(page)).toBe('reveal');
 
   await run(page, 2000);
@@ -60,7 +76,7 @@ test('the build shows the version from package.json', async ({ page }) => {
 });
 
 test('the logo can be skipped with any button', async ({ page }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await run(page, 300);
   await page.keyboard.press('Digit1');
@@ -68,15 +84,31 @@ test('the logo can be skipped with any button', async ({ page }) => {
   expect(await scenes(page)).toContain('Home');
 });
 
+test('buttons mashed while the game is still loading never freeze it', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('http://localhost:5174/', { waitUntil: 'commit' });
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press('Digit1');
+    await page.waitForTimeout(50);
+  }
+  await expect
+    .poll(() => page.evaluate(() => window.__rps?.scenes() ?? []), { timeout: 10_000 })
+    .not.toContain('Logo');
+  expect(errors).toEqual([]);
+});
+
 test('scaling fills the height by default; options switches it and remembers', async ({ page }) => {
-  await page.clock.install();
+  await pausedClock(page);
   await page.goto('http://localhost:5174/');
   await untilScene(page, 'Logo');
   await page.keyboard.press('Digit1'); // skip the logo
   await untilScene(page, 'Home');
   expect(await scale(page)).toBeCloseTo(1000 / 472, 3); // 600 x 1000 window: fills the height
 
-  await page.keyboard.press('ArrowDown'); // ONLINE is greyed out, so the cursor lands on OPTIONS
+  await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('ArrowDown'); // HOW TO PLAY
+  await page.keyboard.press('ArrowDown'); // OPTIONS
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');
 
@@ -90,12 +122,98 @@ test('scaling fills the height by default; options switches it and remembers', a
 
   await page.keyboard.press('Digit1');
   await untilScene(page, 'Home');
-  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowUp'); // wraps round to OPTIONS
   await page.keyboard.press('Enter');
   await untilScene(page, 'Options');
   await page.keyboard.press('ArrowRight'); // flips back to FILL HEIGHT
   await run(page, 100);
   expect(await scale(page)).toBeCloseTo(1000 / 472, 3);
+  await page.keyboard.press('Escape');
+  await untilScene(page, 'Home');
+});
+
+test('music: the menu loop on home and the fight loop in a match', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await pausedClock(page);
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1'); // skip the logo (also lets the browser play sound)
+  await untilScene(page, 'Home');
+  await run(page, 300);
+  expect(await page.evaluate(() => window.__rps.music())).toBe('menu');
+
+  await page.keyboard.press('Enter'); // START GAME
+  await untilScene(page, 'Fight');
+  await run(page, 300);
+  expect(await page.evaluate(() => window.__rps.music())).toBe('fight');
+  expect(errors).toEqual([]);
+});
+
+test('ONLINE opens the lobby, and BACK returns home', async ({ page }) => {
+  await pausedClock(page);
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1'); // skip the logo
+  await untilScene(page, 'Home');
+  await page.keyboard.press('ArrowDown'); // ONLINE (enabled in dev builds: local server address)
+  await page.keyboard.press('Enter');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('Escape');
+  await untilScene(page, 'Home');
+});
+
+test('JOIN ROOM takes letters by keyboard layout, and its code box is a real text field', async ({
+  page,
+}) => {
+  await pausedClock(page);
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1');
+  await untilScene(page, 'Home');
+  await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('Enter');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('ArrowDown'); // JOIN ROOM
+  await page.keyboard.press('Enter');
+  await run(page, 600);
+  const field = page.getByRole('textbox', { name: 'Room code' });
+  await expect(field).toBeVisible();
+  await expect(field).toBeFocused();
+
+  // typing into the field (what a phone keyboard does); vowels and digits are not code letters
+  await page.keyboard.type('bc');
+  await expect(field).toHaveValue('BC');
+
+  // AZERTY: the key that types "m" sits where QWERTY has ";". The letter counts, not the position.
+  await field.evaluate((el) => el.blur());
+  await page.evaluate(() =>
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', code: 'Semicolon' })),
+  );
+  await expect(field).toHaveValue('BCM');
+
+  // leaving the screen removes the field
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Escape');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('Escape');
+  await untilScene(page, 'Home');
+  await expect(field).toHaveCount(0);
+});
+
+test('NEW ROOM is cancelled by any cabinet button, back to the lobby menu', async ({ page }) => {
+  await pausedClock(page);
+  await page.goto('http://localhost:5174/');
+  await untilScene(page, 'Logo');
+  await page.keyboard.press('Digit1');
+  await untilScene(page, 'Home');
+  await page.keyboard.press('ArrowDown'); // ONLINE
+  await page.keyboard.press('Enter');
+  await untilScene(page, 'Lobby');
+  await page.keyboard.press('Enter'); // CREATE ROOM
+  await run(page, 600);
+  await page.keyboard.press('Digit2'); // cancel
+  await run(page, 600);
+  // from the lobby menu, Esc goes home (from NEW ROOM it would only go back to the menu)
   await page.keyboard.press('Escape');
   await untilScene(page, 'Home');
 });

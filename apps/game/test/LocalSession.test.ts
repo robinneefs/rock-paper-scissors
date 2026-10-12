@@ -39,18 +39,32 @@ describe('LocalSession', () => {
     const { clock, session, reveals } = setup();
     session.ready();
     clock.advance(1000);
-    session.submitPick('block');
-    expect(session.snapshot().myPick).toBe('block');
+    session.submitPick('paper');
+    expect(session.snapshot().myPick).toBe('paper');
     clock.advance(5000);
     expect(reveals).toHaveLength(1);
-    expect(reveals[0]!.picks.p1).toBe('block');
+    expect(reveals[0]!.picks.p1).toBe('paper');
     expect(reveals[0]!.autoPicked).toEqual({ p1: false, p2: false });
+  });
+
+  it('paused, the match stands still (the timer, the CPU and the phases) and then carries on', () => {
+    const { clock, session, seen } = setup();
+    session.ready();
+    clock.advance(1500);
+    session.setPaused(true);
+    const before = seen.length;
+    clock.advance(60_000);
+    expect(seen.length).toBe(before);
+    expect(session.snapshot()).toMatchObject({ phase: 'picking', msLeft: 4500 });
+    session.setPaused(false);
+    clock.advance(4500);
+    expect(session.snapshot().phase).toBe('reveal');
   });
 
   it('a pick outside the picking phase is ignored', () => {
     const { session } = setup();
     session.ready();
-    session.submitPick('attack');
+    session.submitPick('rock');
     expect(session.snapshot().myPick).toBeNull();
   });
 
@@ -58,7 +72,7 @@ describe('LocalSession', () => {
     const { clock, session, seen } = setup();
     session.ready();
     for (let i = 0; i < 5000 && session.snapshot().phase !== 'matchOver'; i++) {
-      if (session.snapshot().phase === 'picking') session.submitPick('attack');
+      if (session.snapshot().phase === 'picking') session.submitPick('rock');
       clock.advance(500);
     }
     expect(session.snapshot().phase).toBe('matchOver');
@@ -90,7 +104,7 @@ describe('RandomCpu', () => {
     const clock = new FakeClock();
     const cpu = new RandomCpu({ min: 0, max: 10 });
     const rng = seededRng(42);
-    const counts: Record<Move, number> = { attack: 0, throw: 0, block: 0 };
+    const counts: Record<Move, number> = { rock: 0, scissors: 0, paper: 0 };
     const state = { round: 1, health: { p1: 100, p2: 100 }, roundsWon: { p1: 0, p2: 0 }, winner: null };
     for (let i = 0; i < 3000; i++) {
       cpu.onPickingStarted(
@@ -100,7 +114,7 @@ describe('RandomCpu', () => {
       clock.advance(20);
     }
     for (const n of Object.values(counts)) expect(n).toBeGreaterThan(900);
-    expect(counts.attack + counts.throw + counts.block).toBe(3000);
+    expect(counts.rock + counts.scissors + counts.paper).toBe(3000);
   });
 
   it('decides before the deadline and can be cancelled', () => {

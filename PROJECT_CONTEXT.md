@@ -1,6 +1,6 @@
 # RPS Rivals: Project Context
 
-_Last updated: 2026-10-11_
+_Last updated: 2026-10-12_
 
 This is the single source of truth for the project. **Any Claude working on this project: read this file first, and update it whenever a decision is made or something changes.** Keep edits small, add to the decision log, and bump the date above.
 
@@ -42,63 +42,66 @@ New art samples go in `docs/art-direction/` (their source in `sources/art-direct
 
 ## Where things stand
 
-- Phase: **building**. First playable version built 2026-10-10 (roadmap steps 1 and 2), merged into `main` as PR #3 on 2026-10-10. The user also runs it locally from `D:\Vibe Coding Projects\rps-rivals` (`npm run dev`).
-- What works: Chain Shift studio logo intro in purple (skippable, since v0.4.0), home menu (START GAME vs CPU, ONLINE greyed "SOON"), full best-of-three vs a uniformly random CPU (5s countdown, random auto-pick, icons drop, poses, hit flash, whole-pixel shake, health drain, K.O., round banners), result screen with RETRY / MAIN MENU. Keys 1/2/3 or tapping the cabinet buttons; arrows / joystick drag in menus. Works in a desktop browser and on a phone. OPTIONS on the home menu opens an Options screen with one setting, Scaling: Fill height (default since v0.3.0, fills the screen) or Pixel perfect (whole-number), remembered between visits.
-- Art is **placeholder**, drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so final sprites swap in without touching views. No sound or music yet.
-- Next (step 3, order agreed with the user 2026-10-10): 1) dev tuning panel (Tweakpane; **done in v0.5.0**, merged as PR #8 on 2026-10-11), 2) juice on the placeholders (sparks, dust, hit-pause, anticipation, stronger banners), 3) sound (CC0 SFX + menu/fight loops), 4) final fighter art once the parked art direction and tool (PixelLab or Retro Diffusion) are decided. Open feel questions: 5s vs 3s timer, 100 health (rounds take about 6 to 8 exchanges).
+- Phase: **released** (2026-10-12). v1.0.0 is the first public release, live at https://robinneefs.github.io/rps-rivals/ (published at the user's word: "ready to publish v1.0"). The user runs it locally from `D:\Vibe Coding Projects\rps-rivals` (`npm run dev`).
+- What works (v1.0.0): Chain Shift logo intro (skippable); home menu START GAME (vs CPU), ONLINE (vs a friend with a 4-letter room code), HOW TO PLAY, OPTIONS (scaling, CRT screen, sound, music and effects volume); best of three vs a random CPU or online, 3s pick timer, 50 health, Rock 15 / Paper 10 / Scissors 20; the clash reveal with move badges, juice (hit pause, shake, sparks, dust, K.O. slow motion and chunky K.O. letters, cabinet rattle), three random stages, a CRT shader and CRT off/on screen transitions; result screen RETRY / MAIN MENU; chiptune sound and music; a flickering marquee, wood-grain cabinet, shaded buttons with hover and glint, a clicking, wobbling joystick. Browser tab title, favicon and link-share image. Desktop browser and phone.
+- Art is drawn in code (`apps/game/src/assets/placeholders/`) under the real asset keys (`assets/keys.ts`), so sprite sheets could still swap in without touching views. The marquee art is cut from the user's AI mock-up; the user decided it stays as is (2026-10-11). Sound is synthesised by `tools/audio/make-audio.mjs`.
+- Next: nothing scheduled. Ideas for after 1.0: online reconnect grace period, typed names, a share link that fills in the room code, a QUIT MATCH prompt, credits line, Android.
 - `archive/old-draft/` in this folder is an **earlier draft the user discarded**. Do not build on it. It is not in the repository.
 
-## Code (2026-10-10)
+## Code (updated 2026-10-11, v0.11.0)
 
 | Where | What |
 |---|---|
-| `packages/core` | `@rps/core`: rules (`resolveExchange`, `applyExchange`, rounds) and the `Referee` phase machine with injected clock + seeded RNG. Rules config and phase timings in `src/config.ts` (pick 5000, reveal 1800, round intro 1600, round over 2200 ms). |
+| `packages/core` | `@rps/core`: rules (`resolveExchange`, `applyExchange`, rounds) and the `Referee` phase machine with injected clock + seeded RNG. Rules config and phase timings in `src/config.ts` (pick 3000, reveal 1800, round intro 1600, round over 2200 ms; start health 50). |
 | `apps/game/src/session` | `MatchSession`, `LocalSession`, `RandomCpu` (think delay 0.4 to 1.6s), `createSession(setup)` |
-| `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition (pixel wipe) + `flow.ts` (`SceneFlow`) |
+| `apps/game/src/scenes` | Boot, Cabinet, Logo, Home, HowTo, Options, Lobby, Fight, Result, Transition (CRT off/on) + `flow.ts` (`SceneFlow`) |
 | `apps/game/src/{views,fight,fx,menus,input,platform}` | Dumb views, `FightDirector`, shake/flash, menus as data, `InputRouter`, `PixelScaler` (two scaling modes), `SettingsStore` (`platform/settings.ts`, localStorage) |
 | `apps/game/src/config/tuning.ts` | Every feel value |
+| `packages/core/src/online/protocol.ts` | Online messages shared by game and server, `PROTOCOL_VERSION`, room codes (4 consonants, no vowels so no words) (v0.6.0) |
+| `apps/server` | `@rps/server`: Cloudflare Worker + one Durable Object (`RoomObject`) per room code; `MatchRoom.ts` seats two players and runs the `Referee`. Local: `npm run dev:server` (port 8787). Deployed by `.github/workflows/deploy-server.yml` on main (needs secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`). Guide: `apps/server/README.md` (v0.6.0) |
+| `apps/game/src/session/OnlineSession.ts`, `socket.ts`; `scenes/LobbyScene.ts`; `config/online.ts` | Online client: real sides on both screens since v0.9.1 (host = P1 on the left, guest = P2 on the right; HUD tags "P1 YOU" / "P2 RIVAL"), opponent named RIVAL; lobby CREATE ROOM / JOIN ROOM; server address (dev: localhost:8787; release: the Worker's address, null until known = ONLINE greyed out) (v0.6.0) |
 | `apps/game/src/dev/` | Dev tuning panel (v0.5.0): Tweakpane over `tuning.ts` (live) plus the core rules and phase timings (next match), with Restart match, Copy changes, Reset all; edits kept in localStorage; backquote hides it. Only in `npm run dev`. Guide: `docs/tuning/TUNING-PANEL.md`. |
 | `apps/game/public/assets/logo.png` | Studio logo (Chain Shift as purple pixel art, 192x84 native): the master reduced to 94 blocks wide, each block 2x2 native pixels like the title's scaled font, violet #A35BFF fill with a light top edge, darker bottom edge, drop shadow in `palette.shadow` and a 1 px `palette.ink` outline. Built from the white master `docs/brand/logo-chain-shift-white.png` by `python3 tools/make-logo.py` (needs Pillow), which also writes the full-size `docs/brand/logo-chain-shift-purple.png` |
 
 Changelog: `CHANGELOG.md` at the repo root.
 
-Commands: `npm install`, `npm run dev`, `npm test` (57 tests), `npm run test:e2e` (Playwright smoke), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
+Commands: `npm install`, `npm run dev`, `npm test` (91 tests), `npm run test:e2e` (9 Playwright tests), `npm run audio` (regenerate sounds), `node tools/make-icons.mjs` (favicon, share image, README play button), `node sources/screenshots/capture.mjs` (docs screenshots), `npm run lint`, `npm run typecheck`, `npm run build`. CI (GitHub Actions) runs all of them.
 
-**Versions and changelog (rule, user's request 2026-10-10):** every build that goes online gets a version bump and a `CHANGELOG.md` entry, no exceptions. Semver under 1.0: new features bump the middle number (0.2.0 → 0.3.0), fix-only builds the last (0.2.1). The version is set in one place, `apps/game/package.json`; Vite injects it (`src/version.ts`) and the home screen shows it small in the bottom-right corner. Each version is tagged `vX.Y.Z` with a GitHub release by the Release workflow (`.github/workflows/release.yml`): on every push to main it tags a package.json version that has no tag yet, using its changelog entry as the notes (cloud sessions can't push tags themselves). Current in main: **v0.5.3** (docs only). Live online: **v0.4.0** (Chain Shift pixel-art logo intro) at https://robinneefs.github.io/RPS-Fighter/ (main @ cdabb84, PR #7; site repo @ 2aa77f2). v0.3.0 = Fill height by default (main @ c49023e). v0.2.0 = Options + scaling. v0.1.0 = the first playable (main @ a1a96aa).
+**Versions and changelog (rule, user's request 2026-10-10):** every build that goes online gets a version bump and a `CHANGELOG.md` entry, no exceptions. Semver: new features bump the middle number (1.0.0 → 1.1.0), fix-only builds the last (1.0.1). The version is set in one place, `apps/game/package.json`; Vite injects it (`src/version.ts`) and the home screen shows it small in the bottom-right corner. Each version is tagged `vX.Y.Z` with a GitHub release by the Release workflow (`.github/workflows/release.yml`): on every push to production it tags a package.json version that has no tag yet, using its changelog entry as the notes (cloud sessions can't push tags themselves). Current: **v1.0.0** in main (staging) and production (live), 2026-10-12. Before it: v0.11.1 (bug-hunt fixes, PR #24 @ 1b3d8be); live was v0.5.4 until 1.0.
 
-Publishing (2026-10-10): bump the version and add the changelog entry in the PR, merge (the Release workflow tags it), `npm run build`, then replace the contents of `RPS-Fighter/` in `robinneefs/robinneefs.github.io` with `apps/game/dist/*` and push to its `main`; GitHub Pages redeploys on its own. Vite `base: './'` keeps paths relative, so no base-path change is needed. Nothing updates the online copy automatically: republish after changes the user wants online. **Planned move (user's call 2026-10-11):** after the rebrand and rename, host the game from a free GitHub organization named after the game at `<org>.github.io`, replacing robinneefs.github.io/RPS-Fighter/ (leave a redirect at the old address). Tracked in the roadmap doc.
+Publishing (since v0.6.0, agreed with the user 2026-10-11; replaces the manual copy into `robinneefs.github.io/RPS-Fighter/`): three levels. **Feature branches** go by PR into `main` (CI must pass). **`main` = staging**: every push publishes it to https://robinneefs.github.io/rps-rivals/staging/ with the staging match server `rps-rivals-server-staging`. **`production` = live**: https://robinneefs.github.io/rps-rivals/ with the live server `rps-rivals-server`. "Publish" = a PR from main into production, merged with the user's OK; the Release workflow tags `vX.Y.Z` on production pushes. Workflows: `.github/workflows/pages.yml` (builds both branches into one Pages site), `deploy-server.yml` (Worker per branch), `release.yml`. User setup: Pages source = GitHub Actions; github-pages environment must allow `main` and `production`; secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`; variable `CLOUDFLARE_WORKERS_SUBDOMAIN`. The old RPS-Fighter folder in `robinneefs/robinneefs.github.io` is a redirect to the new live address since 2026-10-11 (site repo @ 2a764f5; never touch that repo's `moment37/`). A game-named GitHub org was considered and dropped (user, 2026-10-11).
 
 ## The game in one paragraph
 
-A browser fighting game built on rock paper scissors. Two pixel-art fighters stand close together in the middle of the screen. Each exchange, both players secretly pick Attack, Throw or Block within a 5 second countdown; the picks are revealed together, move icons drop in, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds. Single player against a random computer first; online multiplayer and an Android app later.
+A browser fighting game built on rock paper scissors. Two pixel-art fighters stand close together in the middle of the screen. Each exchange, both players secretly pick Rock, Paper or Scissors within a 3 second countdown; the picks are revealed together, the two move badges collide in the middle, the fighters act out their moves, and the loser of the exchange takes damage. Best of three rounds. Against a random computer or a friend online (room codes); an Android app later. (The moves were called Attack, Block and Throw until v0.7.0.)
 
 ## Core rules
 
 | Winning move    | Beats  | Damage to loser |
 |-----------------|--------|-----------------|
-| Throw           | Block  | 20              |
-| Attack          | Throw  | 15              |
-| Block (counter) | Attack | 10              |
+| Scissors (was Throw)       | Paper    | 20              |
+| Rock (was Attack)          | Scissors | 15              |
+| Paper (counter, was Block) | Rock     | 10              |
 
 - Tie: no damage. Only the loser of an exchange takes damage (no double KO).
-- 100 health per fighter per round (starting value, to tune).
+- 50 health per fighter per round (was 100 until v0.9.0; tunable).
 - Round ends when a fighter hits 0. Match = best of three rounds. Health resets each round.
 - Computer opponent: uniformly random pick (decided by the user; no pattern reading for now).
 
 ## The mind game (user's insight)
 
-Uneven damage makes this different from classic RPS. Throw is the tempting big hit, Attack punishes Throw, Block punishes Attack, Throw punishes Block.
+Uneven damage makes this different from classic RPS. Scissors is the tempting big hit, Rock punishes Scissors, Paper punishes Rock, Scissors punishes Paper.
 
-- Nash equilibrium (net damage, zero-sum): **Attack 4/9 (44%), Block 3/9 (33%), Throw 2/9 (22%)**. Throw, the biggest hit, is the rarest optimal pick.
-- Low health changes stakes: at 15 HP, a 15 or 20 win ends the round but a 10 block counter doesn't.
-- Rule of thumb: each move's balanced share is proportional to the damage of the move it beats (Attack ∝ Throw dmg, Throw ∝ Block dmg, Block ∝ Attack dmg).
-- Vs the random CPU: Attack and Throw average +1.67 net damage per exchange, Block -3.33. A smarter CPU (equilibrium mix or pattern punishing) is a future option.
+- Nash equilibrium (net damage, zero-sum): **Rock 4/9 (44%), Paper 3/9 (33%), Scissors 2/9 (22%)**. Scissors, the biggest hit, is the rarest optimal pick.
+- Low health changes stakes: at 15 HP, a 15 or 20 win ends the round but a 10 paper counter doesn't.
+- Rule of thumb: each move's balanced share is proportional to the damage of the move it beats (Rock ∝ Scissors dmg, Scissors ∝ Paper dmg, Paper ∝ Rock dmg).
+- Vs the random CPU: Rock and Scissors average +1.67 net damage per exchange, Paper -3.33. A smarter CPU (equilibrium mix or pattern punishing) is a future option.
 
 ## Exchange flow
 
-1. 5 second countdown (3s is the alternative to playtest). Player picks via tap/click or keys 1/2/3; can change until time is up.
+1. 3 second countdown (was 5s until v0.9.0). Player picks via tap/click or keys 1/2/3; can change until time is up.
 2. Timer hits 0: anyone without a pick gets a random move. Picks hidden until both are locked.
-3. Reveal: each fighter's move icon drops in above their head with a bounce, at the same time.
+3. Reveal (since v0.9.0): a move badge pops in beside each fighter, both fly to the middle and collide; the winning badge stays and the loser's is knocked away, with "ROCK WINS" (etc.) or "CLASH!" on a tie.
 4. Both fighters animate their move. Winner lands with hit flash, hit sound, small screen shake. Tie = clash, no damage.
 5. Loser's health bar drains.
 6. Next countdown, or KO, round banner ("Round 2", "Final round"), or the result screen with Retry / Main menu (see "Menus and screen flow").
@@ -180,9 +183,11 @@ When: a dedicated tuning pass near the end, before release, at the latest before
 
 ## Audio
 
-- SFX: countdown ticks (last 3s), lock-in, distinct hit per winning move, tie clash, KO, "Round 1, fight", win jingle. Source: OpenGameArt "37 hits/punches" (CC0).
-- Music: menu loop + fight loop, mute and separate volumes. Start with a CC0 chiptune loop.
-- Later: make music with Claude (composed as code, e.g. Tone.js sequences, or as MIDI rendered to audio).
+- Decided with the user 2026-10-11 ("Game audio" thread): 90s arcade chiptune style; sound effects first, then music; no announcer voice for now; mute plus separate music and effects volumes in Options.
+- Built in v0.8.0 (PR #19, merged into main 2026-10-11): every sound and both music loops are synthesised by `tools/audio/make-audio.mjs` (original, owned by the project; no outside samples). Asset sites (OpenGameArt, Kenney) are blocked from Claude's cloud sessions, so the planned CC0 hit layers and CC0 music loops were replaced by generated ones; real CC0 files can be dropped in later under the same names. Guide, sound list and licence table: `docs/audio/AUDIO.md`.
+- SFX: menu move/select/back, countdown ticks (last 3s, rising), time-up slam, lock-in, icon whoosh, a hit per winning move (rock thud, paper slap, scissors slash; 3 variations each), tie clash, K.O., round start, FIGHT!, win and lose jingles.
+- Music: menu loop (A minor, 132 BPM, ~29s) on Home, Options, lobby and Result (after the jingle); fight loop (D minor, 156 BPM, ~25s) in the fight. OGG with MP3 fallback.
+- Later: announcer voice; replace or layer with recorded CC0 sounds if the user wants.
 
 ## Technology (decided)
 
@@ -192,7 +197,7 @@ When: a dedicated tuning pass near the end, before release, at the latest before
 | Language | TypeScript |
 | Build | Vite |
 | Tests | Vitest |
-| Online (later) | Server-authoritative match room running `@rps/core`'s Referee. Host not decided: Cloudflare Durable Object recommended (free, 2026-10-11, see `docs/architecture/ONLINE-OPTIONS.md`); originally Node + Colyseus |
+| Online (later) | Server-authoritative match room running `@rps/core`'s Referee. Host: **Cloudflare Workers + a Durable Object per room** (user's decision 2026-10-11, free plan; see `docs/architecture/ONLINE-OPTIONS.md`). Replaces the original Node + Colyseus plan |
 | Android (later) | Capacitor wrapping the web build |
 
 Architecture rules:
@@ -217,7 +222,7 @@ Architecture rules:
 2. Playable prototype: placeholder fighters, buttons, bars, timer, best of three, plus the menu flow (logo intro, home with Start game, result with Retry / Main menu). **Done 2026-10-10.**
 3. Art and juice: sprites, falling icons, hit flash, shake, SFX, music.
 4. Polish and release on the web (e.g. GitHub Pages), including a dedicated game-feel pass (see "Polish and game feel").
-5. Online play (server match room, room codes; host to pick, see `docs/architecture/ONLINE-OPTIONS.md`).
+5. Online play (Cloudflare Durable Object match room, room codes; see `docs/architecture/ONLINE-OPTIONS.md`). **First version built in v0.6.0** (thread "Online play on Cloudflare"); waiting on the user's Cloudflare account and GitHub secrets to deploy. Still open: reconnect grace period, typed names, share link.
 6. Android build (Capacitor).
 
 ## Open questions
@@ -226,9 +231,7 @@ Architecture rules:
 - Overall aesthetic: the user is "not crazy about it yet" (cute chibi + neon '80s); parked, revisit later.
 - Art tools (researched 2026-10-10): best fit is **PixelLab** (pixel-art AI with character directions + animations, hosted MCP at https://api.pixellab.ai/mcp, Bearer API key, plans from ~$12/mo). Alternatives: Retro Diffusion (great look, Aseprite extension, $20-65 one-time, has API), Ludo, Scenario; Aseprite for hand cleanup. Claude's cloud sessions currently cannot reach api.pixellab.ai (built-in environment blocks it): needs a cloud environment that allows the domain plus the key as a secret, or run Claude Code locally with the MCP. User wants a more attractive pixel style with slightly bigger pixels.
 - Cabinet look: monitor aspect (3:4 portrait chosen as default), cabinet colours and side art.
-- Where online matches run (step 5): Cloudflare Durable Object (recommended: free, server decides, no cold start), peer-to-peer PeerJS (no server, but the host could see picks without commit-reveal), or Colyseus on Render free (sleeps after 15 min, ~1 min wake-up). GitHub Pages can't host it (static only). Details: `docs/architecture/ONLINE-OPTIONS.md`.
-- Online seat: always show yourself on the left (recommended) or real sides.
-- 100 starting health right? 5s or 3s timer?
+- ~~Online seat: always show yourself on the left or real sides.~~ Decided 2026-10-11: real sides (host P1 left, guest P2 right).
 - Art direction references for the NEXT step (user, 2026-10-11): use the user's four redesign mock-ups in `docs/mockups/redesign/` as the starting point. `mockups-characters-1.png`: one Ryu-like karate fighter (brown hair, red wraps, torn gi, black belt, barefoot) in nine pixel styles (classic 16-bit, modern, low-res, anime, detailed, chibi, dark, minimalist, cartoon). `mockups-characters-2.png`: the same fighter as a chibi in nine variants (clean, white sticker outline, shaded, anime, Game Boy, SNES, dithered, minimalist, expressive). `mockups-game-1.png` and `mockups-game-2.png` ("RPS Rivals" sheet): the vertical cabinet with marquee art, joystick plus red/yellow/blue ROCK/PAPER/SCISSORS buttons, menu, fighter select, fight HUD, hit effects, K.O., online match, and a palette of hot pink, cyan, violet, navy and pale lavender. These lean toward relabelling the moves Rock/Paper/Scissors (see Move animations).
 - Move animations (user's note 2026-10-10): Attack, Throw and Block currently look nearly the same. Either make each clearly read as a strike, a grab/throw and a block/counter, or relabel the moves Rock, Paper, Scissors with animations to match. Roadmap doc recommends trying distinct silhouettes on the placeholders first.
 
@@ -293,3 +296,19 @@ Architecture rules:
 - 2026-10-11: Round 3 mock-ups (`docs/rebrand/mockups-round3/`, source `sources/rebrand/draw_round3.py`) after the user's feedback: they like the SF2-style health bars (now 12 px tall) and want a much bigger timer (now 15x21 digits) with juice in the real game (noted under Polish and game feel). They didn't like the cabinet, so four cabinet styles, four stages, four marquees and two flatter button-icon styles (white, engraved) were drawn. Square screen used by default. Waiting on the user's picks.
 - 2026-10-11: The asset rebrand thread is paused at the user's request, after round 3. Nothing is in the game yet. On resume: get the user's picks (cabinet, stage, marquee, icon style, square vs tall screen, Rock/Paper/Scissors naming), then build v0.6.0.
 - 2026-10-11: At the user's request (saved architecture prompt), the architecture doc was rewritten to match the real code (v0.5.4): real types, events, timings, tuning values, scenes, GameContext, lint rules and tests, planned parts marked; 7 diagrams redrawn, 2 new (code map, online hosting options). Section 10 now lists what is already online-ready and the gaps (opponent name, seat side, disconnect events, rematch waiting, lobby, server input checks, version match). New `ONLINE-OPTIONS.md` compares free online hosts; recommends a Cloudflare Durable Object per room (free plan: 100k requests and 13,000 GB-s a day, about 800 two-minute matches) over PeerJS P2P or Colyseus on Render. Waiting on the user's pick of host.
+- 2026-10-11: PR #14 (v0.5.4, architecture docs) merged into main @ 9c8e68e at the user's request. **The user chose Cloudflare Workers + Durable Objects for online play** (replacing Node + Colyseus). Implementation moves to its own thread on a new branch.
+- 2026-10-11: v0.6.0, first online play, built on branch `claude/project-thread-pxob0s` in its own thread: Cloudflare Worker + Durable Object room per 4-letter code running the core `Referee`, lobby (CREATE ROOM / JOIN ROOM), always-on-the-left seat mirror, opponent shown as RIVAL, rematch needs both players, leave/disconnect goes home, same game version required. Tested with two browsers against a local Worker. The user was given setup steps (free Cloudflare account, workers.dev subdomain, API token from the "Edit Cloudflare Workers" template, account ID, both as GitHub repo secrets). Release builds keep ONLINE greyed out until the Worker address goes into `apps/game/src/config/online.ts`.
+- 2026-10-11: Publishing setup agreed: feature branches → main (staging, auto-published to robinneefs.github.io/rps-rivals/staging/) → production branch (live, robinneefs.github.io/rps-rivals/), each with its own Cloudflare Worker; tags on production. The user dropped the idea of a rps-rivals GitHub org after hearing it needs a repo transfer. Added to PR #15.
+- 2026-10-11: PR #15 merged into main @ 63dfaf6 at the user's request; first Pages publish succeeded (staging = v0.6.0 at robinneefs.github.io/rps-rivals/staging/, live = v0.5.4 at robinneefs.github.io/rps-rivals/). The user set Pages to GitHub Actions and allowed main + production on the github-pages environment. Old RPS-Fighter page now redirects. Still to do by the user: Cloudflare secrets and the `CLOUDFLARE_WORKERS_SUBDOMAIN` variable.
+- 2026-10-11: Cloudflare set up by the user (workers.dev subdomain `ggenie`, secrets + `CLOUDFLARE_WORKERS_SUBDOMAIN` variable). Staging Worker live at rps-rivals-server-staging.ggenie.workers.dev; staging site rebuilt with online play on. The live Worker (`rps-rivals-server`) deploys on the first publish to production. Claude's cloud sessions can't reach workers.dev (proxy), so online checks need the user's browser.
+- 2026-10-11: v0.6.1 (PR #16, merged into main @ f427573 with the user's pre-approval; on staging, not yet live): JOIN ROOM letters now come from `KeyboardEvent.key` (AZERTY reported by the user typed by QWERTY position before), and the code boxes are backed by an invisible `<input>` laid over them so phones open their keyboard on tap. Pattern for future text entry: a transparent DOM input positioned from `scaler.layout` + `scaler.zoom`; `InputRouter` leaves letters and Backspace to a focused text field.
+- 2026-10-11: v0.6.2 (PR #17, merged into main @ c51cd60 at the user's OK; on staging, not yet live): NEW ROOM and JOIN ROOM get on-screen CANCEL/BACK buttons (the user found no way back on the create screen; only Esc worked, nothing on phones or cabinet buttons). Any cabinet button or Enter also cancels NEW ROOM. Room codes skipping vowels (A etc.) is intended; the user said to leave it without a hint.
+- 2026-10-11: Audio ("Game audio" thread): the user took all the recommended defaults (chiptune, generated SFX, music loops, SFX first, no announcer). Built as v0.8.0: `audio/AudioService` in the GameContext, music per screen from `SceneFlow`, SOUND / MUSIC / EFFECTS in Options. CC0 sites were unreachable from the cloud session, so all audio is generated by `tools/audio/make-audio.mjs`. PR #19 merged into main @ d2ef165 at the user's request (on staging; not yet live).
+- 2026-10-11: Polish thread, v0.9.0 (PR #20, draft): flat white move icons on the cabinet buttons and reveal coins (round 3 "white icons" style), deeper button press with a lock-in flash and ring, a control panel with depth (slanted lit top, bevels, bolts, front lip). At the user's request the pick timer is now 3s (was 5s) and start health 50 (was 100). Polish changes are copied straight into the user's local clone for testing before any merge.
+- 2026-10-11: The user asked for fixed online sides: the room's host is always Player 1 on the left and the guest Player 2 on the right, the same on both screens (before, each player saw themselves on the left). Built as v0.9.1 (PR #21, merged into main @ 95fa118 at the user's OK; on staging, not yet live): the client seat mirror (`mirror.ts`) was removed, the server already seated create = p1 and join = p2. The user's character redesign request (P1 man in jeans and red shirt, P2 woman in a fighting outfit) runs in its own thread, "New fighter designs".
+- 2026-10-11: New fighter designs at the user's request ("New fighters" thread), v0.10.0 (PR #22, merged into main @ 7ee7f98 at the user's OK; on staging, not yet live): P1 (left) a strong brawler in blue jeans, brown boots and an open red shirt over a white undershirt; P2 (right) a woman martial artist with a high ponytail, teal wrap top with white trim, gold sash, navy pants, white boots, wrapped hands. Still drawn in code (`apps/game/src/assets/placeholders/fighters.ts`, colours in `config/palette.ts` `fighterColors`), now with two body builds posed by two-bone IK so both share the same poses. Preview: `docs/art-direction/9-new-fighters.png`. This replaces the white-gi / blue-gi chibi placeholders; the user approved the look as is.
+- 2026-10-11: Final polish thread before 1.0 ("Final polish"), v0.11.0 on branch `claude/final-polish-x0olnn`: buttons get a chrome collar, cylinder shading, a rimmed cap with glint, an embossed icon, a hover state and a glint that sweeps them every 6s (`buttons.shine*` in tuning); the marquee flickers every 1.5-4.5s (was 4-11s), darker (dip 0.7, blackout 0.92), with the neon loop going out too and a bright surge on relight (`marquee` in tuning). Copied to the user's local clone for testing; merge only on the user's OK.
+- 2026-10-11: Final polish round 2 (same thread, still v0.11.0, PR #23): at the user's picks, softer marquee flicker (dip 0.45, blackout 0.7, surge 0.1; frequency kept), new chunky gradient K.O. letters (`assets/placeholders/koLetters.ts`; the user wanted only the letters changed, no freeze/zoom/PERFECT), joystick click (`stickClick` sfx) and wobble on release, CRT off/on screen transitions (TransitionScene), a HOW TO PLAY home-menu item and screen (HowToScene), and wood grain plus wear on the cabinet body. Skipped at the user's call: fighter reactions, the INSERT COIN attract screen. The user decided the marquee art stays as is (2026-10-11: "the art is fine").
+- 2026-10-11: Release prep (same thread, v0.11.0, PR #23): tab title "RPS Rivals: Rock Paper Scissors Fighter", favicon + apple-touch-icon (the Rock button) and a 1200x630 share image with og/twitter tags pointing at the live address, all made by `tools/make-icons.mjs` (also makes `docs/readme/play-button.png`). Screenshots retaken (now also `howto` and `ko`). README rebuilt at the user's request: kept the play link and AI disclosure, added a PLAY button, game description, screenshots, tech list, mermaid architecture diagram, an assets/credits disclosure (marquee cut from the owner's AI-generated mock-up; Chain Shift logo is the owner's; everything else generated in code), privacy note. The GitHub About description can't be set from a cloud session: text given to the user to paste.
+- 2026-10-12: Bug hunt before 1.0 (same thread, v0.11.1), at the user's request. Tested online play with two browsers against a local server (full match, rematch, leaving at every stage, full/unknown/cancelled rooms, mashing), a hidden tab, random input across screen sizes. Fixed: keys pressed while loading froze the game on black (TransitionScene wipe before its create); online, the rival leaving between the K.O. and the result left a dead RETRY; CPU matches now pause while the tab is hidden (`PausableClock`); lobby BACK/CANCEL overlapped the hint. Real phones still need the user's own check.
+- 2026-10-12: v1.0.0, the first public release, at the user's word ("ready to publish v1.0") after the phone checklist looked good to them. Version bump PR into main, then main into `production` (live was v0.5.4).

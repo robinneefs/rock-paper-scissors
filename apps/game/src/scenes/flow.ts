@@ -1,9 +1,24 @@
 import type { MatchState, Side } from '@rps/core';
 import type Phaser from 'phaser';
+import type { AudioService } from '../audio/AudioService';
+import type { MusicKey } from '../audio/sounds';
 import { createSession } from '../session/createSession';
 import type { MatchSession, MatchSetup } from '../session/MatchSession';
 import { MONITOR_SCENES, SceneKey } from './keys';
 import type { TransitionScene } from './TransitionScene';
+
+/** The music each screen plays (Result switches to the menu loop after the win or lose jingle). */
+const SCENE_MUSIC: Record<string, MusicKey | null> = {
+  [SceneKey.logo]: null,
+  [SceneKey.home]: 'menu',
+  [SceneKey.options]: 'menu',
+  [SceneKey.howTo]: 'menu',
+  [SceneKey.lobby]: 'menu',
+  [SceneKey.fight]: 'fight',
+};
+
+/** How long the result jingle plays before the menu music comes back. */
+const RESULT_MUSIC_DELAY_MS = 2200;
 
 export interface FightData {
   setup: MatchSetup;
@@ -17,14 +32,17 @@ export interface ResultData extends FightData {
 
 /**
  * The one place that changes screens: Logo -> Home -> Fight -> Result -> (Retry -> Fight | Home),
- * and Home <-> Options.
+ * Home <-> Options, Home <-> How to play, and Home -> Lobby -> Fight for online matches.
  * Scenes never start each other by key. Owns the current match session's lifetime.
  */
 export class SceneFlow {
   private session: MatchSession | null = null;
   private busy = false;
 
-  constructor(private readonly game: Phaser.Game) {}
+  constructor(
+    private readonly game: Phaser.Game,
+    private readonly audio: AudioService,
+  ) {}
 
   /** The match being played or just finished, if any. */
   get activeSession(): MatchSession | null {
@@ -46,6 +64,15 @@ export class SceneFlow {
     this.wipe(() => this.show(SceneKey.options));
   }
 
+  toHowTo(): void {
+    this.wipe(() => this.show(SceneKey.howTo));
+  }
+
+  /** Online: create or join a room. The lobby hands its connected session to toFight. */
+  toLobby(): void {
+    this.wipe(() => this.show(SceneKey.lobby));
+  }
+
   /** Starts a match; pass the existing session for a rematch (Retry). */
   toFight(setup: MatchSetup, session?: MatchSession): void {
     this.wipe(() => {
@@ -60,12 +87,15 @@ export class SceneFlow {
   toResult(data: ResultData): void {
     this.game.scene.pause(SceneKey.fight);
     this.game.scene.run(SceneKey.result, data);
+    this.audio.playMusic('menu', { delayMs: RESULT_MUSIC_DELAY_MS, fadeOutMs: 250 });
   }
 
   private show(key: string, data?: object): void {
     for (const k of MONITOR_SCENES) if (k !== key) this.game.scene.stop(k);
     this.game.scene.start(key, data);
     this.game.scene.bringToTop(SceneKey.transition);
+    const music = SCENE_MUSIC[key];
+    if (music !== undefined) this.audio.playMusic(music);
   }
 
   private wipe(swap: () => void): void {

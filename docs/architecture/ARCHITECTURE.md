@@ -1,6 +1,6 @@
 # Architecture
 
-_Status: describes the code as it is in v0.5.4 (2026-10-11), checked file by file. Steps 1 and 2 of the build order are built, plus the dev tuning panel from step 3. Anything not built yet is marked **(planned)**. Change this document when the code or a decision changes._
+_Status: describes the code as it is in v0.11.0 (2026-10-11), the last build before the 1.0 release. The core, the cabinet game, online play (section 10), audio, the dev tuning panel and the polish passes are built. Anything not built yet is marked **(planned)**. Change this document when the code or a decision changes._
 
 How the RPS Rivals code is organised so that it stays readable as it grows: from a local game against a random CPU, to online play, to an Android app. It builds on the decisions in [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md) (Phaser 3, TypeScript, Vite, Vitest, arcade cabinet layout, pixel perfect, polish as a core goal). Where online matches could be hosted for free is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md).
 
@@ -70,33 +70,34 @@ rps-rivals/
 ├── apps/
 │   ├── game/                    the Phaser client (Vite)
 │   │   ├── index.html
-│   │   ├── public/assets/       logo.png (the only real image so far)
+│   │   ├── public/              favicon, touch icon and link-share image; assets/: logo.png, marquee.png, audio/
 │   │   ├── e2e/                 Playwright smoke tests
-│   │   ├── test/                LocalSession, scaling + settings, tuning panel plumbing
+│   │   ├── test/                LocalSession, OnlineSession, scaling + settings, stages, audio files, tuning panel plumbing
 │   │   └── src/
 │   │       ├── main.ts          builds the Phaser game and the GameContext, loads dev/ in dev builds
 │   │       ├── version.ts       VERSION, injected by Vite from package.json
-│   │       ├── config/          tuning.ts (feel), layout.ts (cabinet geometry), palette.ts
+│   │       ├── config/          tuning.ts (feel), layout.ts (cabinet geometry), palette.ts, stages.ts, online.ts (server address)
 │   │       ├── platform/        PixelScaler (+ computeLayout), settings.ts (SettingsStore)
-│   │       ├── session/         MatchSession, LocalSession, MoveSource, cpu/RandomCpu, createSession, browserClock
+│   │       ├── session/         MatchSession, LocalSession, OnlineSession + socket, MoveSource, cpu/RandomCpu, createSession, browserClock, PausableClock
 │   │       ├── input/           InputRouter: keys, taps, joystick → actions
-│   │       ├── scenes/          Boot, Cabinet, Logo, Home, Options, Fight, Result, Transition + flow.ts, context.ts
-│   │       ├── menus/           MenuItem + homeMenu, optionsMenu, resultMenu (menus as data)
+│   │       ├── scenes/          Boot, Cabinet, Logo, Home, HowTo, Options, Lobby, Fight, Result, Transition + flow.ts, context.ts
+│   │       ├── menus/           MenuItem + homeMenu, optionsMenu, lobbyMenu, resultMenu (menus as data)
 │   │       ├── fight/           FightDirector: session events → choreography
-│   │       ├── views/           FighterView, HudView, MoveIconView, BannerView, ButtonsView, JoystickView, MenuView, PixelText
-│   │       ├── fx/              shake, flash
+│   │       ├── views/           FighterView, HudView, ClashView, BannerView, ButtonsView, JoystickView, MenuView, MenuBackdrop, PixelText
+│   │       ├── fx/              shake, cabinetShake, flash, particles, koImpact, crt + crtOverlay (CRT shader)
+│   │       ├── audio/           AudioService (music + effects buses), sounds.ts (typed sound keys)
 │   │       ├── assets/          keys.ts (typed texture keys), pixel font, placeholders/ (art drawn in code)
 │   │       ├── dev/             tuning panel (Tweakpane), dev builds only
 │   │       └── util/            snap, gfx
-│   └── server/                  (planned, step 5) the online match room, using @rps/core
+│   └── server/                  the online match server: a Cloudflare Worker, MatchRoom Durable Object per room code, using @rps/core
 ├── config/                      tsconfig.base.json, vitest.config.ts
-├── tools/                       make-logo.py (builds assets/logo.png from the brand master)
+├── tools/                       make-logo.py, make-marquee.py, make-icons.mjs, audio/make-audio.mjs (every sound)
 ├── docs/  sources/              design docs, mock-ups, art direction, the scripts that draw them
-├── .github/workflows/           ci.yml (checks), release.yml (tags each version)
+├── .github/workflows/           ci.yml (checks), pages.yml (publishes staging and live), deploy-server.yml (Workers), release.yml (tags each version)
 └── package.json                 workspaces, shared lint/format/test scripts
 ```
 
-A folder is added when there is something to put in it. Not there yet: `audio/` (sound arrives in step 3) and `apps/server`.
+A folder is added when there is something to put in it.
 
 ![Code map](diagrams/8-code-map.svg)
 
@@ -110,14 +111,14 @@ Data in, data out. No time, no randomness, no side effects. This is where the da
 
 ```ts
 // packages/core/src/rules/types.ts
-export type Move = 'attack' | 'throw' | 'block';
+export type Move = 'rock' | 'paper' | 'scissors';
 export type Side = 'p1' | 'p2';
 export type Picks = Record<Side, Move>;
 
 export interface RulesConfig {
-  beats: Record<Move, Move>;          // attack→throw, throw→block, block→attack
-  damage: Record<Move, number>;       // dealt when this move wins: throw 20, attack 15, block 10
-  startHealth: number;                // 100
+  beats: Record<Move, Move>;          // rock→scissors, scissors→paper, paper→rock
+  damage: Record<Move, number>;       // dealt when this move wins: scissors 20, rock 15, paper 10
+  startHealth: number;                // 50
   roundsToWin: number;                // 2 (best of three)
 }
 
@@ -148,7 +149,7 @@ createMatchState(cfg) · isRoundOver(state) · startNextRound(state, cfg) · isF
 
 The state is never changed in place; a new state comes back. That makes every result easy to test, log and replay, and it is exactly what a server needs. `applyExchange` refuses to play on after a K.O. or after the match is won, so a bug can't silently keep a finished round going.
 
-Moves are data (`beats` and `damage` tables), not `if` chains, so a balance change or a renamed move is a config and type edit, not a logic rewrite. (The planned Rock / Paper / Scissors naming from the rebrand maps one to one onto Attack / Block / Throw.)
+Moves are data (`beats` and `damage` tables), not `if` chains, so a balance change or a renamed move is a config and type edit, not a logic rewrite. (The moves were renamed from Attack / Block / Throw to Rock / Paper / Scissors in v0.7.0 exactly that way.)
 
 ### 4b. Referee: the match phases
 
@@ -190,8 +191,8 @@ The same `Referee` class runs inside the local game now and can run inside an on
 | Phase | Value | What happens |
 |---|---|---|
 | `roundIntroMs` | 1600 | "ROUND 1" (or "FINAL ROUND") banner; "FIGHT!" as picking starts |
-| `pickMs` | 5000 | The countdown. Picks can change until it ends; nobody picks = random |
-| `revealMs` | 1800 | Icons drop, fighters act it out, the loser's bar drains |
+| `pickMs` | 3000 | The countdown. Picks can change until it ends; nobody picks = random |
+| `revealMs` | 1800 | The move badges collide, fighters act it out, the loser's bar drains |
 | `roundOverMs` | 2200 | K.O. and the winner's pose, then the next round or the result |
 
 The client plays its animations *inside* those windows (see [section 6](#6-presentation-scenes-director-views)). The dev tuning panel can change them for the next match.
@@ -222,7 +223,7 @@ export type MatchSetup = { mode: 'cpu'; cpu: CpuKind };   // step 5 adds { mode:
 
 | Implementation | Status | How it works |
 |---|---|---|
-| `LocalSession` | Built | Owns a `Referee` on `browserClock` (`performance.now` + `setTimeout`) and `Math.random`. You are always `p1`; your picks go straight in. The opponent's picks come from a **move source**. `requestRematch()` is accepted at once. |
+| `LocalSession` | Built | Owns a `Referee` on `browserClock` (`performance.now` + `setTimeout`) and `Math.random`, through a `PausableClock`: while the tab is hidden the whole match (timer, phases, CPU) waits, since the screen stops drawing then. Online matches can't pause. You are always `p1`; your picks go straight in. The opponent's picks come from a **move source**. `requestRematch()` is accepted at once. |
 | `OnlineSession` | Planned (step 5) | A WebSocket client. Sends your pick to the match room and turns room messages into the same `SessionEvents`. |
 
 `createSession(setup)` builds the session for a match. It gives each match its own copy of the rules and timings, so the dev panel's edits apply from the next match instead of halfway through one.
@@ -247,26 +248,28 @@ Phaser code is split into three kinds of pieces, each with one job:
 |---|---|---|
 | **Scene** | Wiring only: creates views, connects the session and input, starts and stops. Short (the longest is 83 lines). | `FightScene` |
 | **Director** | Listens to session events and turns them into choreography over time, using tuning values. | `FightDirector` plays the reveal timeline below |
-| **View** | A dumb visual piece with a small API. Knows nothing about rules or sessions. | `FighterView.pose('throw')`, `HudView.setHealth('p2', 70)` |
+| **View** | A dumb visual piece with a small API. Knows nothing about rules or sessions. | `FighterView.pose('scissors')`, `HudView.setHealth('p2', 70)` |
 
 The **juice kit** (`fx/`) so far has two effects: `shake` (camera jumps between whole-pixel offsets that shrink to nothing) and `flash` (the sprite turns solid white for a few frames). Sparks, dust and impact frames join it in step 3, reading their numbers from `tuning.ts` the same way.
 
 ### The scenes
 
-Scenes are listed in `main.ts` in draw order: the cabinet at the bottom, monitor screens above it, the wipe on top.
+Scenes are listed in `main.ts` in draw order: the cabinet at the bottom, monitor screens above it, the screen transition on top.
 
 | Scene | Runs | Draws |
 |---|---|---|
-| `BootScene` | Once | Loads `logo.png` with a pixel loading bar, registers the pixel font at sizes 1 to 4, generates placeholder art, launches the cabinet and transition scenes, then the logo |
-| `CabinetScene` | Always, underneath everything | Arcade room backdrop, cabinet body, the three buttons and the joystick |
+| `BootScene` | Once | Loads `logo.png`, `marquee.png` and the audio with a pixel loading bar, registers the pixel font at sizes 1 to 7, generates placeholder art, launches the cabinet and transition scenes, then the logo |
+| `CabinetScene` | Always, underneath everything | Arcade room backdrop, the wood-grain cabinet, the marquee (with its flickering backlight), the three buttons (hover, glint, lock-in) and the joystick (click and wobble) |
 | `LogoScene` | Once per launch, on the monitor | The Chain Shift studio logo: fades in, holds, fades out. Any button or tap skips it |
-| `HomeScene` | On the monitor | Title (still "RPS FIGHTER" until the asset rebrand), idle fighters, the home menu, the version in the corner |
-| `OptionsScene` | On the monitor, from Home | One setting, Scaling (Fill height or Pixel perfect), applied at once and saved |
-| `FightScene` | On the monitor | Stage, fighters, HUD, move icons, banners, effects |
+| `HomeScene` | On the monitor | Idle fighters (the RPS Rivals title is the marquee art above the monitor), the home menu, the version in the corner |
+| `HowToScene` | On the monitor, from Home | A one-card How to play: which move beats which, each move's damage, the few rules. Any button goes back |
+| `OptionsScene` | On the monitor, from Home | Scaling (Fill height or Pixel perfect), CRT screen, sound on/off, music and effects volume, applied at once and saved |
+| `LobbyScene` | On the monitor, from Home | Online: CREATE ROOM (shows a 4-letter code and waits) or JOIN ROOM (type the code), then hands the connected session to the fight |
+| `FightScene` | On the monitor | One of three stages, fighters, HUD, the clash of move badges, banners (K.O. in its own letters), effects |
 | `ResultScene` | On the monitor, over the paused last fight frame | "YOU WIN!" or "CPU WINS", the round score, Retry or Main menu |
-| `TransitionScene` | Always, on top | The pixel wipe between screens (black bands close, the screen swaps, they open) |
+| `TransitionScene` | Always, on top | The CRT switch-off and switch-on between screens (the picture closes to a line, then a dot, the screen swaps, it opens again) |
 
-Monitor scenes call `useMonitorCamera(scene)`, which places their camera over the cabinet's screen, so they always draw in their own 216 × 288 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put.
+Monitor scenes call `useMonitorCamera(scene)`, which places their camera over the cabinet's screen, so they always draw in their own 216 × 216 space and don't care where the cabinet sits in the window. Screen shake moves only the monitor camera; the cabinet stays put.
 
 **Shared services.** `main.ts` builds one `GameContext` (`scenes/context.ts`) and stores it in Phaser's registry; scenes read it with `getContext(this)`:
 
@@ -277,14 +280,16 @@ Monitor scenes call `useMonitorCamera(scene)`, which places their camera over th
 | `settings` | The `SettingsStore` |
 | `flow` | The `SceneFlow` |
 | `lights` | `CabinetLights`: which cabinet button is lit (the player's current pick), shared by the fight and the cabinet scene |
+| `audio` | The `AudioService` (music and effects) |
+| `cabinetShake` | Rattles the whole cabinet on a K.O. and big hits |
 
 ### Screen flow and menus
 
 ![Screen flow](diagrams/7-screen-flow.svg)
 
-The game always starts the same way: Boot, the logo intro, then the home screen. **Start game** begins a match against the CPU; when it ends, the result screen offers **Retry** (a new match with the same setup) or **Main menu**. Options sits beside Home.
+The game always starts the same way: Boot, the logo intro, then the home screen. **Start game** begins a match against the CPU and **Online** goes through the lobby to a match against a friend; when a match ends, the result screen offers **Retry** (a new match with the same setup) or **Main menu**. How to play and Options sit beside Home.
 
-- **One place for screen changes.** Scenes never start each other by key. `SceneFlow` (`scenes/flow.ts`) has `toLogo()`, `toHome()`, `toOptions()`, `toFight(setup, session?)` and `toResult(data)`. It plays the wipe (`tuning.transitions`), ignores new requests mid-wipe, and **owns the match session's lifetime**: it creates it in `toFight`, keeps it for a rematch, and disposes of it on the way home.
+- **One place for screen changes.** Scenes never start each other by key. `SceneFlow` (`scenes/flow.ts`) has `toLogo()`, `toHome()`, `toHowTo()`, `toOptions()`, `toLobby()`, `toFight(setup, session?)` and `toResult(data)`. It plays the screen transition (`tuning.transitions`), ignores new requests mid-transition, and **owns the match session's lifetime**: it creates it in `toFight`, keeps it for a rematch, and disposes of it on the way home.
 - **`MatchSetup` describes a match.** It travels Home → Fight → Result. **Retry** is `session.requestRematch()`: the session answers `rematchAccepted` (locally at once; online once both players agree), and the flow reopens the fight with the same session, which starts again on `ready()`.
 - **Menus are data.** A menu is a list of `MenuItem { id, label, tag?, enabled, onSelect? }` in `menus/`. One `MenuView` draws any list, moves and blinks the cursor, skips disabled items, accepts taps, and shows a setting's value as the item's tag (`setTag`). The home menu today:
 
@@ -292,14 +297,16 @@ The game always starts the same way: Boot, the logo intro, then the home screen.
   // apps/game/src/menus/homeMenu.ts
   export const homeMenu = (flow: SceneFlow): MenuItem[] => [
     { id: 'cpu', label: 'START GAME', tag: 'VS CPU', enabled: true, onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }) },
-    { id: 'online', label: 'ONLINE', tag: 'SOON', enabled: false }, // step 5: opens the lobby
+    // greyed out (SOON) in a build that has no match server address
+    { id: 'online', label: 'ONLINE', tag: 'VS FRIEND', enabled: true, onSelect: () => flow.toLobby() },
+    { id: 'howto', label: 'HOW TO PLAY', enabled: true, onSelect: () => flow.toHowTo() },
     { id: 'options', label: 'OPTIONS', enabled: true, onSelect: () => flow.toOptions() },
   ];
   ```
 
-  Adding online play or a how-to-play screen is a new item here plus its scene. Options was added this way.
+  Options, Online and How to play were each added this way: a new item here plus its scene.
 - **Menu input.** `InputRouter` actions: `nav` (joystick, arrow keys), `confirm` (Enter, Space), `back` (Esc, Backspace), and `pick` from the three cabinet buttons, which menus treat as confirm.
-- **Music (planned).** A menu loop on Home and Result and a fight loop in the fight, cross-faded by `SceneFlow` once an audio service exists.
+- **Music (since v0.8.0).** `SceneFlow` picks the track for each screen (`SCENE_MUSIC` in `scenes/flow.ts`): the menu loop on Home, Options and the lobby, the fight loop in the fight. On the result screen the fight music fades out for the win or lose jingle, and the menu loop comes back after it.
 
 ### One reveal, as the director plays it
 
@@ -337,29 +344,27 @@ So every image must be made at its final native size, in palette colours, before
 - At a fractional scale some rows and columns of native pixels come out one device pixel wider than their neighbours (at 1.7×, pixels are 1 or 2 device pixels wide). Thin lines and text can look slightly uneven.
 - The choice is kept in `SettingsStore` and read before the game starts, so the first frame is already at the chosen scale. Changing it in Options re-runs the scaler, and `main.ts` resizes and re-zooms the game.
 
-**Geometry** lives in `config/layout.ts`: cabinet 270 × 472, marquee 32, monitor 216 × 288 at (27, 44), control panel 128 from y 344, button and joystick positions, and the stage (floor at y 232, fighters at x 84 and 132). The square-screen layout from the rebrand mock-ups (216 × 216 monitor, taller marquee) would be a change to this file plus redrawn art.
+**Geometry** lives in `config/layout.ts`: cabinet 270 × 472, marquee 104 (its 234 × 78 art at (18, 13)), a square monitor 216 × 216 at (27, 116), control panel 128 from y 344, button and joystick positions, and the stage (floor at y 180, fighters at x 84 and 132).
 
 ## 8. Tuning: every feel value in one place
 
-Every number that changes how the game *feels* lives in one typed file, `apps/game/src/config/tuning.ts`. Scenes, views and effects import from it. Current values:
+Every number that changes how the game *feels* lives in one typed file, `apps/game/src/config/tuning.ts`. Scenes, views and effects import from it. Its groups, each with a comment saying what the numbers do:
+
+| Group | Tunes |
+|---|---|
+| `reveal`, `hitPause`, `shake`, `flash`, `ko`, `sparks`, `dust` | The clash of the move badges, the hit, the K.O. slow motion and the particles |
+| `hud` | Health bar drain and the big juiced timer |
+| `buttons`, `joystick`, `cabinet` | Button press, lock-in flash and glint; joystick tilt, spring-back and wobble; the cabinet rattle |
+| `idle`, `intro`, `transitions`, `menu`, `banner`, `result` | Idle breathing, the logo intro, the CRT screen transition, menu cursor and backdrop, banners, the result delay |
+| `crt` | The CRT shader: glow, vignette, scanlines, and the impact effects |
+| `marquee` | How often and how hard the marquee light flickers |
+| `online` | How long online ending messages stay up |
+
+For example:
 
 ```ts
-// apps/game/src/config/tuning.ts
-export const tuning = {
-  reveal: { iconDropMs: 320, iconDropFromPx: 28, iconBouncePx: 4, strikeAtMs: 420, impactAtMs: 620, recoverAtMs: 1400, lungePx: 4 },
-  hitPause: { byDamage: { 10: 50, 15: 70, 20: 90 } },              // ms before shake and drain start
-  shake: { byDamage: { 10: 2, 15: 3, 20: 4 }, durationMs: 280, koPx: 5 },
-  flash: { frames: 2, frameMs: 33 },
-  hud: { drainMs: 600, trailDelayMs: 120, lowHealth: 30, timerWarnMs: 3000 },
-  buttons: { pressDepthPx: 5, releaseMs: 80 },
-  joystick: { springBackMs: 90, tiltPx: { x: 9, y: 6 }, dragDeadzonePx: 6 },
-  idle: { breatheEveryMs: 420 },
-  intro: { fadeInMs: 500, holdMs: 1500, fadeOutMs: 500, fadeSteps: 4 },   // logo intro
-  transitions: { wipeMs: 240, bandPx: 8 },
-  menu: { cursorBlinkMs: 400, repeatDelayMs: 300 },
-  banner: { slamMs: 180, holdMs: 900 },
-  result: { delayAfterMatchMs: 400 },
-} as const;
+  transitions: { closeMs: 120, lineMs: 80, offMs: 60, stepMs: 20 },
+  marquee: { minGapMs: 1500, maxGapMs: 4500, dimAlpha: 0.45, blackoutAlpha: 0.7, surgeAlpha: 0.1, surgeMs: 50 },
 ```
 
 There are two homes for numbers, on purpose:
@@ -375,11 +380,11 @@ There are two homes for numbers, on purpose:
 
 **Input.** One `InputRouter` turns every source into game actions: keys 1/2/3 (and the numpad), taps on the cabinet buttons, arrow keys and drag for the joystick. Scenes only hear `action` events (`pick`, `confirm`, `back`, `nav`); the cabinet also hears `button` (pressed or released) and `stick` (tilt) to animate. Two arrow keys at once tilt the stick diagonally; holding the stick repeats `nav` every `tuning.menu.repeatDelayMs`. Releasing the window releases everything. A gamepad or rebinding touches only `input/`.
 
-**Audio (planned, step 3).** An `AudioService` in `audio/` wrapping Phaser sound with two buses (music, sfx), mute, and saved volumes. Sounds referred to by typed keys, with random variations so hits don't repeat. It will join the `GameContext`. Nothing plays sound yet.
+**Audio (since v0.8.0).** `AudioService` in `audio/` wraps Phaser sound with two buses (music, sfx), mute and saved volumes, and is in the `GameContext` as `audio`. Sounds are typed keys (`audio/sounds.ts`); a key with variations plays one at random. Music cross-fades and waits for the browser to allow sound (the first tap or key). Views and the director only see the small `SfxPlayer` interface (`play(key)`); a lint rule keeps game logic out of `audio/`. Every sound is synthesised by `tools/audio/make-audio.mjs`. Guide and licences: [`docs/audio/AUDIO.md`](../audio/AUDIO.md).
 
-**Assets.** Until the real art exists, `assets/placeholders/` paints every texture in code at boot (room tile, cabinet, buttons, joystick ball, stage, fighters, move icons) under the real keys from `assets/keys.ts`. `generatePlaceholders` skips any key that is already loaded, so loading a real sprite sheet under the same key in `BootScene` replaces its placeholder without touching a view. The only real image so far is `logo.png`. Each fighter sheet provides the frames `idle0, idle1, attack, throw, block, hurt, ko, win` (64 px tall). The palette is in `config/palette.ts`.
+**Assets.** Until the real art exists, `assets/placeholders/` paints every texture in code at boot (room tile, cabinet, buttons, joystick ball, stage, fighters, move icons) under the real keys from `assets/keys.ts`. `generatePlaceholders` skips any key that is already loaded, so loading a real sprite sheet under the same key in `BootScene` replaces its placeholder without touching a view. The only real images so far are `logo.png` and `marquee.png` (the marquee art, cut from a mock-up by `tools/make-marquee.py`). Each fighter sheet provides the frames `idle0, idle1, rock, paper, scissors, hurt, ko, win` (64 px tall). The palette is in `config/palette.ts`.
 
-**Settings.** `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON under the localStorage key `rps-fighter.settings` (kept on purpose so saved settings survive the rename). Broken or missing storage falls back to the defaults and never stops the game. Today it holds only the scaling mode; volumes and mute join it later. Behind it is a small key-value type (`getItem`/`setItem`), so Capacitor Preferences can replace localStorage on Android.
+**Settings.** `SettingsStore` in `platform/settings.ts` holds the player's settings, emits `change`, and saves them as JSON under the localStorage key `rps-fighter.settings` (kept on purpose so saved settings survive the rename). Broken or missing storage falls back to the defaults and never stops the game. It holds the scaling mode, mute and the music and effects volumes (0 to 10). Behind it is a small key-value type (`getItem`/`setItem`), so Capacitor Preferences can replace localStorage on Android.
 
 **Version.** Set once, in `apps/game/package.json`; `vite.config.ts` injects it and `src/version.ts` exports `VERSION`, which the home screen shows in the corner. Every build bumps it and adds a `CHANGELOG.md` entry, and the Release workflow tags it `vX.Y.Z` with a GitHub release when it reaches main.
 
@@ -387,7 +392,7 @@ There are two homes for numbers, on purpose:
 
 ## 10. Online play
 
-Online play is step 5 and not built. This section says what the code already gets right for it, what still has to change, and how the online part is meant to work. **Where** the match room runs (it can't be GitHub Pages, which only serves files) is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md). The recommendation there is a free Cloudflare Durable Object running the same `Referee`; the choice is still open.
+Online play is step 5; its first version is built (v0.6.0). This section says what the code already gets right for it, what still has to change, and how the online part is meant to work. **Where** the match room runs (it can't be GitHub Pages, which only serves files) is compared in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md). The user chose a free Cloudflare Durable Object running the same `Referee` (2026-10-11); the first version is built (v0.6.0, below).
 
 ![Online exchange sequence](diagrams/6-online-exchange.svg)
 
@@ -410,19 +415,32 @@ Online play is step 5 and not built. This section says what the code already get
 | A match is described by `MatchSetup`, and sessions are built in one place | `createSession(setup)` |
 | An ONLINE slot already sits on the home menu | `menus/homeMenu.ts` |
 
-**Still to change for online play:**
+**Built in v0.6.0 (Cloudflare Durable Objects, the user's choice on 2026-10-11):**
 
-| Gap | Today | Change |
+| Part | Where | What it does |
 |---|---|---|
-| Opponent's name | `FightScene` labels the HUD `YOU` / `CPU`; `ResultScene` says `CPU WINS` | Add the opponent's display name to the session; use it in both scenes |
-| Which side I am | `LocalSession.me` is always `p1`, shown on the left | Online you may be `p2`. Decide: mirror so you are always on the left (recommended), or show real sides |
-| Leaving and disconnects | No event for it | New session events (e.g. `opponentLeft`, `connection`), a grace period in the room, then auto-picks or a forfeit |
-| Rematch waiting | Accepted at once | Result screen shows "waiting for opponent"; a decline or leave goes back to the menu |
-| Lobby | None | `LobbyScene` (create a room, join with a code), the ONLINE item enabled, `MatchSetup { mode: 'online'; roomCode }` |
-| Input checks on the server | `Referee.submitPick` trusts its types | The room checks every message (a real `Move`, the sender's own side) before calling the referee |
-| Version match | None | Clients send `VERSION` when joining; the room refuses a mismatch so both run the same rules |
-| Server randomness | `mathRandomRng` | Fine for a hobby game; `crypto.getRandomValues` if it ever matters |
-| Server package | None | `apps/server` (planned) importing `@rps/core`, with its own tests |
+| Protocol | `packages/core/src/online/protocol.ts` | The JSON messages both ways (`ClientMessage`, `ServerMessage`), `PROTOCOL_VERSION`, room codes (four consonants, so no words) and `parseClientMessage`, which turns anything unexpected into `null` |
+| Match room | `apps/server/src/MatchRoom.ts` | Seats `create` as p1 and `join` as p2, refuses wrong codes, full rooms, other protocol versions and a rival on another build; starts the `Referee` when both are ready; forwards its events with `msLeft`; rematch when both ask; closes the room when someone leaves or it sits idle (10 min lobby, 2 min after a match) |
+| Worker | `apps/server/src/index.ts` | `GET /room/CODE` (WebSocket) goes to the Durable Object named after the code; `RoomObject` holds the two sockets and feeds `MatchRoom` |
+| Deploy | `.github/workflows/deploy-server.yml` | Wrangler deploy: main to `rps-rivals-server-staging`, `production` to `rps-rivals-server` |
+| `OnlineSession` | `apps/game/src/session/OnlineSession.ts` | WebSocket client implementing `MatchSession`; turns `msLeft` into a local deadline; reports `opponentJoined`, `refused`, `rematchRequested`, `opponentLeft`, `disconnected` |
+| Lobby | `apps/game/src/scenes/LobbyScene.ts`, `menus/lobbyMenu.ts` | CREATE ROOM (shows the code, waits) and JOIN ROOM (four letter boxes; stick or typed letters); hands the connected session to `flow.toFight({ mode: 'online', roomCode }, session)` |
+| Server address | `apps/game/src/config/online.ts` | `VITE_SERVER_URL` (set by `pages.yml` to the staging or live Worker), else `ws://localhost:8787` in dev; null keeps ONLINE greyed out |
+
+How the gaps from the earlier list were closed:
+
+| Gap | Now |
+|---|---|
+| Opponent's name | `MatchSession.opponentName` (`CPU` or `RIVAL`) on the HUD and the result screen. Typed player names are a later step |
+| Which side I am | The room's real side on both screens (since v0.9.1): host = p1 on the left, guest = p2 on the right; `OnlineSession.me` comes from the room's welcome and the HUD tags say "P1 YOU" / "P2 RIVAL" |
+| Leaving and disconnects | The room tells the other player and closes; the fight and result screens show RIVAL LEFT or OFFLINE and go home. No reconnect grace period yet |
+| Rematch waiting | RETRY shows WAITING FOR RIVAL; the other player sees RIVAL WANTS A REMATCH; MAIN MENU stays available |
+| Lobby | Built (above) |
+| Input checks on the server | `parseClientMessage` checks every message; picks only count for the sender's own seat |
+| Version match | Protocol version against the server; game version between the two players |
+| Server randomness | Still `mathRandomRng` |
+
+**Still open:** reconnecting after a short drop, typed player names, and a share link that fills in the room code.
 
 ## 11. Android
 
@@ -469,11 +487,12 @@ Views may use types from `@rps/core` (like `Move` and `Side`) and the `InputRout
 | Session and CPU | Vitest | `apps/game/test/LocalSession.test.ts` | `ready()`, time left, picks per side, a full match and rematch, dispose; `RandomCpu` odds and deadline |
 | Scaler and settings | Vitest | `apps/game/test/scaling.test.ts` | `computeLayout` in both modes, settings saved, reloaded, broken values ignored |
 | Tuning panel plumbing | Vitest | `apps/game/test/tunables.test.ts` | Flatten, assign, change notes, remembered edits, broken storage |
-| Game in a browser | Playwright | `apps/game/e2e/smoke.spec.ts` | Boots to the logo and home, plays an exchange, shows the right version, skips the logo, Options switches scaling and remembers it |
+| Online room | Vitest | `apps/server/test/MatchRoom.test.ts`, `packages/core/test/protocol.test.ts` | Room codes, joining, hidden picks, the server clock, rematch, leaving |
+| Game in a browser | Playwright | `apps/game/e2e/smoke.spec.ts` | Boots to the logo and home, plays an exchange, shows the right version, skips the logo, Options switches scaling and remembers it, the music per screen, the online lobby menus and code entry |
 
-That is 57 unit tests and 4 browser tests today. **Planned:** a pixel-perfect screenshot check (at 3× every 3 × 3 block is one colour), and server tests (picks stay hidden, timer, disconnects) in step 5.
+That is 91 unit tests and 9 browser tests today. **Planned:** a pixel-perfect screenshot check (at 3× every 3 × 3 block is one colour).
 
-**CI** (`.github/workflows/ci.yml`, on every push to main and every PR): `npm ci`, lint, format check, typecheck, unit tests, build, then the Playwright tests in Chromium. **Release** (`release.yml`): on a push to main, tags a new version from `apps/game/package.json` and makes a GitHub release from its changelog entry. Publishing to GitHub Pages is still done by hand (copying `apps/game/dist` into the site repo).
+**CI** (`.github/workflows/ci.yml`, on every push to main and every PR): `npm ci`, lint, format check, typecheck, unit tests, build, then the Playwright tests in Chromium. **Release** (`release.yml`): on a push to main, tags a new version from `apps/game/package.json` and makes a GitHub release from its changelog entry. **Pages** (`pages.yml`): main publishes the staging copy at `/rps-rivals/staging/` and the `production` branch the live game at `/rps-rivals/`, each pointing at its own match server. **Deploy server** (`deploy-server.yml`) deploys the matching Cloudflare Worker.
 
 ## 14. How the design grows
 
@@ -484,13 +503,11 @@ What a typical future change touches:
 | Rebalance damage or health | `packages/core/src/config.ts` (try it first in the dev panel) |
 | Make the reveal snappier | `config/tuning.ts` (or live in the dev panel) |
 | Smarter CPU | new `session/cpu/EquilibriumCpu.ts`, a new `CpuKind`, one line in `createSession` |
-| Rename moves to Rock / Paper / Scissors | the `Move` type and core config, `assets/keys.ts` frames, input key map, labels |
 | A fourth move | core config (`beats`, `damage`), one new icon, fighter frames, one button in `layout.ts` |
 | New fighter art | a sprite sheet loaded in `BootScene` under the existing `Tex` key; no view changes |
-| Square monitor (rebrand) | `config/layout.ts` and redrawn cabinet and stage art |
-| Sound and music | new `audio/` service in the `GameContext`; calls from the director, `MenuView` and `SceneFlow` |
+| A new stage | one painter plus one line in `config/stages.ts` |
+| A new sound | a `voice()` recipe in `tools/audio/make-audio.mjs`, its key in `audio/sounds.ts`, an `audio.play('key')` call |
 | Local two-player (hot-seat) | new `HotSeatSource` move source, input bindings for player 2 |
-| Online play | new `apps/server`, `session/OnlineSession.ts`, a `LobbyScene`, enabling the ONLINE item, plus the gaps in section 10; fight and result scenes barely change |
 | Another menu (more options, how to play, pause) | one scene + one menu file + an item in an existing menu |
 | Android | Capacitor config + `platform/` adapters; game unchanged |
 | Gamepad | `input/` only |
@@ -501,9 +518,9 @@ Matches the roadmap in the project context:
 
 1. **Rules core with tests.** Monorepo, lint rules, CI, `@rps/core`. _Done 2026-10-10._
 2. **Playable prototype.** Scaler, cabinet, menus, fight vs `RandomCpu` with placeholder art, result screen. _Done 2026-10-10 (v0.1.0), Options and scaling modes since v0.2.0 / v0.3.0._
-3. **Art and juice.** Dev tuning panel _(done, v0.5.0)_; then the asset rebrand, more `fx/` (sparks, dust, impact frames), audio, final fighter art.
-4. **Polish and web release.** The game-feel pass, screenshot tests, an automatic GitHub Pages deploy, the move to a game-named GitHub organization.
-5. **Online.** Pick the host ([`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md)), `apps/server`, `OnlineSession`, lobby with room codes, the gaps in section 10.
+3. **Art and juice.** Dev tuning panel (v0.5.0), rebrand to RPS Rivals with the square screen (v0.7.0), audio (v0.8.0), clash reveal, stages, juice and CRT (v0.9.0), new fighters (v0.10.0). _Done._
+4. **Polish and web release.** Final polish, How to play, link previews and an automatic Pages deploy (v0.11.0); then 1.0 goes live. _In progress._
+5. **Online.** Cloudflare match rooms, `OnlineSession`, lobby with room codes (v0.6.0, fixed sides v0.9.1). _Done; still open: a reconnect grace period, typed names, a share link._
 6. **Android.** Capacitor and the platform adapters.
 
 ## 16. Decisions and open choices
@@ -515,7 +532,7 @@ Built as decided:
 | Repo shape | npm workspaces monorepo: `packages/core`, `apps/game`, later `apps/server` |
 | Dev tuning panel | Tweakpane, dev builds only (`apps/game/src/dev/`) |
 | Lint for import rules | `eslint-plugin-import` `no-restricted-paths` plus `no-restricted-imports` for Phaser and the `Referee` |
-| Cabinet size | 270 × 472 native, monitor 216 × 288 |
+| Cabinet size | 270 × 472 native, monitor 216 × 216 |
 | Default scaling | Fill height (Pixel perfect in Options) |
 
 Open:
@@ -523,5 +540,5 @@ Open:
 | Choice | Options | Recommendation |
 |---|---|---|
 | Where online matches run | Cloudflare Durable Object, peer-to-peer (PeerJS), Colyseus on a free host | Cloudflare Durable Object: free, server-decided, no sleeping server. Details in [`ONLINE-OPTIONS.md`](ONLINE-OPTIONS.md) |
-| Online seat display | Always show yourself on the left, or real sides | Always on the left |
+| Online seat display | Always show yourself on the left, or real sides | Real sides (user's choice, v0.9.1) |
 | Square or tall monitor | From the rebrand mock-ups | The user's pick in the rebrand thread |

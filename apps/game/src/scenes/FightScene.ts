@@ -1,20 +1,26 @@
+import { opponentOf, type Side } from '@rps/core';
 import Phaser from 'phaser';
-import { Tex } from '../assets/keys';
 import { STAGE } from '../config/layout';
+import { palette } from '../config/palette';
+import { stageFor, stageTexture } from '../config/stages';
+import { tuning } from '../config/tuning';
 import { FightDirector } from '../fight/FightDirector';
 import { BannerView } from '../views/BannerView';
+import { ClashView } from '../views/ClashView';
 import { FighterView } from '../views/FighterView';
 import { HudView } from '../views/HudView';
-import { MoveIconView } from '../views/MoveIconView';
 import { getContext } from './context';
 import type { FightData } from './flow';
 import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
+import type { MatchSession, MatchSetup } from '../session/MatchSession';
 
 /** Wiring only: builds the views, connects the session, input and director, then says ready. */
 export class FightScene extends Phaser.Scene {
   private fight!: FightData;
   private hud!: HudView;
+  /** The last whole second shown on the timer, for the countdown ticks. */
+  private lastSecs = 0;
 
   constructor() {
     super(SceneKey.fight);
@@ -25,36 +31,62 @@ export class FightScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { input, flow, lights } = getContext(this);
+    const { input, flow, lights, audio, cabinetShake } = getContext(this);
     const { session, setup } = this.fight;
     useMonitorCamera(this);
-    this.add.image(0, 0, Tex.stage).setOrigin(0);
+    // ?stage=<id> in the address forces a stage, for trying one out
+    const stage = stageFor(session.stageSeed(), new URLSearchParams(window.location.search).get('stage'));
+    this.add.image(0, 0, stageTexture(stage.id)).setOrigin(0);
 
     const fighters = {
       p1: new FighterView(this, 'p1', STAGE.fighterX.p1, STAGE.floorY),
       p2: new FighterView(this, 'p2', STAGE.fighterX.p2, STAGE.floorY),
     };
-    const iconY = STAGE.floorY - 78;
-    const icons = {
-      p1: new MoveIconView(this, STAGE.fighterX.p1, iconY),
-      p2: new MoveIconView(this, STAGE.fighterX.p2, iconY),
-    };
-    const hud = new HudView(this, { p1: 'YOU', p2: 'CPU' }, session.rules.startHealth);
-    const banner = new BannerView(this, 96);
+    const hud = new HudView(this, hudNames(session, setup), session.rules.startHealth);
+    const clash = new ClashView(this);
+    const banner = new BannerView(this, 64);
+    /** Online, the rival left or the connection dropped: the match is over without a result. */
+    let endedEarly = false;
 
-    new FightDirector(this, session, { fighters, icons, hud, banner }, session.rules.roundsToWin, {
+    new FightDirector(this, session, { fighters, clash, hud, banner }, audio, session.rules.roundsToWin, {
       clearPick: () => lights.select(null),
-      matchOver: (winner, state) => flow.toResult({ setup, session, winner, state }),
+      // online, the rival can leave in the moment between the K.O. and the result screen
+      matchOver: (winner, state) => {
+        if (!endedEarly) flow.toResult({ setup, session, winner, state });
+      },
+      shakeCabinet: (px, ms) => cabinetShake.kick(px, ms),
     });
 
-    const off = input.on('action', (a) => {
-      if (!this.scene.isActive() || a.type !== 'pick') return;
-      session.submitPick(a.move);
-      const picked = session.snapshot().myPick;
-      if (picked) lights.select(picked);
-    });
+    // online only: the match ends early if the other player leaves or the connection drops
+    // (once the result screen is up, it says so itself)
+    const endEarly = (text: string) => {
+      if (endedEarly || !this.scene.isActive()) return;
+      endedEarly = true;
+      banner.show(text, { color: palette.pink, holdMs: Infinity });
+      this.time.delayedCall(tuning.online.endedHoldMs, () => flow.toHome());
+    };
+    const offs = [
+      input.on('action', (a) => {
+        if (!this.scene.isActive() || a.type !== 'pick') return;
+        const before = session.snapshot().myPick;
+        session.submitPick(a.move);
+        const picked = session.snapshot().myPick;
+        if (picked) lights.select(picked);
+        if (picked && picked !== before) audio.play('lockIn');
+      }),
+      session.on('opponentLeft', () => endEarly('RIVAL LEFT')),
+      session.on('disconnected', () => endEarly('OFFLINE')),
+    ];
+    // a hidden tab stops drawing, so a CPU match waits for the player to come back
+    const hide = () => session.setPaused(true);
+    const show = () => session.setPaused(false);
+    this.game.events.on(Phaser.Core.Events.HIDDEN, hide);
+    this.game.events.on(Phaser.Core.Events.VISIBLE, show);
     this.events.once('shutdown', () => {
-      off();
+      offs.forEach((off) => off());
+      this.game.events.off(Phaser.Core.Events.HIDDEN, hide);
+      this.game.events.off(Phaser.Core.Events.VISIBLE, show);
+      session.setPaused(false);
       lights.select(null);
     });
     this.hud = hud;
@@ -64,5 +96,23 @@ export class FightScene extends Phaser.Scene {
   override update(): void {
     const view = this.fight.session.snapshot();
     this.hud.setTimer(view.phase === 'picking' ? view.msLeft : null);
+    // a tick for each of the last seconds, higher as time runs out (quiet once you've picked)
+    const secs = view.phase === 'picking' ? Math.ceil(view.msLeft / 1000) : 0;
+    if (secs !== this.lastSecs && secs > 0 && view.msLeft <= tuning.hud.timerWarnMs && !view.myPick)
+      getContext(this).audio.play('tick', { detune: (tuning.hud.timerWarnMs / 1000 - secs) * 200 });
+    this.lastSecs = secs;
   }
+}
+
+/**
+ * The HUD's name tags. Online, P1 (the host) is always on the left and P2 on the right on both
+ * screens, so each tag says which player it is and which one is you.
+ */
+function hudNames(session: MatchSession, setup: MatchSetup): Record<Side, string> {
+  const names = { [session.me]: 'YOU', [opponentOf(session.me)]: session.opponentName } as Record<
+    Side,
+    string
+  >;
+  if (setup.mode !== 'online') return names;
+  return { p1: `P1 ${names.p1}`, p2: `P2 ${names.p2}` };
 }

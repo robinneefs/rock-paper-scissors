@@ -9,6 +9,7 @@ export default tseslint.config(
   {
     ignores: [
       '**/dist/**',
+      '**/.wrangler/**',
       '**/node_modules/**',
       'docs/**',
       'sources/**',
@@ -60,6 +61,12 @@ export default tseslint.config(
               target: `${game}/!(dev)/**/*`,
               from: `${game}/dev`,
               message: 'Only main.ts loads the dev tuning panel.',
+            },
+            // Audio: plays sounds it is told to; knows nothing about matches or screens
+            {
+              target: `${game}/audio`,
+              from: [`${game}/session`, `${game}/scenes`, `${game}/views`, `${game}/fight`],
+              message: 'The audio service plays what it is told; no game logic.',
             },
             // Platform: no game logic
             {

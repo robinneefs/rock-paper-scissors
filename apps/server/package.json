@@ -1,0 +1,17 @@
+{
+  "name": "@rps/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Online match rooms for RPS Rivals: a Cloudflare Worker with one Durable Object per room code, running @rps/core's referee.",
+  "type": "module",
+  "scripts": {
+    "dev": "npx wrangler@4.137.0 dev",
+    "deploy": "npx wrangler@4.137.0 deploy"
+  },
+  "dependencies": {
+    "@rps/core": "0.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260905.1"
+  }
+}

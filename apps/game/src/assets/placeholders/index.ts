@@ -1,11 +1,21 @@
 import type Phaser from 'phaser';
 import { css, fighterColors, palette } from '../../config/palette';
+import { STAGES, stageTexture } from '../../config/stages';
 import { FighterFrames, Tex } from '../keys';
-import { BUTTON_FRAME, paintButtons, paintCabinet, paintJoystickBall, paintRoomTile } from './cabinet';
+import {
+  BUTTON_FRAME,
+  BUTTON_RING,
+  paintButtonRings,
+  paintButtons,
+  paintCabinet,
+  paintJoystickBall,
+  paintRoomTile,
+} from './cabinet';
 import { FIGHTER_FRAME, paintFighter } from './fighters';
-import { ICON, paintIcons } from './icons';
+import { BADGE, paintBadges } from './icons';
+import { paintKoLetters } from './koLetters';
 import type { PixelBuffer } from './PixelBuffer';
-import { paintStage } from './stage';
+import { paintMenuBackdrop, paintMenuStripes } from './menu';
 
 /**
  * Generates every placeholder texture under its real asset key. When a real sprite sheet is loaded
@@ -25,10 +35,13 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
 
   add(Tex.room, paintRoomTile());
   add(Tex.cabinet, paintCabinet());
-  add(Tex.stage, paintStage());
+  add(Tex.menuBackdrop, paintMenuBackdrop());
+  add(Tex.menuStripes, paintMenuStripes());
+  for (const stage of STAGES) add(stageTexture(stage.id), stage.paint());
   add(Tex.joystickBall, paintJoystickBall());
+  add(Tex.koLetters, paintKoLetters());
   add(Tex.buttons, paintButtons(), (tex) => {
-    (['attack', 'throw', 'block'] as const).forEach((m, row) =>
+    (['rock', 'paper', 'scissors'] as const).forEach((m, row) =>
       BUTTON_FRAME.states.forEach((state, i) =>
         tex.add(
           `${m}-${state}`,
@@ -41,8 +54,25 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
       ),
     );
   });
-  add(Tex.icons, paintIcons(), (tex) =>
-    ICON.frames.forEach((name, i) => tex.add(name, 0, i * ICON.size, 0, ICON.size, ICON.size)),
+  add(Tex.buttonRings, paintButtonRings(), (tex) => {
+    (['rock', 'paper', 'scissors'] as const).forEach((m, row) => {
+      for (let f = 0; f < BUTTON_RING.frames; f++)
+        tex.add(
+          `${m}-${f}`,
+          0,
+          f * BUTTON_RING.width,
+          row * BUTTON_RING.height,
+          BUTTON_RING.width,
+          BUTTON_RING.height,
+        );
+    });
+  });
+  add(Tex.badges, paintBadges(), (tex) =>
+    BADGE.moves.forEach((m, row) =>
+      BADGE.states.forEach((state, i) =>
+        tex.add(`${m}-${state}`, 0, i * BADGE.size, row * BADGE.size, BADGE.size, BADGE.size),
+      ),
+    ),
   );
   for (const [key, colors] of [
     [Tex.fighterP1, fighterColors.p1],
