@@ -10,8 +10,6 @@
 
 ***Coded on only the purest of vibes.***
 
-<sub>RPS Rivals is an AI-developed project: the code, docs and placeholder art are written by Claude, with a human calling the shots.</sub>
-
 </div>
 
 ---
