@@ -7,7 +7,7 @@
 // apps/game/public/: favicon.png (64x64), apple-touch-icon.png (180x180), share.png (1200x630),
 // and the README's PLAY button into docs/readme/play-button.png. For the Android app: the launcher
 // icons and splash screens in every density (apps/android/android/app/src/main/res/), and the
-// Play Store icon (512x512) and feature graphic (1024x500) in apps/android/store/.
+// Play Store icon (512x512) and feature graphic (1024x500) in play-store/.
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -171,7 +171,7 @@ try {
     // Play Store listing: the 512x512 icon and the 1024x500 feature graphic
     const [store, stg] = canvas(512, 512, hex(palette.ink));
     centred(stg, 512, 8);
-    android.push(['../../android/store/icon-512.png', store]);
+    android.push(['../../../play-store/icon-512.png', store]);
     const [feat, ftg] = canvas(1024, 500, hex(palette.ink));
     const fs = 3;
     const fx = (1024 - marquee.width * fs) / 2;
@@ -191,7 +191,7 @@ try {
       marquee.height * fs,
     );
     [0, 1, 2].forEach((row, i) => button(ftg, row, 512 - fw * 1.5 * 3 - 60 + i * (fw * 3 + 60), 320, 3));
-    android.push(['../../android/store/feature-graphic.png', feat]);
+    android.push(['../../../play-store/feature-graphic.png', feat]);
 
     return Object.fromEntries(
       [
