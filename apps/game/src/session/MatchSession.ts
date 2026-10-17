@@ -44,7 +44,7 @@ export interface SessionEvents extends Record<string, unknown> {
  */
 export interface MatchSession {
   readonly me: Side;
-  /** Shown on the HUD and the result screen ("CPU", "RIVAL"). */
+  /** Shown on the HUD and the result screen ("RIVAL" for the CPU and online alike). */
   readonly opponentName: string;
   /** The rules this match is played with (start health, rounds to win, damage). */
   readonly rules: RulesConfig;

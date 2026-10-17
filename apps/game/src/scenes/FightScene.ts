@@ -9,6 +9,7 @@ import { BannerView } from '../views/BannerView';
 import { ClashView } from '../views/ClashView';
 import { FighterView } from '../views/FighterView';
 import { HudView } from '../views/HudView';
+import { TagView } from '../views/TagView';
 import { getContext } from './context';
 import type { FightData } from './flow';
 import { SceneKey } from './keys';
@@ -42,21 +43,31 @@ export class FightScene extends Phaser.Scene {
       p1: new FighterView(this, 'p1', STAGE.fighterX.p1, STAGE.floorY),
       p2: new FighterView(this, 'p2', STAGE.fighterX.p2, STAGE.floorY),
     };
+    const names = labels(session);
+    const tags = new TagView(this, names);
     const hud = new HudView(this, hudNames(session, setup), session.rules.startHealth);
-    const clash = new ClashView(this);
+    const clash = new ClashView(this, names, session.me);
     const banner = new BannerView(this, 64);
     /** Online, the rival left or the connection dropped: the match is over without a result. */
     let endedEarly = false;
 
-    new FightDirector(this, session, { fighters, clash, hud, banner }, audio, session.rules.roundsToWin, {
-      clearPick: () => lights.select(null),
-      // online, the rival can leave in the moment between the K.O. and the result screen
-      matchOver: (winner, state) => {
-        if (!endedEarly) flow.toResult({ setup, session, winner, state });
+    const director = new FightDirector(
+      this,
+      session,
+      { fighters, clash, hud, banner, tags },
+      audio,
+      session.rules.roundsToWin,
+      names,
+      {
+        clearPick: () => lights.select(null),
+        // online, the rival can leave in the moment between the K.O. and the result screen
+        matchOver: (winner, state) => {
+          if (!endedEarly) flow.toResult({ setup, session, winner, state });
+        },
+        shakeCabinet: (px, ms) => cabinetShake.kick(px, ms),
+        vibrate: (px) => (px === 'ko' ? haptics.ko() : haptics.shake(px)),
       },
-      shakeCabinet: (px, ms) => cabinetShake.kick(px, ms),
-      vibrate: (px) => (px === 'ko' ? haptics.ko() : haptics.shake(px)),
-    });
+    );
 
     // online only: the match ends early if the other player leaves or the connection drops
     // (once the result screen is up, it says so itself)
@@ -72,7 +83,10 @@ export class FightScene extends Phaser.Scene {
         const before = session.snapshot().myPick;
         session.submitPick(a.move);
         const picked = session.snapshot().myPick;
-        if (picked) lights.select(picked);
+        if (picked) {
+          lights.select(picked);
+          director.myPick(picked);
+        }
         if (picked && picked !== before) audio.play('lockIn');
       }),
       session.on('opponentLeft', () => endEarly('RIVAL LEFT')),
@@ -105,15 +119,17 @@ export class FightScene extends Phaser.Scene {
   }
 }
 
+/** Short names: "YOU" for this player's side, the opponent's name ("RIVAL") for the other. */
+function labels(session: MatchSession): Record<Side, string> {
+  return { [session.me]: 'YOU', [opponentOf(session.me)]: session.opponentName } as Record<Side, string>;
+}
+
 /**
  * The HUD's name tags. Online, P1 (the host) is always on the left and P2 on the right on both
  * screens, so each tag says which player it is and which one is you.
  */
 function hudNames(session: MatchSession, setup: MatchSetup): Record<Side, string> {
-  const names = { [session.me]: 'YOU', [opponentOf(session.me)]: session.opponentName } as Record<
-    Side,
-    string
-  >;
+  const names = labels(session);
   if (setup.mode !== 'online') return names;
   return { p1: `P1 ${names.p1}`, p2: `P2 ${names.p2}` };
 }

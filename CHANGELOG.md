@@ -2,6 +2,21 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Version numbers follow semver: a new feature bumps the middle number (1.0.0 → 1.1.0), a fix-only build bumps the last (1.0.0 → 1.0.1). Each version that goes live is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches the `production` branch.
 
+## 1.2.0 (2026-10-17)
+
+New players often couldn't tell which fighter was theirs or what had just happened. The fight now spells it out:
+
+- **YOU VS RIVAL.** Before round 1, the two names slide in from their sides with a big VS between them, then ROUND 1 slams in.
+- **A tag over each fighter.** Through round 1 a bobbing **YOU** or **RIVAL** tag with an arrow points down at each fighter. At the start of round 2 the tags blink out.
+- **Each side has its own colour.** Your names, health bar frames and round boxes are now red for the left fighter (red shirt) and teal for the right one (teal top), so each bar matches its fighter.
+- **Your pick shows over your head.** While picking, your move appears over your fighter, and a **?** hangs over your rival's head (dim until they lock in, bright once they have). The pick stays hidden until the reveal.
+- **A bigger prompt.** PICK YOUR MOVE is bigger and sits under the fighters. For the first three picks of a match, **▼ PRESS A BUTTON ▼** points down at the buttons. The prompt goes away once you've picked.
+- **The reveal says who hit whom.** Each badge carries its owner's name (YOU / RIVAL) until the badges collide. Then the rule appears (**SCISSORS BEATS PAPER**), followed by **YOU HIT!** or **RIVAL HITS!**, both in the winner's colour. A tie shows **CLASH!** and **NO DAMAGE**.
+- **The hit lands on the right bar.** The damage number now pops off the loser's head in red, and the loser's health bar flashes white.
+- **The CPU is called RIVAL.** RIVAL now appears everywhere the game used to say CPU: the HUD, the result screen (RIVAL WINS) and the home menu (START GAME, VS RIVAL). Online works the same way, with P1 / P2 in front of each name on the HUD.
+- At low health the bar frame now flashes white instead of red (red is the left side's colour now).
+- All of it works the same online, from either seat. New tuning values (`identity`, `prompt`, the verdict and bar flash values under `reveal` and `hud`) are in the dev tuning panel.
+
 ## 1.1.1 (2026-10-13)
 
 - **Privacy policy page.** The game's site now has a privacy policy at `privacy.html` (needed for Google Play): no accounts, no ads, no analytics, settings stay on your device, and the online server only passes moves between the two players without saving anything.

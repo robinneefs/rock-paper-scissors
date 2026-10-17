@@ -7,7 +7,7 @@ export const homeMenu = (flow: SceneFlow, quit?: () => void): MenuItem[] => [
   {
     id: 'cpu',
     label: 'START GAME',
-    tag: 'VS CPU',
+    tag: 'VS RIVAL',
     enabled: true,
     onSelect: () => flow.toFight({ mode: 'cpu', cpu: 'random' }),
   },

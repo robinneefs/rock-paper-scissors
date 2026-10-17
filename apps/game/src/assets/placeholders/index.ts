@@ -12,7 +12,7 @@ import {
   paintRoomTile,
 } from './cabinet';
 import { FIGHTER_FRAME, paintFighter } from './fighters';
-import { BADGE, paintBadges } from './icons';
+import { BADGE, PICK_CHIP, paintBadges, paintPickChips } from './icons';
 import { paintKoLetters } from './koLetters';
 import type { PixelBuffer } from './PixelBuffer';
 import { paintMenuBackdrop, paintMenuStripes } from './menu';
@@ -72,6 +72,11 @@ export function generatePlaceholders(scene: Phaser.Scene): void {
       BADGE.states.forEach((state, i) =>
         tex.add(`${m}-${state}`, 0, i * BADGE.size, row * BADGE.size, BADGE.size, BADGE.size),
       ),
+    ),
+  );
+  add(Tex.pickChips, paintPickChips(), (tex) =>
+    PICK_CHIP.frames.forEach((frame, i) =>
+      tex.add(frame, 0, i * PICK_CHIP.width, 0, PICK_CHIP.width, PICK_CHIP.height),
     ),
   );
   for (const [key, colors] of [

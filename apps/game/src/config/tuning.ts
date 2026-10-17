@@ -6,7 +6,7 @@ export const tuning = {
      * Move badges pop in beside the fighters (badgeOutPx out from them, at badgeY), wait, then fly
      * from flyAtMs to the middle and collide at impactAtMs. The winner slides to the centre; the
      * loser is knocked off screen in loserFlyMs, turning a quarter every loserSpinMs. A tie bounces
-     * both back by tieBouncePx. The verdict ("ROCK WINS") slams in at verdictY.
+     * both back by tieBouncePx.
      */
     badgePopMs: 200,
     badgePopFromPx: 10,
@@ -19,7 +19,15 @@ export const tuning = {
     tieBouncePx: 14,
     tieBounceMs: 240,
     flashMs: 60,
-    verdictY: 38,
+    /**
+     * The verdict: the rule ("ROCK BEATS SCISSORS") at ruleY, then after hitLineDelayMs who hit
+     * ("YOU HIT!", "RIVAL HITS!") at verdictY, both in the winner's colour. A tie: "CLASH!" and
+     * "NO DAMAGE". While the badges fly each carries its owner's name, ownerGapPx above it.
+     */
+    ruleY: 32,
+    verdictY: 42,
+    hitLineDelayMs: 140,
+    ownerGapPx: 10,
     /** The damage number hops up damageHopPx, then falls damageFallPx over damageFallMs. */
     damageHopPx: 4,
     damageFallPx: 22,
@@ -91,6 +99,9 @@ export const tuning = {
     timerSlamDropPx: 10,
     timerSlamMs: 160,
     timerSlamHoldMs: 450,
+    /** The hurt fighter's bar flashes white hitFlashes times, hitFlashMs per flash and per gap. */
+    hitFlashes: 3,
+    hitFlashMs: 60,
   },
   /**
    * Cabinet buttons. releaseMs: how long a quick tap stays down. Lock-in: the chosen button flashes
@@ -117,6 +128,22 @@ export const tuning = {
   /** Menus; the backdrop's diagonal stripes move one pixel every stripeStepMs. */
   menu: { cursorBlinkMs: 400, repeatDelayMs: 300, stripeStepMs: 90 },
   banner: { slamMs: 180, holdMs: 900 },
+  /**
+   * Who is who. Before round 1 a "YOU VS RIVAL" card holds for vsCardMs, then "ROUND 1" slams in.
+   * A "YOU" / "RIVAL" tag with an arrow bobs over each fighter (by bobPx every bobMs) through the
+   * first tagRounds rounds; at the start of the next round it blinks out (blinkTimes, blinkMs each).
+   */
+  identity: {
+    vsCardMs: 850,
+    vsSlideMs: 220,
+    tagRounds: 1,
+    bobPx: 1,
+    bobMs: 320,
+    blinkTimes: 3,
+    blinkMs: 110,
+  },
+  /** "PICK YOUR MOVE" and, for the first arrowTurns picks of a match, "▼ PRESS A BUTTON ▼" under it. */
+  prompt: { arrowTurns: 3 },
   /**
    * The whole cabinet rattles against the room: on a K.O., on a hit of bigHitDamage or more,
    * and once when the pick timer runs out. It moves to a new offset every shakeStepMs.

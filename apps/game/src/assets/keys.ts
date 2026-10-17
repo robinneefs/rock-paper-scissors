@@ -12,6 +12,8 @@ export const Tex = {
   fighterP1: 'fighter-p1',
   fighterP2: 'fighter-p2',
   badges: 'move-badges',
+  /** Small move symbols over the fighters' heads while picking (your pick, the rival's "?"). */
+  pickChips: 'pick-chips',
   buttons: 'cabinet-buttons',
   buttonRings: 'cabinet-button-rings',
   joystickBall: 'joystick-ball',

@@ -3,7 +3,7 @@ import type Phaser from 'phaser';
 import { GLYPH } from '../assets/glyphs';
 import type { FontSize } from '../assets/keys';
 import { MONITOR } from '../config/layout';
-import { palette } from '../config/palette';
+import { palette, sideColors } from '../config/palette';
 import { tuning } from '../config/tuning';
 import { lighten } from '../assets/placeholders/icons';
 import { shade } from '../assets/placeholders/PixelBuffer';
@@ -15,6 +15,8 @@ const PIP = { y: 23, size: 5, gap: 3 } as const;
 /** Where the timer's first second is centred; later seconds drift down from here. */
 const TIMER = { x: MONITOR.width / 2, y: 15 } as const;
 const MAX_FONT = 7;
+/** "PICK YOUR MOVE" sits on the floor under the fighters, the arrows to the buttons below it. */
+const PROMPT = { y: 186, arrowsY: 204 } as const;
 
 interface BarState {
   shown: number; // what the bar shows now (animates toward the target)
@@ -22,7 +24,10 @@ interface BarState {
   max: number;
 }
 
-/** Health bars, round pips, timer, names, "READY" markers and the pick prompt. Shows what it's told. */
+/**
+ * Health bars, round pips, timer, names, "READY" markers and the pick prompt. Names, bar frames and
+ * pips are in each side's colour. Shows what it's told.
+ */
 const SIDES = ['p1', 'p2'] as const;
 
 export class HudView {
@@ -38,6 +43,9 @@ export class HudView {
   private boxY: number = TIMER.y;
   private slamHide: Phaser.Time.TimerEvent | null = null;
   private readonly prompt: PixelText;
+  private readonly arrows: PixelText;
+  /** While above scene time, that side's bar flashes white (it was just hit). */
+  private readonly flashUntil: Record<Side, number> = { p1: 0, p2: 0 };
   private readonly ready: Record<Side, PixelText>;
   private readonly bars: Record<Side, BarState>;
   private roundsWon: Record<Side, number> = { p1: 0, p2: 0 };
@@ -83,9 +91,9 @@ export class HudView {
       color: palette.red,
     });
     this.timerBox.add(this.timerSlam.setVisible(false));
-    new PixelText(scene, BAR.inset, PIP.y, names.p1, { color: palette.text, shadow: palette.ink });
+    new PixelText(scene, BAR.inset, PIP.y, names.p1, { color: sideColors.p1, shadow: palette.ink });
     new PixelText(scene, MONITOR.width - BAR.inset, PIP.y, names.p2, {
-      color: palette.text,
+      color: sideColors.p2,
       align: 'right',
       shadow: palette.ink,
     });
@@ -100,11 +108,28 @@ export class HudView {
         shadow: palette.ink,
       }).setVisible(false),
     };
-    this.prompt = new PixelText(scene, MONITOR.width / 2, 78, 'PICK YOUR MOVE', {
+    this.prompt = new PixelText(scene, MONITOR.width / 2, PROMPT.y, 'PICK YOUR MOVE', {
+      size: 2,
       color: palette.text,
       align: 'center',
-      shadow: palette.ink,
+      outline: palette.ink,
+      shadow: palette.shadow,
+      edgePx: 1,
     }).setVisible(false);
+    this.arrows = new PixelText(scene, MONITOR.width / 2, PROMPT.arrowsY, '▼ PRESS A BUTTON ▼', {
+      color: palette.gold,
+      align: 'center',
+      outline: palette.ink,
+    }).setVisible(false);
+    // the arrows bob toward the buttons
+    scene.time.addEvent({
+      delay: tuning.identity.bobMs,
+      loop: true,
+      callback: () =>
+        this.arrows.setY(
+          this.arrows.y === PROMPT.arrowsY ? PROMPT.arrowsY + tuning.identity.bobPx : PROMPT.arrowsY,
+        ),
+    });
     this.draw();
   }
 
@@ -219,8 +244,30 @@ export class HudView {
     this.ready[side].setVisible(ready);
   }
 
-  showPrompt(on: boolean): void {
+  /** The pick prompt; `arrows` adds the line pointing down at the buttons (the first few picks). */
+  showPrompt(on: boolean, arrows = false): void {
     this.prompt.setVisible(on);
+    this.arrows.setVisible(on && arrows);
+  }
+
+  /** The bar of the side that was just hit flashes white a few times, so the eye goes to it. */
+  flashBar(side: Side): void {
+    const t = tuning.hud;
+    const ms = t.hitFlashes * t.hitFlashMs * 2;
+    this.flashUntil[side] = this.scene.time.now + ms;
+    this.scene.time.addEvent({
+      delay: t.hitFlashMs,
+      repeat: t.hitFlashes * 2,
+      callback: () => this.draw(),
+    });
+  }
+
+  /** On during the "on" half of each flash. */
+  private flashing(side: Side): boolean {
+    const now = this.scene.time.now;
+    const left = this.flashUntil[side] - now;
+    if (left <= 0) return false;
+    return Math.floor(left / tuning.hud.hitFlashMs) % 2 === 1;
   }
 
   private isLow(bar: BarState): boolean {
@@ -267,8 +314,11 @@ export class HudView {
         const nx = x + 1 + Math.round((inner * i) / 10);
         g.fillStyle(palette.ink, 0.35).fillRect(nx, y + 3, 1, h - 5);
       }
-      frameRect(g, x, BAR.y, BAR.w, BAR.h, low && this.pulse ? palette.red : palette.gold);
-      g.fillStyle(lighten(palette.gold, 0.5)).fillRect(x + 1, BAR.y, BAR.w - 2, 1); // frame highlight
+      const flash = this.flashing(side);
+      if (flash) g.fillStyle(palette.white).fillRect(x + 1, y, inner, h);
+      const frame = flash || (low && this.pulse) ? palette.white : sideColors[side];
+      frameRect(g, x, BAR.y, BAR.w, BAR.h, frame);
+      g.fillStyle(lighten(frame, 0.5)).fillRect(x + 1, BAR.y, BAR.w - 2, 1); // frame highlight
 
       // round pips next to the name, toward the centre
       for (let i = 0; i < this.roundsToWin; i++) {
@@ -278,7 +328,13 @@ export class HudView {
             : MONITOR.width - BAR.inset - BAR.w + i * (PIP.size + PIP.gap);
         const won = i < this.roundsWon[side];
         g.fillStyle(palette.ink).fillRect(px - 1, PIP.y - 1, PIP.size + 2, PIP.size + 2);
-        g.fillStyle(won ? palette.gold : palette.hpBack).fillRect(px, PIP.y, PIP.size, PIP.size);
+        g.fillStyle(won ? sideColors[side] : shade(sideColors[side], 0.3)).fillRect(
+          px,
+          PIP.y,
+          PIP.size,
+          PIP.size,
+        );
+        if (won) g.fillStyle(lighten(sideColors[side], 0.6)).fillRect(px, PIP.y, PIP.size, 1);
       }
     }
   }
