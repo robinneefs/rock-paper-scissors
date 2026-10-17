@@ -2,7 +2,7 @@ import type { Move, ExchangeOutcome, Side } from '@rps/core';
 import type Phaser from 'phaser';
 import { Tex } from '../assets/keys';
 import { MONITOR, STAGE } from '../config/layout';
-import { moveColors, palette } from '../config/palette';
+import { palette, sideColors } from '../config/palette';
 import { tuning } from '../config/tuning';
 import { snap } from '../util/snap';
 import { PixelText } from './PixelText';
@@ -10,15 +10,21 @@ import { PixelText } from './PixelText';
 const SIDES = ['p1', 'p2'] as const;
 /** Half a badge's width minus the overlap where the two touch at the collision. */
 const CONTACT_PX = 15;
+/** Half a badge's height. */
+const BADGE_HALF = 20;
 
 /**
- * The reveal: each side's move badge pops in beside its fighter, both fly to the middle and
- * collide, the winner stays and the loser is knocked away, "ROCK WINS" slams in and the damage
- * number falls from the loser's head. The director decides when each step plays.
+ * The reveal: each side's move badge pops in beside its fighter with its owner's name over it, both
+ * fly to the middle and collide, the winner stays and the loser is knocked away, "ROCK BEATS
+ * SCISSORS" and "YOU HIT!" slam in and the damage number falls from the loser's head. The director
+ * decides when each step plays.
  */
 export class ClashView {
   private readonly badges: Record<Side, Phaser.GameObjects.Image>;
   private readonly autos: Record<Side, PixelText>;
+  /** "YOU" / "RIVAL" over each badge until they collide. */
+  private readonly owners: Record<Side, PixelText>;
+  private readonly rule: PixelText;
   private readonly verdict: PixelText;
   private readonly damage: PixelText;
   private moves: Record<Side, Move> = { p1: 'rock', p2: 'rock' };
@@ -27,7 +33,11 @@ export class ClashView {
   /** Tweens on plain progress objects (the loser's flight, the damage fall), stopped by hide(). */
   private paths: Phaser.Tweens.Tween[] = [];
 
-  constructor(private readonly scene: Phaser.Scene) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly labels: Record<Side, string>,
+    private readonly me: Side,
+  ) {
     const r = tuning.reveal;
     this.home = { p1: STAGE.fighterX.p1 - r.badgeOutPx, p2: STAGE.fighterX.p2 + r.badgeOutPx };
     this.badges = {
@@ -38,6 +48,17 @@ export class ClashView {
       p1: this.label(this.home.p1),
       p2: this.label(this.home.p2),
     };
+    const owner = (side: Side) =>
+      new PixelText(scene, this.home[side], 0, labels[side], {
+        color: sideColors[side],
+        align: 'center',
+        outline: palette.ink,
+      }).setVisible(false);
+    this.owners = { p1: owner('p1'), p2: owner('p2') };
+    this.rule = new PixelText(scene, this.centre, r.ruleY, '', {
+      align: 'center',
+      outline: palette.ink,
+    }).setVisible(false);
     this.verdict = new PixelText(scene, this.centre, r.verdictY, '', {
       size: 2,
       align: 'center',
@@ -51,8 +72,9 @@ export class ClashView {
     }).setVisible(false);
   }
 
+  /** "AUTO" under a badge when the timer picked for that side. */
   private label(x: number): PixelText {
-    const y = tuning.reveal.badgeY - 30;
+    const y = tuning.reveal.badgeY + BADGE_HALF + 2;
     return new PixelText(this.scene, x, y, 'AUTO', {
       color: palette.lilac,
       align: 'center',
@@ -72,9 +94,18 @@ export class ClashView {
         .setAngle(0)
         .setVisible(true);
       this.autos[side].setVisible(autoPicked[side]);
-      this.tween(badge, { y: r.badgeY }, r.badgePopMs, 'Back.easeOut');
+      this.owners[side].setVisible(true);
+      this.follow(side, this.home[side], r.badgeY - r.badgePopFromPx);
+      this.tween(badge, { y: r.badgeY }, r.badgePopMs, 'Back.easeOut', () =>
+        this.follow(side, badge.x, badge.y),
+      );
       this.scene.time.delayedCall(r.flashMs, () => badge.setFrame(`${picks[side]}-normal`));
     }
+  }
+
+  /** The owner's name sits over its badge, wherever the badge is (until the collision hides it). */
+  private follow(side: Side, x: number, y: number): void {
+    this.owners[side].setAnchorX(snap(x)).setY(snap(y) - BADGE_HALF - tuning.reveal.ownerGapPx);
   }
 
   /** Both badges fly to the middle, arriving (touching) after `ms`. */
@@ -83,7 +114,8 @@ export class ClashView {
     for (const side of SIDES) {
       this.autos[side].setVisible(false);
       const x = this.centre + (side === 'p1' ? -CONTACT_PX : CONTACT_PX);
-      this.tween(this.badges[side], { x, y: r.clashY }, ms, 'Quad.easeIn');
+      const badge = this.badges[side];
+      this.tween(badge, { x, y: r.clashY }, ms, 'Quad.easeIn', () => this.follow(side, badge.x, badge.y));
     }
   }
 
@@ -95,6 +127,7 @@ export class ClashView {
       badge.setFrame(`${this.moves[side]}-flash`);
       this.scene.time.delayedCall(r.flashMs, () => badge.setFrame(`${this.moves[side]}-normal`));
     }
+    for (const side of SIDES) this.owners[side].setVisible(false);
     if (outcome.kind === 'tie') {
       for (const side of SIDES) {
         const out = side === 'p1' ? -1 : 1;
@@ -105,7 +138,7 @@ export class ClashView {
           'Quad.easeOut',
         );
       }
-      this.slamVerdict('CLASH!', palette.lilac);
+      this.slamVerdict('CLASH!', palette.lilac, 'NO DAMAGE', 'below');
       return;
     }
     const winner = this.badges[outcome.winner];
@@ -130,17 +163,20 @@ export class ClashView {
         onComplete: () => loser.setVisible(false),
       }),
     );
-    const move = outcome.picks[outcome.winner];
-    this.slamVerdict(`${move} WINS`, moveColors[move].main);
+    const won = outcome.picks[outcome.winner];
+    const lost = outcome.picks[outcome.loser];
+    const hit =
+      outcome.winner === this.me ? `${this.labels[this.me]} HIT!` : `${this.labels[outcome.winner]} HITS!`;
+    this.slamVerdict(hit, sideColors[outcome.winner], `${won} BEATS ${lost}`, 'above');
   }
 
-  /** "-15" in the winning move's colour hops up over the loser's head, then falls. */
-  showDamage(loser: Side, amount: number, move: Move): void {
+  /** "-15" in red hops up off the loser's head, then falls. */
+  showDamage(loser: Side, amount: number): void {
     const r = tuning.reveal;
     const y = STAGE.floorY - 80;
     this.damage
       .setText(`-${amount}`)
-      .setColor(moveColors[move].main)
+      .setColor(palette.red)
       .setAnchorX(STAGE.fighterX[loser] + (loser === 'p1' ? -10 : 10))
       .setY(y)
       .setVisible(true);
@@ -170,20 +206,39 @@ export class ClashView {
       this.scene.tweens.killTweensOf(this.badges[side]);
       this.badges[side].setVisible(false).setAngle(0);
       this.autos[side].setVisible(false);
+      this.owners[side].setVisible(false);
     }
     this.scene.tweens.killTweensOf(this.verdict);
+    this.scene.tweens.killTweensOf(this.rule);
     this.verdict.setVisible(false);
+    this.rule.setVisible(false);
     this.damage.setVisible(false);
   }
 
-  private slamVerdict(text: string, color: number): void {
-    const y = tuning.reveal.verdictY;
-    this.verdict
-      .setText(text)
-      .setColor(color)
-      .setY(y - 24)
-      .setVisible(true);
-    this.tween(this.verdict, { y }, tuning.banner.slamMs, 'Back.easeOut');
+  /**
+   * The big line ("YOU HIT!", "CLASH!") and a small one: the rule above it, slammed in first with
+   * the big line a beat later; or a note below it ("NO DAMAGE"), slammed in a beat after.
+   */
+  private slamVerdict(big: string, color: number, small: string, where: 'above' | 'below'): void {
+    const r = tuning.reveal;
+    const [first, firstY, second, secondY] =
+      where === 'above'
+        ? ([this.rule, r.ruleY, this.verdict, r.verdictY] as const)
+        : ([this.verdict, r.ruleY, this.rule, r.ruleY + 16] as const);
+    this.verdict.setText(big).setColor(color);
+    this.rule.setText(small).setColor(where === 'above' ? color : palette.text);
+    this.slam(first, firstY);
+    this.paths.push(
+      this.scene.tweens.addCounter({
+        duration: r.hitLineDelayMs,
+        onComplete: () => this.slam(second, secondY),
+      }),
+    );
+  }
+
+  private slam(text: PixelText, y: number): void {
+    text.setY(y - 24).setVisible(true);
+    this.tween(text, { y }, tuning.banner.slamMs, 'Back.easeOut');
   }
 
   private tween(
@@ -191,6 +246,7 @@ export class ClashView {
     to: { x?: number; y?: number },
     ms: number,
     ease: string,
+    onStep?: () => void,
   ): void {
     const obj = target as Phaser.GameObjects.Components.Transform;
     this.scene.tweens.add({
@@ -201,6 +257,7 @@ export class ClashView {
       onUpdate: () => {
         if (to.x !== undefined) obj.x = snap(obj.x);
         if (to.y !== undefined) obj.y = snap(obj.y);
+        onStep?.();
       },
     });
   }

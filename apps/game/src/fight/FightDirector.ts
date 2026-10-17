@@ -14,12 +14,14 @@ import type { BannerView } from '../views/BannerView';
 import type { ClashView } from '../views/ClashView';
 import type { FighterView } from '../views/FighterView';
 import type { HudView } from '../views/HudView';
+import type { TagView } from '../views/TagView';
 
 export interface FightViews {
   fighters: Record<Side, FighterView>;
   clash: ClashView;
   hud: HudView;
   banner: BannerView;
+  tags: TagView;
 }
 
 /**
@@ -30,6 +32,10 @@ export class FightDirector {
   private readonly offs: (() => void)[] = [];
   private koSide: Side | null = null;
   private firstPickOfRound = false;
+  /** Picks so far this match, so the arrows to the buttons show only for the first few. */
+  private turns = 0;
+  /** "ROUND 1" waits for the VS card; a phase change cancels it. */
+  private introStep: Phaser.Time.TimerEvent | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -37,6 +43,8 @@ export class FightDirector {
     private readonly views: FightViews,
     private readonly sfx: SfxPlayer,
     private readonly roundsToWin: number,
+    /** Short names over the fighters and on the VS card ("YOU", "RIVAL"). */
+    private readonly labels: Record<Side, string>,
     private readonly hooks: {
       clearPick: () => void;
       matchOver: (winner: Side, state: MatchState) => void;
@@ -48,7 +56,11 @@ export class FightDirector {
   ) {
     this.offs.push(
       session.on('phase', this.onPhase),
-      session.on('locked', ({ side }) => views.hud.setReady(side, true)),
+      session.on('locked', ({ side }) => {
+        views.hud.setReady(side, true);
+        // your own chip shows your move (see myPick); the rival's turns from a dim "?" to a bright one
+        if (side !== session.me) views.tags.setChip(side, 'unknown');
+      }),
       session.on('reveal', this.onReveal),
       session.on('matchOver', ({ winner, state }) =>
         scene.time.delayedCall(tuning.result.delayAfterMatchMs, () => hooks.matchOver(winner, state)),
@@ -57,9 +69,18 @@ export class FightDirector {
     scene.events.once('shutdown', () => this.offs.forEach((off) => off()));
   }
 
+  /** You picked (or changed your pick): your move shows over your head and the prompt goes. */
+  myPick(move: Move): void {
+    this.views.tags.setChip(this.session.me, move);
+    this.views.hud.showPrompt(false);
+  }
+
   private onPhase = (e: SessionEvents['phase']): void => {
-    const { fighters, clash, hud, banner } = this.views;
+    const { fighters, clash, hud, banner, tags } = this.views;
     const state = this.session.snapshot().state;
+    const tagged = e.round <= tuning.identity.tagRounds;
+    this.introStep?.remove();
+    this.introStep = null;
     switch (e.phase) {
       case 'roundIntro': {
         this.koSide = null;
@@ -73,11 +94,22 @@ export class FightDirector {
         hud.resetHealth(state.health);
         hud.setRounds(state.roundsWon, this.roundsToWin);
         hud.showPrompt(false);
-        this.sfx.play('roundStart');
-        banner.show(e.finalRound ? 'FINAL ROUND' : `ROUND ${e.round}`, {
-          color: palette.gold,
-          holdMs: Infinity,
-        });
+        tags.hideChips();
+        const title = e.finalRound ? 'FINAL ROUND' : `ROUND ${e.round}`;
+        const showTitle = () => {
+          this.sfx.play('roundStart');
+          banner.show(title, { color: palette.gold, holdMs: Infinity });
+        };
+        if (e.round === 1) {
+          // who is who before anything happens: the VS card, then the round
+          tags.showTags(true);
+          banner.showVs(this.labels);
+          this.introStep = this.scene.time.delayedCall(tuning.identity.vsCardMs, showTitle);
+        } else {
+          if (e.round === tuning.identity.tagRounds + 1) tags.blinkOut();
+          else tags.showTags(tagged);
+          showTitle();
+        }
         break;
       }
       case 'picking': {
@@ -87,7 +119,11 @@ export class FightDirector {
           hud.setReady(side, false);
         }
         clash.hide();
-        hud.showPrompt(true);
+        this.turns++;
+        hud.showPrompt(true, this.turns <= tuning.prompt.arrowTurns);
+        tags.showTags(tagged);
+        tags.setChip('p1', 'waiting');
+        tags.setChip('p2', 'waiting');
         if (this.firstPickOfRound) {
           this.sfx.play('fight');
           banner.show('FIGHT!', { color: palette.pink, holdMs: 350 });
@@ -96,6 +132,9 @@ export class FightDirector {
         break;
       }
       case 'reveal':
+        // the badges carry the names from here
+        tags.showTags(false);
+        tags.hideChips();
         hud.showPrompt(false);
         hud.setReady('p1', false);
         hud.setReady('p2', false);
@@ -184,7 +223,8 @@ export class FightDirector {
         hud.setHealth(outcome.loser, e.state.health[outcome.loser]);
         const hit = e.events.find((ev) => ev.type === 'damage' && ev.side === outcome.loser);
         const amount = hit?.type === 'damage' ? hit.amount : outcome.damage;
-        clash.showDamage(outcome.loser, amount, e.picks[outcome.winner]);
+        clash.showDamage(outcome.loser, amount);
+        hud.flashBar(outcome.loser);
       });
       if (ko) this.koSide = outcome.loser;
     });
