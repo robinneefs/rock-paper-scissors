@@ -12,7 +12,7 @@ import { SceneKey } from './keys';
 import { useMonitorCamera } from './monitor';
 import { VERSION } from '../version';
 
-/** Main menu (the title is on the marquee): both fighters idling, START GAME (VS RIVAL), ONLINE, HOW TO PLAY, OPTIONS
+/** Main menu (the title is on the marquee): both fighters idling, START GAME (VS CPU), ONLINE, HOW TO PLAY, OPTIONS
  * and, in the Android app, QUIT. */
 export class HomeScene extends Phaser.Scene {
   constructor() {

@@ -14,7 +14,8 @@ const PAD = 6;
 
 /**
  * Draws any menu (a list of MenuItem) on the monitor: panel, blinking cursor, disabled items skipped.
- * Joystick / arrows move the cursor; any cabinet button, Enter or Space confirms; items can be tapped.
+ * Joystick / arrows or the mouse move the cursor; any cabinet button, Enter or Space confirms; items
+ * can be clicked or tapped.
  */
 export class MenuView {
   private readonly gfx: Phaser.GameObjects.Graphics;
@@ -68,6 +69,14 @@ export class MenuView {
         .zone(ix, iy, this.itemW, ITEM_H)
         .setOrigin(0)
         .setInteractive({ useHandCursor: item.enabled });
+      // the mouse selects what it is over, like the joystick (a tap on a phone just confirms)
+      zone.on('pointerover', (p: Phaser.Input.Pointer) => {
+        if (p.wasTouch || !item.enabled || this.locked || i === this.selected) return;
+        this.sfx.play('menuMove');
+        this.selected = i;
+        this.blinkOn = true;
+        this.draw();
+      });
       zone.on('pointerdown', () => {
         if (!item.enabled) return;
         this.selected = i;

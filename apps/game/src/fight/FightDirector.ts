@@ -180,7 +180,7 @@ export class FightDirector {
     }
     at(r.flyAtMs, () => {
       clash.fly(r.impactAtMs - r.flyAtMs);
-      this.sfx.play('whoosh', { volume: 0.7 });
+      this.sfx.play('whoosh');
     });
 
     const outcome = e.outcome;
