@@ -2,6 +2,14 @@
 
 Every build that goes online gets a new version number (in `apps/game/package.json`, shown small on the home screen) and an entry here. Version numbers follow semver: a new feature bumps the middle number (1.0.0 → 1.1.0), a fix-only build bumps the last (1.0.0 → 1.0.1). Each version that goes live is tagged `vX.Y.Z` with a GitHub release, made automatically from its entry here when it reaches the `production` branch.
 
+## 1.3.0 (2026-10-17)
+
+- **CPU is CPU again.** In a match against the computer it's called CPU everywhere again: the tags over the fighters, the VS card, "CPU HITS!", the HUD, "CPU WINS" and START GAME, VS CPU on the home menu. RIVAL is now only for online matches, and the ONLINE menu item now says VS RIVAL instead of VS FRIEND.
+- **Menus follow the mouse.** Hovering a menu item with the mouse now selects it, just like moving to it with the joystick, with the same blip. (On a phone a tap still just picks the item.)
+- **How to Play shows the circle.** The three moves are now drawn in a triangle with arrows going round: rock → scissors → paper → rock, each move beating the one its arrow points at. The cryptic "PAPER BEATS ROCK TOO" line is gone.
+- **Steadier sound.** The sound effects came out of the generator up to 7 dB apart (the whoosh and K.O. loud, the menu blips quiet), so the volume jumped from one sound to the next. Every effect now peaks at about the same level (the K.O. a touch louder). The effects sit closer to the music: they used to be about 14 dB above it and are now about 9. A limiter on the output stops overlapping sounds from clipping into a loud crackle.
+- **Even CRT scanlines.** The scanlines are now drawn at the screen's own resolution, one equally thick line under each pixel row, placed exactly where the browser draws that row. Before, at the default Fill height scaling, the lines came out uneven and drifted against the rows.
+
 ## 1.2.0 (2026-10-17)
 
 New players often couldn't tell which fighter was theirs or what had just happened. The fight now spells it out:

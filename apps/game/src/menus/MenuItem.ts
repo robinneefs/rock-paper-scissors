@@ -2,7 +2,7 @@
 export interface MenuItem {
   id: string;
   label: string;
-  /** Small text on the right (e.g. "VS RIVAL", "SOON"). */
+  /** Small text on the right (e.g. "VS CPU", "SOON"). */
   tag?: string;
   enabled: boolean;
   onSelect?: () => void;

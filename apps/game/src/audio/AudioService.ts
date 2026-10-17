@@ -2,8 +2,11 @@ import type Phaser from 'phaser';
 import { VOLUME_MAX, type Settings, type SettingsStore } from '../platform/settings';
 import { musicFileKey, SFX_GAIN, sfxFileKeys, type MusicKey, type SfxKey, type SfxPlayer } from './sounds';
 
-/** Loudness of each bus at full volume, so effects sit on top of the music. */
-const BUS = { music: 0.5, sfx: 0.85 } as const;
+/**
+ * Loudness of each bus at full volume, so effects sit on top of the music without jumping out of
+ * it (they were about 14 dB over it; now about 9).
+ */
+const BUS = { music: 0.7, sfx: 0.7 } as const;
 const FADE_IN_MS = 200;
 
 /** Gain for a volume step: a curve, so the low steps are still audible but get quiet fast. */
@@ -41,6 +44,7 @@ export class AudioService implements SfxPlayer {
     private readonly settings: SettingsStore,
   ) {
     game.events.on('step', (time: number) => this.step(time));
+    this.addLimiter();
     game.sound.on('unlocked', () => this.startWanted());
     settings.onChange(() => this.applyVolumes());
   }
@@ -73,6 +77,25 @@ export class AudioService implements SfxPlayer {
     }
     if (key === null) return;
     this.startAt = this.now + (opts.delayMs ?? 0);
+  }
+
+  /**
+   * A limiter on the way out: when several sounds land at once (a hit, the whoosh, the music)
+   * their sum would clip into a harsh, louder crackle. It only acts on those peaks.
+   */
+  private addLimiter(): void {
+    const manager = this.game.sound as Partial<Phaser.Sound.WebAudioSoundManager>;
+    const { context, masterVolumeNode: master } = manager;
+    if (!context || !master) return; // HTML5 audio or no audio: nothing to route
+    const limiter = context.createDynamicsCompressor();
+    limiter.threshold.value = -3;
+    limiter.knee.value = 2;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.002;
+    limiter.release.value = 0.15;
+    master.disconnect();
+    master.connect(limiter);
+    limiter.connect(context.destination);
   }
 
   private startWanted(): void {
